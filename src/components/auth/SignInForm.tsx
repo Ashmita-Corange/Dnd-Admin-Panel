@@ -12,8 +12,8 @@ import {
   selectLoginStatus, 
   selectAuthError, 
   selectIsAuthenticated 
-} from "../../store/slices/authslice"; // Adjust path as needed
-import type { AppDispatch } from "../../store"; // <-- Import your AppDispatch type
+} from "../../store/slices/authslice";
+import type { AppDispatch } from "../../store";
 
 export default function SignInForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -23,11 +23,11 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "", // Changed from username to email
     password: ""
   });
   const [formErrors, setFormErrors] = useState({
-    username: "",
+    email: "", // Changed from username to email
     password: ""
   });
 
@@ -39,7 +39,7 @@ export default function SignInForm() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/"); // Adjust redirect path as needed
+      navigate("/dashboard"); // Better redirect path
     }
   }, [isAuthenticated, navigate]);
 
@@ -49,7 +49,7 @@ export default function SignInForm() {
   }, [dispatch]);
 
   // Handle input changes
-  const handleInputChange = (field: "username" | "password", value: string) => {
+  const handleInputChange = (field: "email" | "password", value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -67,14 +67,15 @@ export default function SignInForm() {
   // Form validation
   const validateForm = () => {
     const errors = {
-      username: "",
+      email: "",
       password: ""
     };
 
-    if (!formData.username.trim()) {
-      errors.username = "Username is required";
-    } 
-    // Optionally add username format validation here
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email address is invalid";
+    }
 
     if (!formData.password.trim()) {
       errors.password = "Password is required";
@@ -83,32 +84,44 @@ export default function SignInForm() {
     }
 
     setFormErrors(errors);
-    return !errors.username && !errors.password;
+    return !errors.email && !errors.password;
   };
 
   // Handle form submission
-  const handleSubmit = async (e:any) => {
-    e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    try {
-     
-      const result = await dispatch(login({
-        username: formData.username.trim(),
-        password: formData.password.trim(),
-      }));
+  if (!validateForm()) return;
 
-      if (login.fulfilled.match(result)) {
-        // Login successful - navigation will be handled by useEffect
-        console.log("Login successful");
+  try {
+    const result = await dispatch(login({
+      email: formData.email.trim(),
+      password: formData.password.trim(),
+    }));
+
+    // ✅ Check if it's fulfilled
+    if (login.fulfilled.match(result)) {
+      const payload = result.payload as AuthResponse;
+
+      if (payload?.user) {
+        console.log("✅ Login successful:", payload.user);
+        // navigation can go here or in useEffect
+      } else {
+        console.warn("⚠️ Login succeeded, but user is missing from payload");
       }
-    } catch (error) {
-      console.error("Login error:", error);
+
+    // ❌ Handle rejected case
+    } else {
+      console.error("❌ Login failed:", result.payload || result.error.message);
     }
-  };
+
+  } catch (error) {
+    console.error("🔥 Unexpected login error:", error);
+  }
+};
+
+
+
 
   const isLoading = loginStatus === "loading";
 
@@ -130,7 +143,7 @@ export default function SignInForm() {
               Sign In
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your username and password to sign in!
+              Enter your email and password to sign in!
             </p>
           </div>
 
@@ -146,18 +159,18 @@ export default function SignInForm() {
               <div className="space-y-6">
                 <div>
                   <Label>
-                    Username <span className="text-error-500">*</span>
+                    Email <span className="text-error-500">*</span>
                   </Label>
                   <Input 
-                    placeholder="Enter your username" 
-                    type="text"
-                    value={formData.username}
-                    onChange={(e) => handleInputChange("username", e.target.value)}
+                    placeholder="Enter your email" 
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     disabled={isLoading}
-                    className={formErrors.username ? "border-red-500" : ""}
+                    className={formErrors.email ? "border-red-500" : ""}
                   />
-                  {formErrors.username && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.username}</p>
+                  {formErrors.email && (
+                    <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
                   )}
                 </div>
                 
@@ -201,7 +214,6 @@ export default function SignInForm() {
                       Keep me logged in
                     </span>
                   </div>
-                
                 </div>
                 
                 <div>

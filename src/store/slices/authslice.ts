@@ -13,7 +13,7 @@ import type {
 
 // API base URL
 
-const API_BASE_URL = import.meta.env.VITE_BASE_URL || "https://test.swarnsiddhi.com/admin/api/v1";
+const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000/api";
 
 // Helper function to handle API errors
 
@@ -30,14 +30,14 @@ const handleApiError = (error: unknown): string => {
 
 export const login = createAsyncThunk<
   AuthResponse,
-  { username: string; password: string },
+  { email: string; password: string },
   { rejectValue: string }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post<ApiResponse<AuthResponse>>(
-      `${API_BASE_URL}/auth/login/`,
+    const response = await axiosInstance.patch<AuthResponse>(
+      `${API_BASE_URL}/user`,
       {
-        username: credentials.username,
+        email: credentials.email,
         password: credentials.password,
       },
       {
@@ -47,30 +47,41 @@ export const login = createAsyncThunk<
         },
       }
     );
-    console.log("Login response:", response);
 
-    const data = response;
+    console.log("🔐 Login response:", response.data);
 
-    // Store tokens and user using correct keys from response
-    if (data.data?.access) {
-      localStorage.setItem("token", data.data.access);
-      localStorage.setItem("accessToken", data.data.access);
+    const data = response.data;
+
+    // Logging token & user
+    if (data.accessToken) {
+      console.log("✅ AccessToken:", data.accessToken);
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("accessToken", data.accessToken);
     }
-    if (data.data?.refresh) {
-      localStorage.setItem("refreshToken", data.data.refresh);
+
+    if (data.refreshToken) {
+      console.log("♻️ RefreshToken:", data.refreshToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
     }
-   
+
+    if (data.user) {
+      console.log("👤 Logged in User:", data.user);
+      localStorage.setItem("user", JSON.stringify(data.user));
+    }
 
     // Return all required fields for state update
     return {
-      accessToken: data.data.access,
-      refreshToken: data.data.refresh,
+      user: data.user,
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
     };
   } catch (error: any) {
-    console.error("Login error:", error.message);
+    console.error("❌ Login error:", error.message);
     return rejectWithValue(handleApiError(error));
   }
 });
+
+
 
 
 
