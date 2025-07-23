@@ -1,27 +1,25 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
-interface CourseState {
+interface CategoryState {
   loading: boolean;
   error: string | null;
   data: any;
 }
 
-const initialState: CourseState = {
+const initialState: CategoryState = {
   loading: false,
   error: null,
   data: null,
 };
 
-export const createCourse = createAsyncThunk(
-  "course/createCourse",
+// Create Category
+export const createCategory = createAsyncThunk(
+  "category/createCategory",
   async (formData: FormData, { rejectWithValue }) => {
     try {
-      // Ensure the formData is properly formatted
-
-      console.log("Creating course with data:", formData);
-      formData.append("instructerId", "684088dfef718469d2bbcb62");
-      const response = await axiosInstance.post("/courses/", formData, {
+      console.log("Creating category with data:", formData);
+      const response = await axiosInstance.post("/categories/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -33,80 +31,73 @@ export const createCourse = createAsyncThunk(
   }
 );
 
+// Fetch Categories with Pagination
 interface PaginationData {
-  courses: any[];
+  categories: any[];
   total: number;
   page: number;
   limit: number;
   totalPages: number;
 }
 
-export const fetchCourses = createAsyncThunk<
+export const fetchCategories = createAsyncThunk<
   PaginationData,
   { page?: number; limit?: number } | undefined
->(
-  "course/fetchCourses",
-  async (params = {}, { rejectWithValue }) => {
+>("category/fetchCategories", async (params = {}, { rejectWithValue }) => {
+  try {
+    const { page = 1, limit = 10 } = params;
+    const response = await axiosInstance.get("/categories/", {
+      params: { page, limit },
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = response.data?.data;
+    return {
+      categories: data?.data || [],
+      total: data?.total || 0,
+      page: data?.page || 1,
+      limit: data?.limit || 10,
+      totalPages: data?.totalPages || 0,
+    };
+  } catch (error: any) {
+    return rejectWithValue(
+      error.response?.data?.message || "Failed to fetch categories"
+    );
+  }
+});
+
+// Fetch Category by ID
+export const fetchCategoryById = createAsyncThunk(
+  "category/fetchCategoryById",
+  async (categoryId: string, { rejectWithValue }) => {
     try {
-      const { page = 1, limit = 10 } = params;
-      const response = await axiosInstance.get("/courses/", {
-        params: { page, limit },
+      const response = await axiosInstance.get(`/categories/${categoryId}`, {
         headers: {
           "Content-Type": "application/json",
         },
       });
-      const data = response.data?.data;
-      console.log("Fetched vfgbhcourses:", data);
-      return {
-        courses: data?.data || [],
-        total: data?.total || 0,
-        page: data?.page || 1,
-        limit: data?.limit || 10,
-        totalPages: data?.totalPages || 0,
-      };
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch courses");
-    }
-  }
-);
-
-export const fetchCourseById = createAsyncThunk(
-  "course/fetchCourseById",
-  async (
-    { courseId, token }: { courseId: string; token: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axiosInstance.get(
-        `/courses/${courseId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log("Fetched course by ID:", response.data?.course);
-      return response.data?.data?.course;
+      return response.data?.data?.category;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || error.message);
     }
   }
 );
 
-export const updateCourse = createAsyncThunk(
-  "course/updateCourse",
+// Update Category
+export const updateCategory = createAsyncThunk(
+  "category/updateCategory",
   async ({ id, data }: { id: string; data: FormData }, { rejectWithValue }) => {
     try {
-      console.log("Updating course with ID:", id, "and data:", data);
-      // Remove any existing 'instructorId' entries before appending the correct one
-      data.delete("instructorId");
-      data.append("instructorId", "684088dfef718469d2bbcb62");
+      console.log("Updating category with ID:", id, "and data:", data);
 
-      const response = await axiosInstance.put(`/courses/${id}`, data, {
+      const response = await axiosInstance.put(`/categories/${id}`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || error.message);
@@ -114,108 +105,66 @@ export const updateCourse = createAsyncThunk(
   }
 );
 
-
-
-export const fetchCourseAttachments = createAsyncThunk(
-  "course/fetchCourseAttachments",
-  async (
-    { courseId, type }: { courseId: string; type: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await axiosInstance.get(
-        `/courses/${courseId}/attachments`,
-        {
-          params: { type },
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data?.data || [];
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data || error.message);
-    }
-  }
-);
-
-const courseSlice = createSlice({
-  name: "course",
+// Slice
+const categorySlice = createSlice({
+  name: "category",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(createCourse.pending, (state) => {
+      .addCase(createCategory.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(createCourse.fulfilled, (state, action) => {
+      .addCase(createCategory.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(createCourse.rejected, (state, action) => {
+      .addCase(createCategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(fetchCourses.pending, (state) => {
+      .addCase(fetchCategories.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCourses.fulfilled, (state, action) => {
+      .addCase(fetchCategories.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(fetchCourses.rejected, (state, action) => {
+      .addCase(fetchCategories.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(fetchCourseById.pending, (state) => {
+      .addCase(fetchCategoryById.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCourseById.fulfilled, (state, action) => {
+      .addCase(fetchCategoryById.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(fetchCourseById.rejected, (state, action) => {
+      .addCase(fetchCategoryById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(updateCourse.pending, (state) => {
+      .addCase(updateCategory.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateCourse.fulfilled, (state, action) => {
+      .addCase(updateCategory.fulfilled, (state, action) => {
         state.loading = false;
         state.data = action.payload;
       })
-      .addCase(updateCourse.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      .addCase(fetchCourseAttachments.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCourseAttachments.fulfilled, (state, action) => {
-        state.loading = false;
-        // Assuming you want to store attachments in the data field
-        if (state.data) {
-          state.data.attachments = action.payload;
-        } else {
-          state.data = { attachments: action.payload };
-        }
-      })
-      .addCase(fetchCourseAttachments.rejected, (state, action) => {
+      .addCase(updateCategory.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
-      
   },
 });
 
-export default courseSlice.reducer;
+export default categorySlice.reducer;
 
-// Selector to get all courses (array)
-export const getAllCourses = (state: any) =>
-  state.course?.data?.courses || [];
+// Selector to get all categories
+export const getAllCategories = (state: any) =>
+  state.category?.data?.categories || [];

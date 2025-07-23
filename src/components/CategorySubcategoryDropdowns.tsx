@@ -4,7 +4,7 @@ import {
   createCourseCategory,
   createSubCategory,
   fetchCourseCategories,
-} from "../store/slices/courseCategorySlice";
+} from "../store/slices/categorySlice";
 import { fetchSubcategoriesByCategory } from "../store/slices/filter";
 import { Plus } from "lucide-react";
 import toast from "react-hot-toast";
@@ -158,7 +158,9 @@ export default function CategorySubcategoryDropdowns({
         toast.success("New subcategory added successfully!");
         // Refetch subcategories for the selected category
         if (selectedCategoryId) {
-          await dispatch(fetchSubcategoriesByCategory(selectedCategoryId)).unwrap();
+          await dispatch(
+            fetchSubcategoriesByCategory(selectedCategoryId)
+          ).unwrap();
         }
       }
 

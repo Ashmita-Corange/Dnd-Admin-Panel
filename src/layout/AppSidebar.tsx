@@ -41,6 +41,14 @@ const navItems: NavItem[] = [
     path: "/",
   },
   {
+    icon: <GridIcon />,
+    name: "Categories",
+    subItems: [
+      { name: "Add Category", path: "/categories/add" },
+      { name: "Category List", path: "/categories/list" },
+    ],
+  },
+  {
     icon: <ListIcon />,
     name: "User Management",
     subItems: [
@@ -48,18 +56,6 @@ const navItems: NavItem[] = [
       { name: "User List", path: "/users/all" },
     ],
   },
-  
-];
-
-const othersItems: NavItem[] = [
-  // {
-  //   icon: <PlugInIcon />,
-  //   name: "Settings",
-  //   subItems: [
-  //     { name: "Profile Settings", path: "/settings/profile" },
-  //     { name: "Account Settings", path: "/settings/account" },
-  //   ],
-  // },
 ];
 
 const AppSidebar: React.FC = () => {
@@ -424,7 +420,6 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>

@@ -13,7 +13,8 @@ import type {
 
 // API base URL
 
-const API_BASE_URL = import.meta.env.VITE_BASE_URL || "https://test.swarnsiddhi.com/admin/api/v1";
+const API_BASE_URL =
+  import.meta.env.VITE_BASE_URL || "https://test.swarnsiddhi.com/admin/api/v1";
 
 // Helper function to handle API errors
 
@@ -26,7 +27,7 @@ const handleApiError = (error: unknown): string => {
 
 // Async thunks for API calls
 
-// login api call 
+// login api call
 
 export const login = createAsyncThunk<
   AuthResponse,
@@ -34,8 +35,8 @@ export const login = createAsyncThunk<
   { rejectValue: string }
 >("auth/login", async (credentials, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post<ApiResponse<AuthResponse>>(
-      `${API_BASE_URL}/auth/login/`,
+    const response = await axiosInstance.patch<ApiResponse<AuthResponse>>(
+      `${API_BASE_URL}/auth/login`,
       {
         username: credentials.username,
         password: credentials.password,
@@ -43,7 +44,7 @@ export const login = createAsyncThunk<
       {
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
+          Accept: "application/json",
         },
       }
     );
@@ -59,7 +60,6 @@ export const login = createAsyncThunk<
     if (data.data?.refresh) {
       localStorage.setItem("refreshToken", data.data.refresh);
     }
-   
 
     // Return all required fields for state update
     return {
@@ -71,8 +71,6 @@ export const login = createAsyncThunk<
     return rejectWithValue(handleApiError(error));
   }
 });
-
-
 
 // signup api call
 
@@ -127,7 +125,6 @@ export const signup = createAsyncThunk<
   }
 });
 
-
 // Logout API call
 
 export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
@@ -153,7 +150,7 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
       localStorage.removeItem("refreshToken");
       localStorage.removeItem("user");
 
-      window.location.href = "/signin"; 
+      window.location.href = "/signin";
     } catch (error) {
       localStorage.removeItem("token");
       localStorage.removeItem("accessToken");
@@ -347,7 +344,9 @@ const initialState: AuthState = {
   user: parseStoredUser(),
   token: localStorage.getItem("accessToken") || localStorage.getItem("token"),
   refreshToken: localStorage.getItem("refreshToken"),
-  isAuthenticated: !!(localStorage.getItem("accessToken") || localStorage.getItem("token")),
+  isAuthenticated: !!(
+    localStorage.getItem("accessToken") || localStorage.getItem("token")
+  ),
   status: "idle",
   error: null,
   loginStatus: "idle",

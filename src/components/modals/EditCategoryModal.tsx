@@ -6,7 +6,7 @@ import {
   createSubCategory,
   updateSubCategory,
   deleteSubCategory,
-} from "../../store/slices/courseCategorySlice";
+} from "../../store/slices/categorySlice";
 import {
   X,
   Save,

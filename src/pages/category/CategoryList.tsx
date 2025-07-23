@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../hooks/redux";
-import {
-  fetchCourseCategories,
-  setSearchQuery,
-  setFilters,
-  resetFilters,
-  deleteCourseCategory,
-} from "../store/slices/courseCategorySlice";
+
 import {
   Pencil,
   Trash2,
@@ -20,11 +13,15 @@ import {
   X,
   AlertTriangle,
 } from "lucide-react";
-import PageBreadcrumb from "../components/common/PageBreadCrumb";
-import PageMeta from "../components/common/PageMeta";
-import EditCategoryModal from "../components/modals/EditCategoryModal";
-import toast from "react-hot-toast";
-import PopupAlert from "../components/popUpAlert";
+import { useAppDispatch, useAppSelector } from "../../hooks/redux";
+import {
+  deleteCategory,
+  fetchCategories,
+  setSearchQuery,
+} from "../../store/slices/categorySlice";
+import PageMeta from "../../components/common/PageMeta";
+import PageBreadcrumb from "../../components/common/PageBreadCrumb";
+import PopupAlert from "../../components/popUpAlert";
 
 interface Category {
   _id: string;
@@ -136,7 +133,7 @@ const DeleteModal: React.FC<{
 const CategoryList: React.FC = () => {
   const dispatch = useAppDispatch();
   const { categories, loading, error, pagination, searchQuery, filters } =
-    useAppSelector((state) => state.courseCategory);
+    useAppSelector((state) => state.category);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -177,11 +174,11 @@ const CategoryList: React.FC = () => {
     };
 
     dispatch(
-      fetchCourseCategories({
+      fetchCategories({
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchQuery || '', // Changed from searchFields to search
+        search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
@@ -190,14 +187,14 @@ const CategoryList: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       dispatch(
-        fetchCourseCategories({
+        fetchCategories({
           page: newPage,
           limit: pagination.limit,
           filters: {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-          search: searchQuery || '', // Changed from searchFields to search
+          search: searchQuery || "", // Changed from searchFields to search
           sort: { createdAt: "desc" },
         })
       );
@@ -206,14 +203,14 @@ const CategoryList: React.FC = () => {
 
   const handleLimitChange = (newLimit: number) => {
     dispatch(
-      fetchCourseCategories({
+      fetchCategories({
         page: 1,
         limit: newLimit,
         filters: {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
-        search: searchQuery || '', // Changed from searchFields to search
+        search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
@@ -254,11 +251,11 @@ const CategoryList: React.FC = () => {
       isVisible: true,
     });
     dispatch(
-      fetchCourseCategories({
+      fetchCategories({
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchQuery || '', // Changed from searchFields to search
+        search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
@@ -280,7 +277,7 @@ const CategoryList: React.FC = () => {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteCourseCategory(categoryToDelete._id)).unwrap();
+        await dispatch(deleteCategory(categoryToDelete._id)).unwrap();
 
         setPopup({
           message: `Category "${categoryToDelete.name}" deleted successfully`,
@@ -298,11 +295,11 @@ const CategoryList: React.FC = () => {
         };
 
         dispatch(
-          fetchCourseCategories({
+          fetchCategories({
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-            search: searchQuery || '', // Changed from searchFields to search
+            search: searchQuery || "", // Changed from searchFields to search
             sort: { createdAt: "desc" },
           })
         );
@@ -367,7 +364,6 @@ const CategoryList: React.FC = () => {
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               />
             </div>
-
 
             {/* Status Filter */}
             <div className="flex items-center gap-2">
@@ -460,17 +456,15 @@ const CategoryList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <img
-  src={`${import.meta.env.VITE_IMAGE_URL}/${cat.image}`}
-  onError={(e) => {
-    e.currentTarget.onerror = null;
-    e.currentTarget.src =
-      "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
-  }}
-  alt={cat?.name || "No image"}
-  className="w-10 h-10 rounded-full object-cover"
-/>
-
-
+                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat.image}`}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
+                      }}
+                      alt={cat?.name || "No image"}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     {cat.name}
@@ -546,13 +540,6 @@ const CategoryList: React.FC = () => {
         </div>
       </div>
 
-      {/* Edit Modal */}
-      <EditCategoryModal
-        isOpen={editModalOpen}
-        onClose={closeEditModal}
-        categoryId={categoryToEdit?._id || null}
-        onSuccess={handleEditSuccess}
-      />
       <PopupAlert
         message={popup.message}
         type={popup.type}
