@@ -14,6 +14,15 @@ import {
   selectIsAuthenticated 
 } from "../../store/slices/authslice";
 import type { AppDispatch } from "../../store";
+import { 
+  showSuccessToast, 
+  showErrorToast, 
+  showInfoToast, 
+  showLoadingToast, 
+  dismissToast 
+} from "../../components/toast/toastUtils";
+
+
 
 export default function SignInForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -93,32 +102,35 @@ const handleSubmit = async (e: React.FormEvent) => {
 
   if (!validateForm()) return;
 
+  const loadingToastId = showLoadingToast("Signing you in...");
+
   try {
     const result = await dispatch(login({
       email: formData.email.trim(),
       password: formData.password.trim(),
     }));
 
-    // ✅ Check if it's fulfilled
+    dismissToast(loadingToastId);
+
     if (login.fulfilled.match(result)) {
       const payload = result.payload as AuthResponse;
 
       if (payload?.user) {
-        console.log("✅ Login successful:", payload.user);
-        // navigation can go here or in useEffect
+        showSuccessToast("Login successful!");
       } else {
-        console.warn("⚠️ Login succeeded, but user is missing from payload");
+        showErrorToast("Login succeeded, but user data missing.");
       }
-
-    // ❌ Handle rejected case
     } else {
-      console.error("❌ Login failed:", result.payload || result.error.message);
+      const errorMsg = result.payload || result.error?.message || "Login failed!";
+      showErrorToast(errorMsg);
     }
-
   } catch (error) {
-    console.error("🔥 Unexpected login error:", error);
+    dismissToast(loadingToastId);
+    showErrorToast("Unexpected login error!");
   }
 };
+
+
 
 
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, Filter, Calendar, Shield, Eye, Edit, ChevronDown } from "lucide-react";
+import { Search, Filter, Calendar, Shield, Eye, Edit, ChevronDown, X, Save } from "lucide-react";
 import PageMeta from "../components/common/PageMeta";
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import { fetchModules } from "../store/slices/moduleSlice";
@@ -18,6 +18,15 @@ const ModuleList = () => {
   const [filterOpen, setFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [selectedModule, setSelectedModule] = useState(null);
+  
+  // Edit modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingModule, setEditingModule] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: "",
+    description: "",
+    allowedPermissions: []
+  });
 
   useEffect(() => {
     dispatch(fetchModules());
@@ -28,6 +37,74 @@ const ModuleList = () => {
       toast.error(error);
     }
   }, [error]);
+
+  // Handle edit button click
+  const handleEditClick = (module, e) => {
+    e.stopPropagation(); // Prevent card selection
+    setEditingModule(module);
+    setEditForm({
+      name: module.name || "",
+      description: module.description || "",
+      allowedPermissions: module.allowedPermissions || []
+    });
+    setEditModalOpen(true);
+  };
+
+  // Handle form input changes
+  const handleFormChange = (field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Handle permission changes
+  const handlePermissionChange = (index, value) => {
+    const newPermissions = [...editForm.allowedPermissions];
+    newPermissions[index] = value;
+    setEditForm(prev => ({
+      ...prev,
+      allowedPermissions: newPermissions
+    }));
+  };
+
+  // Add new permission
+  const addPermission = () => {
+    setEditForm(prev => ({
+      ...prev,
+      allowedPermissions: [...prev.allowedPermissions, ""]
+    }));
+  };
+
+  // Remove permission
+  const removePermission = (index) => {
+    const newPermissions = editForm.allowedPermissions.filter((_, i) => i !== index);
+    setEditForm(prev => ({
+      ...prev,
+      allowedPermissions: newPermissions
+    }));
+  };
+
+  // Handle save changes
+  const handleSave = async () => {
+    try {
+      // Here you would dispatch an update action
+      // dispatch(updateModule({ id: editingModule._id, data: editForm }));
+      
+      toast.success("Module updated successfully!");
+      setEditModalOpen(false);
+      setEditingModule(null);
+    } catch (error) {
+      toast.error("Failed to update module");
+    }
+  };
+
+  // Close modal
+  const closeEditModal = () => {
+    setEditModalOpen(false);
+    setEditingModule(null);
+    setEditForm({ name: "", description: "", allowedPermissions: [] });
+  };
 
   // Filter and sort modules
   const filteredModules = modules
@@ -48,9 +125,128 @@ const ModuleList = () => {
       }
     });
 
+  // Edit Modal Component
+  const EditModal = () => {
+    if (!editModalOpen) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="relative w-full max-w-2xl mx-4 bg-white rounded-2xl shadow-2xl dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
+          {/* Modal Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Edit Module
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Update module information and permissions
+              </p>
+            </div>
+            <button
+              onClick={closeEditModal}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-gray-700"
+            >
+              <X className="h-5 w-5 text-gray-400" />
+            </button>
+          </div>
+
+          {/* Modal Body */}
+          <div className="p-6 space-y-6">
+            {/* Module Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Module Name
+              </label>
+              <input
+                type="text"
+                value={editForm.name}
+                onChange={(e) => handleFormChange("name", e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                placeholder="Enter module name"
+              />
+            </div>
+
+            {/* Module Description */}
+            {/* <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Description
+              </label>
+              <textarea
+                value={editForm.description}
+                onChange={(e) => handleFormChange("description", e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
+                placeholder="Enter module description"
+              />
+            </div> */}
+
+            {/* Permissions */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Permissions
+                </label>
+                <button
+                  onClick={addPermission}
+                  className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Add Permission
+                </button>
+              </div>
+              
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {editForm.allowedPermissions.map((permission, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={permission}
+                      onChange={(e) => handlePermissionChange(index, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      placeholder={`Permission ${index + 1}`}
+                    />
+                    <button
+                      onClick={() => removePermission(index)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/20"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                
+                {editForm.allowedPermissions.length === 0 && (
+                  <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                    <p className="text-sm">No permissions added yet</p>
+                    <p className="text-xs">Click "Add Permission" to get started</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={closeEditModal}
+              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            >
+              <Save className="h-4 w-4" />
+              <span>Save Changes</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const ModuleCard = ({ module, index }) => (
     <div
-      className={`group relative rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:border-gray-700 dark:bg-gray-800/50 ${
+      className={`group relative rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 dark:border-gray-700 dark:bg-gray-800/50 ${
         selectedModule?._id === module._id ? 'ring-2 ring-blue-500 shadow-xl' : ''
       }`}
       style={{ animationDelay: `${index * 50}ms` }}
@@ -84,8 +280,11 @@ const ModuleList = () => {
             </div>
           </div>
           
-          <button className="rounded-lg p-1 opacity-0 transition-all duration-200 hover:bg-gray-100 group-hover:opacity-100 dark:hover:bg-gray-700">
-            <Edit className="h-4 w-4 text-gray-400" />
+          <button 
+            onClick={(e) => handleEditClick(module, e)}
+            className="rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <Edit className="h-4 w-4 text-gray-400 hover:text-blue-600" />
           </button>
         </div>
 
@@ -172,13 +371,6 @@ const ModuleList = () => {
               Manage and view all system modules
             </p>
           </div>
-          
-          {/* Stats */}
-          {/* <div className="flex items-center space-x-4">
-            <div className="rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-              {modules.length} Modules
-            </div>
-          </div> */}
         </div>
 
         {/* Controls */}
@@ -263,6 +455,9 @@ const ModuleList = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Modal */}
+      <EditModal />
     </div>
   );
 };

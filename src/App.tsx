@@ -30,6 +30,7 @@ import EditCreateCertificateTemplate from "./pages/Certification/EditeCertificat
 import IssueCertification from "./pages/Certification/IssueCertification";
 import UserList from "./pages/user/user-list";
 import ModuleList from "./pages/ModuleList";
+import AddModule from "./pages/AddModule";
 
 // Lazy load pages
 const SignIn = lazy(() => import("./pages/AuthPages/SignIn"));
@@ -139,7 +140,7 @@ export default function App() {
               <Route path="/filters/all" element={<FilterList />} />
 
               {/* Modules */}
-              {/* <Route path="/modules/add" element={<AddModule />} /> */}
+              <Route path="/modules/add" element={<AddModule />} />
               <Route path="/modules/all" element={<ModuleList />} />
 
               {/* Bundles */}
