@@ -32,8 +32,8 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({
-    email: "", // Changed from username to email
-    password: ""
+    email: "john12@example.com", // Changed from username to email
+    password: "Password123"
   });
   const [formErrors, setFormErrors] = useState({
     email: "", // Changed from username to email

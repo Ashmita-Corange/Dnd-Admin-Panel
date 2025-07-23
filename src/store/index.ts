@@ -4,7 +4,8 @@ import authReducer from "./slices/authslice";
 import dashboardReducer from "./slices/dashboard";
 import modules from "./slices/moduleSlice";
 import category from "./slices/categorySlice";
-
+import tenantSlice from "./slices/tenant";
+import roleSlice from "./slices/roles";
 import user from "./slices/user";
 
 export const store = configureStore({
@@ -14,6 +15,8 @@ export const store = configureStore({
     modules: modules,
     category: category,
     dashboard: dashboardReducer,
+    tenant: tenantSlice,
+    role: roleSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

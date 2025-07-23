@@ -15,6 +15,12 @@ import AddCategory from "./pages/category/AddCategory";
 import CategoryList from "./pages/category/CategoryList";
 import AddModule from "./pages/module/AddModule";
 import ModuleList from "./pages/module/ModuleList";
+import AddTenant from "./pages/Tenant/AddTenant";
+import TenantList from "./pages/Tenant/TenantList";
+import EditTenant from "./pages/Tenant/EditTenant";
+import AddRole from "./pages/Role/AddRole";
+import RoleList from "./pages/Role/RoleList";
+import EditRole from "./pages/Role/EditRole";
 
 // Lazy load pages
 
@@ -117,6 +123,16 @@ export default function App() {
               {/* Module Management Routes */}
               <Route path="/module/add" element={<AddModule />} />
               <Route path="/module/list" element={<ModuleList />} />
+
+              {/* Module Management Routes */}
+              <Route path="/tenant/add" element={<AddTenant />} />
+              <Route path="/tenant/list" element={<TenantList />} />
+              <Route path="/tenant/edit/:id" element={<EditTenant />} />
+
+              {/* Role Management Routes */}
+              <Route path="/role/add" element={<AddRole />} />
+              <Route path="/role/list" element={<RoleList />} />
+              <Route path="/role/edit/:id" element={<EditRole />} />
             </Route>
           </Route>
 

@@ -43,19 +43,20 @@ export const createModule = createAsyncThunk<Module, { name: string }>(
 // Async thunk to fetch modules
 export const fetchModules = createAsyncThunk<Module[], any>(
   "modules/fetchAll",
-  async ({ search }, { rejectWithValue }) => {
+  async (_, { rejectWithValue }) => {
     try {
+      console.log("Fetching modules with search query:");
       const response = await axiosInstance.get(`/module`);
       console.log("Full response from API:", response.data);
 
       // Correct extraction of modules array
       const modules = response.data?.modules;
 
+      console.log("Modules fetched successfully:", modules);
       if (!Array.isArray(modules)) {
         throw new Error("Invalid module response structure");
       }
 
-      console.log("Modules fetched successfully:", modules);
       return modules;
     } catch (err: any) {
       console.error("Error fetching modules:", err);
