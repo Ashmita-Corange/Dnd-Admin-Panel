@@ -17,7 +17,7 @@ import {
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
-import { Files } from "lucide-react";
+import { Files ,SettingsIcon,BoxIcon  } from "lucide-react";
 
 type NavSubItem = {
   name: string;
@@ -56,6 +56,26 @@ const navItems: NavItem[] = [
       { name: "User List", path: "/users/all" },
     ],
   },
+  {
+    icon: <BoxIcon   />,
+    name: "Modules",
+    subItems: [
+      { name: "Add Module", path: "/modules/add" },
+      { name: "Module List", path: "/modules/all" },
+    ],
+  },
+  
+];
+
+const othersItems: NavItem[] = [
+  // {
+  //   icon: <PlugInIcon />,
+  //   name: "Settings",
+  //   subItems: [
+  //     { name: "Profile Settings", path: "/settings/profile" },
+  //     { name: "Account Settings", path: "/settings/account" },
+  //   ],
+  // },
 ];
 
 const AppSidebar: React.FC = () => {
