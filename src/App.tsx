@@ -21,6 +21,7 @@ import EditTenant from "./pages/Tenant/EditTenant";
 import AddRole from "./pages/Role/AddRole";
 import RoleList from "./pages/Role/RoleList";
 import EditRole from "./pages/Role/EditRole";
+import AddSubscriptionPlan from "./pages/plan/AddPlan";
 
 // Lazy load pages
 
@@ -133,6 +134,9 @@ export default function App() {
               <Route path="/role/add" element={<AddRole />} />
               <Route path="/role/list" element={<RoleList />} />
               <Route path="/role/edit/:id" element={<EditRole />} />
+
+              {/* Plan Management Routes */}
+              <Route path="/plan/add" element={<AddSubscriptionPlan />} />
             </Route>
           </Route>
 
