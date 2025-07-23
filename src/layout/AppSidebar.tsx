@@ -2,22 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
-import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-} from "../icons";
+import { ChevronDownIcon, GridIcon, HorizontaLDots, ListIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
-import { Files ,SettingsIcon,BoxIcon  } from "lucide-react";
+import { BoxIcon } from "lucide-react";
+import axiosInstance from "../services/axiosConfig";
 
 type NavSubItem = {
   name: string;
@@ -57,31 +45,19 @@ const navItems: NavItem[] = [
     ],
   },
   {
-    icon: <BoxIcon   />,
+    icon: <BoxIcon />,
     name: "Modules",
     subItems: [
       { name: "Add Module", path: "/modules/add" },
       { name: "Module List", path: "/modules/all" },
     ],
   },
-  
-];
-
-const othersItems: NavItem[] = [
-  // {
-  //   icon: <PlugInIcon />,
-  //   name: "Settings",
-  //   subItems: [
-  //     { name: "Profile Settings", path: "/settings/profile" },
-  //     { name: "Account Settings", path: "/settings/account" },
-  //   ],
-  // },
 ];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-
+  const [menuItems, setMenuItems] = useState<NavItem[]>([]);
   const [openSubmenu, setOpenSubmenu] = useState<string[]>([]);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
     {}
@@ -277,7 +253,7 @@ const AppSidebar: React.FC = () => {
             {nav.subItems ? (
               <button
                 onClick={() => handleSubmenuToggle(menuKey)}
-                className={`menu-item group ${
+                className={`menu-item group capitalize ${
                   openSubmenu.includes(menuKey) ||
                   hasActiveSubItem(nav.subItems)
                     ? "menu-item-active"
@@ -341,7 +317,7 @@ const AppSidebar: React.FC = () => {
                 ref={(el) => {
                   subMenuRefs.current[menuKey] = el;
                 }}
-                className="overflow-hidden transition-all duration-300"
+                className="overflow-hidden capitalize transition-all duration-300"
                 style={{
                   height: openSubmenu.includes(menuKey)
                     ? `${subMenuHeight[menuKey]}px`
@@ -358,6 +334,53 @@ const AppSidebar: React.FC = () => {
       })}
     </ul>
   );
+
+  const getData = async () => {
+    try {
+      const response = await axiosInstance.get("/module");
+
+      const formattedItems: NavItem[] = response.data.modules.map(
+        (module: any) => {
+          const name = module.name.toLowerCase().replace(/\s+/g, "-");
+
+          const payload = {
+            name: module.name,
+            icon: <ListIcon />,
+          };
+
+          if (!module.permissions) {
+            payload.path = `/${name}/list`;
+            payload.subItems = [
+              { name: `Add ${module.name}`, path: `/${name}/add` },
+              { name: `${module.name} list`, path: `/${name}/list` },
+            ];
+
+            return payload;
+          }
+          if (module.permissions.includes("read")) {
+            payload.subItems = [
+              { name: `${module.name} list`, path: `/${name}/list` },
+            ];
+          }
+          if (module.permissions.includes("add")) {
+            payload.subItems = [
+              ...payload.subItems,
+              { name: `Add ${module.name}`, path: `/${name}/add` },
+            ];
+          }
+
+          return payload;
+        }
+      );
+      setMenuItems(formattedItems);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
 
   return (
     <aside
@@ -424,26 +447,11 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
-            </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
+              {renderMenuItems(menuItems, "main")}
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
+        {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
       </div>
     </aside>
   );

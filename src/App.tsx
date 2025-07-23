@@ -13,6 +13,8 @@ import { useSelector } from "react-redux";
 import { selectIsAuthenticated } from "./store/slices/authslice";
 import AddCategory from "./pages/category/AddCategory";
 import CategoryList from "./pages/category/CategoryList";
+import AddModule from "./pages/module/AddModule";
+import ModuleList from "./pages/module/ModuleList";
 
 // Lazy load pages
 
@@ -107,8 +109,14 @@ export default function App() {
               <Route index path="/" element={<Home />} />
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/calendar" element={<Calendar />} />
-              <Route path="/categories/add" element={<AddCategory />} />
-              <Route path="/categories/list" element={<CategoryList />} />
+
+              {/* Category Management Routes */}
+              <Route path="/category/add" element={<AddCategory />} />
+              <Route path="/category/list" element={<CategoryList />} />
+
+              {/* Module Management Routes */}
+              <Route path="/module/add" element={<AddModule />} />
+              <Route path="/module/list" element={<ModuleList />} />
             </Route>
           </Route>
 

@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start:tenant1": "cross-env PORT=3001 vite --host=tenant1.localhost",
+    "start:tenant2": "cross-env PORT=3002 vite --host=tenant2.localhost"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.15",
@@ -49,6 +51,7 @@
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "cross-env": "^7.0.3",
     "eslint": "^9.19.0",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.18",

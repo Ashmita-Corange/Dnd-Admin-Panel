@@ -16,12 +16,17 @@ import {
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import {
   deleteCategory,
-  fetchCategories,
   setSearchQuery,
 } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
+import {
+  deleteModule,
+  fetchModules,
+  updateModule,
+} from "../../store/slices/moduleSlice";
+import EditModal from "./EditModal";
 
 interface Category {
   _id: string;
@@ -63,7 +68,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Category
+                Delete Module
               </h3>
             </div>
             <button
@@ -77,21 +82,13 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the category{" "}
+              Are you sure you want to delete the Module{" "}
               <strong className="text-gray-900 dark:text-white">
                 "{category.name}"
               </strong>
               ?
             </p>
-            {category.subCategoryCount > 0 && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Warning:</strong> This category has{" "}
-                  {category.subCategoryCount} subcategory(ies). Deleting this
-                  category may affect related subcategories.
-                </p>
-              </div>
-            )}
+
             <p className="text-sm text-gray-500 dark:text-gray-400">
               This action cannot be undone.
             </p>
@@ -130,20 +127,18 @@ const DeleteModal: React.FC<{
   );
 };
 
-const CategoryList: React.FC = () => {
+const ModuleList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { categories, loading, error, pagination, searchQuery, filters } =
-    useAppSelector((state) => state.category);
-
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
-    null
+  const { modules, loading, error, searchQuery } = useAppSelector(
+    (state) => state.modules
   );
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const [searchInput, setSearchInput] = useState(searchQuery);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [ModuleToDelete, setModuleToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [ediModule, setEditModule] = useState<Category | null>(null);
+  const [searchInput, setSearchInput] = useState("");
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
 
   const [popup, setPopup] = useState<{
@@ -168,119 +163,75 @@ const CategoryList: React.FC = () => {
 
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
-    const activeFilters = {
-      isDeleted: false,
-      ...(localFilters.status ? { status: localFilters.status } : {}),
-    };
-
     dispatch(
-      fetchCategories({
-        page: pagination.page,
-        limit: pagination.limit,
-        filters: activeFilters,
+      fetchModules({
         search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
-  }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= pagination.totalPages) {
-      dispatch(
-        fetchCategories({
-          page: newPage,
-          limit: pagination.limit,
-          filters: {
-            isDeleted: false,
-            ...(localFilters.status ? { status: localFilters.status } : {}),
-          },
-          search: searchQuery || "", // Changed from searchFields to search
-          sort: { createdAt: "desc" },
-        })
-      );
-    }
-  };
-
-  const handleLimitChange = (newLimit: number) => {
-    dispatch(
-      fetchCategories({
-        page: 1,
-        limit: newLimit,
-        filters: {
-          isDeleted: false,
-          ...(localFilters.status ? { status: localFilters.status } : {}),
-        },
-        search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
-      })
-    );
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    const updated = { ...localFilters, [key]: value };
-    setLocalFilters(updated);
-    dispatch(setFilters(updated));
-  };
+  }, [dispatch, searchQuery, localFilters]);
 
   const handleResetFilters = () => {
     setSearchInput("");
     setLocalFilters({});
-    dispatch(resetFilters());
-  };
-
-  const openEditModal = (category: Category) => {
-    setCategoryToEdit(category);
-    setEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setCategoryToEdit(null);
-    setEditModalOpen(false);
-  };
-
-  const handleEditSuccess = () => {
-    // Refresh the categories list after successful edit
-    const activeFilters = {
-      isDeleted: false,
-      ...(localFilters.status ? { status: localFilters.status } : {}),
-    };
-
-    setPopup({
-      message: "Category updated successfully",
-      type: "success",
-      isVisible: true,
-    });
     dispatch(
-      fetchCategories({
-        page: pagination.page,
-        limit: pagination.limit,
-        filters: activeFilters,
+      fetchModules({
         search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
   };
 
-  const openDeleteModal = (category: Category) => {
-    setCategoryToDelete(category);
+  const openDeleteModal = (Module: Module) => {
+    setModuleToDelete(Module);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
-    setCategoryToDelete(null);
+    setModuleToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
 
+  const handelEditModule = async (data) => {
+    try {
+      // Dispatch the edit action
+      await dispatch(updateModule(data)).unwrap();
+
+      setPopup({
+        message: `Module "${data.name}" edited successfully`,
+        type: "success",
+        isVisible: true,
+      });
+
+      // Close modal and reset state
+      setEditModalOpen(false);
+      setEditModule(null);
+
+      dispatch(
+        fetchModules({
+          search: searchQuery || "", // Changed from searchFields to search
+        })
+      );
+    } catch (error) {
+      console.error("Failed to edit module:", error);
+      setPopup({
+        message: "Failed to edit module. Please try again.",
+        type: "error",
+        isVisible: true,
+      });
+    }
+  };
+
   const handleDeleteConfirm = async () => {
-    if (categoryToDelete) {
+    if (ModuleToDelete) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteCategory(categoryToDelete._id)).unwrap();
+        await dispatch(deleteModule(ModuleToDelete._id)).unwrap();
 
         setPopup({
-          message: `Category "${categoryToDelete.name}" deleted successfully`,
+          message: `Module "${ModuleToDelete.name}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -288,28 +239,18 @@ const CategoryList: React.FC = () => {
         // Close modal and reset state
         closeDeleteModal();
 
-        // Refresh the categories list
-        const activeFilters = {
-          isDeleted: false,
-          ...(localFilters.status ? { status: localFilters.status } : {}),
-        };
-
         dispatch(
-          fetchCategories({
-            page: pagination.page,
-            limit: pagination.limit,
-            filters: activeFilters,
+          fetchModules({
             search: searchQuery || "", // Changed from searchFields to search
-            sort: { createdAt: "desc" },
           })
         );
 
         // Optional: Show success message
-        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Module "${ModuleToDelete.name}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete module:", error);
         setPopup({
-          message: "Failed to delete category. Please try again.",
+          message: "Failed to delete module. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -318,35 +259,19 @@ const CategoryList: React.FC = () => {
     }
   };
 
-  const generatePageNumbers = () => {
-    const pages = [];
-    const totalPages = pagination.totalPages;
-    const current = pagination.page;
-    const maxPages = 5;
-
-    const start = Math.max(1, current - Math.floor(maxPages / 2));
-    const end = Math.min(totalPages, start + maxPages - 1);
-
-    if (start > 1) pages.push(1, "...");
-    for (let i = start; i <= end; i++) pages.push(i);
-    if (end < totalPages) pages.push("...", totalPages);
-
-    return pages;
-  };
-
   return (
     <div>
       <PageMeta
-        title="Category List | TailAdmin"
-        description="List of all course categories in TailAdmin"
+        title=" Module List | TailAdmin"
+        description="List of all course modules in TailAdmin"
       />
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            Categories
+            Modules
           </h1>
           <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination.total}
+            Total: {modules.length}
           </span>
         </div>
 
@@ -365,7 +290,7 @@ const CategoryList: React.FC = () => {
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <select
                 value={localFilters.status || ""}
@@ -376,10 +301,10 @@ const CategoryList: React.FC = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </div>
+            </div> */}
 
             {/* Limit */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <span className="text-sm dark:text-gray-300">Show:</span>
               <select
                 value={pagination.limit}
@@ -390,7 +315,7 @@ const CategoryList: React.FC = () => {
                 <option value={10}>10</option>
                 <option value={20}>20</option>
               </select>
-            </div>
+            </div> */}
 
             <button
               onClick={handleResetFilters}
@@ -424,18 +349,11 @@ const CategoryList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   #
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Image
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Subcategories
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Status
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </th>
@@ -445,45 +363,28 @@ const CategoryList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {categories.map((cat, idx) => (
+              {modules.map((cat, idx) => (
                 <tr
                   key={cat._id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {(pagination.page - 1) * pagination.limit + idx + 1}
+                    {idx + 1}
                   </td>
-                  <td className="px-6 py-4">
-                    <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat.image}`}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
-                      }}
-                      alt={cat?.name || "No image"}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  </td>
+
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     {cat.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {cat.subCategoryCount}
-                  </td>
-                  <td className="px-6 py-4 text-sm">
-                    {cat.status === "active" ? (
-                      <CheckCircle className="text-green-500 h-5 w-5" />
-                    ) : (
-                      <XCircle className="text-red-500 h-5 w-5" />
-                    )}
-                  </td>
+
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {new Date(cat.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button
-                      onClick={() => openEditModal(cat)}
+                      onClick={() => {
+                        setEditModule(cat);
+                        setEditModalOpen(true);
+                      }}
                       className="text-blue-500 hover:text-blue-700 transition-colors"
                     >
                       <Pencil className="h-5 w-5" />
@@ -500,43 +401,6 @@ const CategoryList: React.FC = () => {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        <div className="flex justify-end gap-2 mt-4">
-          <button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
-            className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          {generatePageNumbers().map((page, idx) =>
-            typeof page === "number" ? (
-              <button
-                key={idx}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
-              >
-                {page}
-              </button>
-            ) : (
-              <span key={idx} className="px-2 text-gray-400 dark:text-gray-500">
-                {page}
-              </span>
-            )
-          )}
-          <button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
-            className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
       </div>
 
       <PopupAlert
@@ -550,11 +414,21 @@ const CategoryList: React.FC = () => {
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={categoryToDelete}
+        category={ModuleToDelete}
         isDeleting={isDeleting}
+      />
+
+      <EditModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setEditModule(null);
+        }}
+        onSubmit={handelEditModule}
+        data={ediModule}
       />
     </div>
   );
 };
 
-export default CategoryList;
+export default ModuleList;
