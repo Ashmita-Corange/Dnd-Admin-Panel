@@ -145,14 +145,14 @@ export default function EditSubcategory() {
       ).unwrap();
 
       console.log(
-        "Created Category:",
+        "Updated Subcategory:",
 
         createdCategory
       );
 
       setPopup({
         isVisible: true,
-        message: "Category created successfully!",
+        message: "Subcategory updated successfully!",
         type: "success",
       });
       setCategory({
@@ -171,7 +171,7 @@ export default function EditSubcategory() {
     } catch (err: any) {
       setPopup({
         isVisible: true,
-        message: "Failed to create Category. Please try again.",
+        message: "Failed to update Subcategory. Please try again.",
         type: "error",
       });
     }

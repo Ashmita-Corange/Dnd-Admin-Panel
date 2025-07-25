@@ -112,7 +112,7 @@ export const fetchSubcategoryById = createAsyncThunk<Subcategory, string>(
     try {
       const response = await axiosInstance.get(`/subcategory/${id}`);
       console.log("Fetched subcategory by ID:", response.data);
-      return response.data.data.body.data;
+      return response.data.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
