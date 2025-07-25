@@ -10,6 +10,7 @@ import type {
   ProfileUpdateData,
   PasswordResetData,
 } from "../../types/auth";
+import { getTenantFromURL } from "../../utils/getTenantFromURL";
 
 // API base URL
 
@@ -44,6 +45,7 @@ export const login = createAsyncThunk<
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+           "x-tenant": getTenantFromURL(),
         },
       }
     );
@@ -107,6 +109,8 @@ export const signup = createAsyncThunk<
       {
         headers: {
           "Content-Type": "application/json",
+                     "x-tenant": getTenantFromURL(),
+
         },
       }
     );
@@ -152,6 +156,8 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
+                       "x-tenant": getTenantFromURL(),
+
           },
           credentials: "include",
         });

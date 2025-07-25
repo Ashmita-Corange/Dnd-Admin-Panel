@@ -1,13 +1,18 @@
-// store/slices/moduleSlice.ts
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
+
+// Utility to get tenant from the current URL
+const getTenantFromURL = (): string => {
+  const host = window?.location?.hostname || "";
+  return host.split(".")[0]; // assumes subdomain is tenant name
+};
 
 interface Module {
   _id: string;
   name: string;
   createdAt: string;
   updatedAt?: string;
-  allowedPermissions?: string[]; // optional, but present in API
+  allowedPermissions?: string[];
 }
 
 interface ModuleState {
@@ -24,70 +29,79 @@ const initialState: ModuleState = {
   error: null,
 };
 
-// API base URL
-
+// Create Module
 export const createModule = createAsyncThunk<Module, { name: string }>(
   "modules/create",
   async (data, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(`/module`, data);
-      console.log("Module created successfully:", response.data);
-      return response.data.body.data; // Adjust based on your API response structure
+      const response = await axiosInstance.post(`/module`, data, {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      });
+      return response.data.body.data;
     } catch (err: any) {
-      console.error("Error creating module:", err);
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
-// Async thunk to fetch modules
-export const fetchModules = createAsyncThunk<Module[], any>(
+// Fetch Modules
+export const fetchModules = createAsyncThunk<Module[]>(
   "modules/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      console.log("Fetching modules with search query:");
-      const response = await axiosInstance.get(`/module`);
-      console.log("Full response from API:", response.data);
+      const response = await axiosInstance.get(`/module`, {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      });
 
-      // Correct extraction of modules array
       const modules = response.data?.modules;
 
-      console.log("Modules fetched successfully:", modules);
       if (!Array.isArray(modules)) {
         throw new Error("Invalid module response structure");
       }
 
       return modules;
     } catch (err: any) {
-      console.error("Error fetching modules:", err);
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
 );
 
+// Update Module
 export const updateModule = createAsyncThunk<
   Module,
   { id: string; data: Partial<Module> }
->("modules/update", async ({ id, name }, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.put(`/module?id=${id}`, { name });
-    console.log("Module updated successfully:", response.data);
-    return response.data.body.data; // Adjust based on your API response structure
-  } catch (err: any) {
-    console.error("Error updating module:", err);
-    return rejectWithValue(err.response?.data?.message || err.message);
+>(
+  "modules/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/module?id=${id}`, data, {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      });
+      return response.data.body.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
   }
-});
+);
 
+// Delete Module
 export const deleteModule = createAsyncThunk<string, string>(
   "modules/delete",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.delete(`/module?id=${id}`);
-      console.log("Module deleted successfully:", response.data);
-      return id; // Return the ID of the deleted module
+      await axiosInstance.delete(`/module?id=${id}`, {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      });
+      return id;
     } catch (err: any) {
-      console.error("Error deleting module:", err);
       return rejectWithValue(err.response?.data?.message || err.message);
     }
   }
@@ -120,6 +134,31 @@ const moduleSlice = createSlice({
         state.modules = action.payload;
       })
       .addCase(fetchModules.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateModule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateModule.fulfilled, (state, action) => {
+        state.loading = false;
+        const index = state.modules.findIndex(m => m._id === action.payload._id);
+        if (index !== -1) state.modules[index] = action.payload;
+      })
+      .addCase(updateModule.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(deleteModule.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteModule.fulfilled, (state, action) => {
+        state.loading = false;
+        state.modules = state.modules.filter(m => m._id !== action.payload);
+      })
+      .addCase(deleteModule.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

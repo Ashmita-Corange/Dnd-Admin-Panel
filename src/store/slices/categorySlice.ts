@@ -86,12 +86,13 @@ export const fetchCategories = createAsyncThunk<
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
     const response = await axiosInstance.get(
-      `/categories?${queryParams.toString()}`
+      `/category?${queryParams.toString()}`
     );
-    const data = response.data;
+    console.log("Response from fetchCategories:", response.data);
+    const data = response.data?.data?.body?.data;
 
     return {
-      categories: data?.data || [],
+      categories: data?.result|| [],
       pagination: {
         total: data?.total || 0,
         page: data?.page || 1,
