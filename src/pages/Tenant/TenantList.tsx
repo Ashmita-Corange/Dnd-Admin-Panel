@@ -14,9 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import {
-  setSearchQuery,
-} from "../../store/slices/categorySlice";
+import { setSearchQuery } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { deleteTenant, fetchTenants } from "../../store/slices/tenant";
@@ -129,8 +127,9 @@ const DeleteModal: React.FC<{
 
 const TenantList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { tenants, loading, error, pagination, searchQuery } =
-    useAppSelector((state) => state.tenant);
+  const { tenants, loading, error, pagination, searchQuery } = useAppSelector(
+    (state) => state.tenant
+  );
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
@@ -234,40 +233,6 @@ const TenantList: React.FC = () => {
     setSearchInput("");
     setLocalFilters({});
     dispatch(resetFilters());
-  };
-
-  const openEditModal = (category: Category) => {
-    setCategoryToEdit(category);
-    setEditModalOpen(true);
-  };
-
-  const closeEditModal = () => {
-    setCategoryToEdit(null);
-    setEditModalOpen(false);
-  };
-
-  const handleEditSuccess = () => {
-    // Refresh the categories list after successful edit
-    const activeFilters = {
-      isDeleted: false,
-      ...(localFilters.status ? { status: localFilters.status } : {}),
-    };
-
-    setPopup({
-      message: "Category updated successfully",
-      type: "success",
-      isVisible: true,
-    });
-    dispatch(
-      fetchTenants({
-        page: pagination.page,
-        limit: pagination.limit,
-        filters: activeFilters,
-        search: searchInput
-          ? { companyName: searchInput, subdomain: searchInput }
-          : undefined, // Changed from searchFields to search        sort: { createdAt: "desc" },
-      })
-    );
   };
 
   const openDeleteModal = (category: Category) => {

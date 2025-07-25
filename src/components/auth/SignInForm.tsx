@@ -6,38 +6,36 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import { 
-  login, 
-  clearError, 
-  selectLoginStatus, 
-  selectAuthError, 
-  selectIsAuthenticated 
+import {
+  login,
+  clearError,
+  selectLoginStatus,
+  selectAuthError,
+  selectIsAuthenticated,
 } from "../../store/slices/authslice";
 import type { AppDispatch } from "../../store";
-import { 
-  showSuccessToast, 
-  showErrorToast, 
-  showInfoToast, 
-  showLoadingToast, 
-  dismissToast 
+import {
+  showSuccessToast,
+  showErrorToast,
+  showInfoToast,
+  showLoadingToast,
+  dismissToast,
 } from "../../components/toast/toastUtils";
-
-
 
 export default function SignInForm() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  
+
   // Form state
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({
-    email: "john12@example.com", // Changed from username to email
-    password: "Password123"
+    email: "tenant1@gmail.com", // Changed from username to email
+    password: "Tenant@112",
   });
   const [formErrors, setFormErrors] = useState({
     email: "", // Changed from username to email
-    password: ""
+    password: "",
   });
 
   // Redux state
@@ -59,16 +57,16 @@ export default function SignInForm() {
 
   // Handle input changes
   const handleInputChange = (field: "email" | "password", value: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // Clear field error when user starts typing
     if (formErrors[field]) {
-      setFormErrors(prev => ({
+      setFormErrors((prev) => ({
         ...prev,
-        [field]: ""
+        [field]: "",
       }));
     }
   };
@@ -77,7 +75,7 @@ export default function SignInForm() {
   const validateForm = () => {
     const errors = {
       email: "",
-      password: ""
+      password: "",
     };
 
     if (!formData.email.trim()) {
@@ -97,43 +95,41 @@ export default function SignInForm() {
   };
 
   // Handle form submission
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  const loadingToastId = showLoadingToast("Signing you in...");
+    const loadingToastId = showLoadingToast("Signing you in...");
 
-  try {
-    const result = await dispatch(login({
-      email: formData.email.trim(),
-      password: formData.password.trim(),
-    }));
+    try {
+      const result = await dispatch(
+        login({
+          email: formData.email.trim(),
+          password: formData.password.trim(),
+        })
+      );
 
-    dismissToast(loadingToastId);
+      dismissToast(loadingToastId);
 
-    if (login.fulfilled.match(result)) {
-      const payload = result.payload as AuthResponse;
+      if (login.fulfilled.match(result)) {
+        const payload = result.payload as AuthResponse;
 
-      if (payload?.user) {
-        showSuccessToast("Login successful!");
+        if (payload?.user) {
+          showSuccessToast("Login successful!");
+        } else {
+          showErrorToast("Login succeeded, but user data missing.");
+        }
       } else {
-        showErrorToast("Login succeeded, but user data missing.");
+        const errorMsg =
+          result.payload || result.error?.message || "Login failed!";
+        showErrorToast(errorMsg);
       }
-    } else {
-      const errorMsg = result.payload || result.error?.message || "Login failed!";
-      showErrorToast(errorMsg);
+    } catch (error) {
+      dismissToast(loadingToastId);
+      showErrorToast("Unexpected login error!");
     }
-  } catch (error) {
-    dismissToast(loadingToastId);
-    showErrorToast("Unexpected login error!");
-  }
-};
-
-
-
-
-
+  };
 
   const isLoading = loginStatus === "loading";
 
@@ -173,8 +169,8 @@ const handleSubmit = async (e: React.FormEvent) => {
                   <Label>
                     Email <span className="text-error-500">*</span>
                   </Label>
-                  <Input 
-                    placeholder="Enter your email" 
+                  <Input
+                    placeholder="Enter your email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
@@ -182,10 +178,12 @@ const handleSubmit = async (e: React.FormEvent) => {
                     className={formErrors.email ? "border-red-500" : ""}
                   />
                   {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.email}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.email}
+                    </p>
                   )}
                 </div>
-                
+
                 <div>
                   <Label>
                     Password <span className="text-error-500">*</span>
@@ -195,7 +193,9 @@ const handleSubmit = async (e: React.FormEvent) => {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={formData.password}
-                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("password", e.target.value)
+                      }
                       disabled={isLoading}
                       className={formErrors.password ? "border-red-500" : ""}
                     />
@@ -211,14 +211,16 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </span>
                   </div>
                   {formErrors.password && (
-                    <p className="mt-1 text-sm text-red-600">{formErrors.password}</p>
+                    <p className="mt-1 text-sm text-red-600">
+                      {formErrors.password}
+                    </p>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Checkbox 
-                      checked={isChecked} 
+                    <Checkbox
+                      checked={isChecked}
                       onChange={setIsChecked}
                       disabled={isLoading}
                     />
@@ -227,18 +229,10 @@ const handleSubmit = async (e: React.FormEvent) => {
                     </span>
                   </div>
                 </div>
-                
+
                 <div>
-                  <button
-                    className="w-full"
-                    type="submit"
-                    disabled={isLoading}
-                  >
-                    <Button 
-                      className="w-full" 
-                      size="sm"
-                      disabled={isLoading}
-                    >
+                  <button className="w-full" type="submit" disabled={isLoading}>
+                    <Button className="w-full" size="sm" disabled={isLoading}>
                       {isLoading ? (
                         <div className="flex items-center justify-center gap-2">
                           <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

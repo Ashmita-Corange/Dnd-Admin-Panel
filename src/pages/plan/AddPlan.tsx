@@ -167,6 +167,7 @@ export default function AddSubscriptionPlan() {
       console.log("Created Plan:", createdPlan);
 
       setPopup({
+        
         isVisible: true,
         message: "Subscription plan created successfully!",
         type: "success",

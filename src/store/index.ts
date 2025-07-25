@@ -7,6 +7,7 @@ import category from "./slices/categorySlice";
 import tenantSlice from "./slices/tenant";
 import roleSlice from "./slices/roles";
 import user from "./slices/user";
+import subcategory from "./slices/subCategory";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     users: user,
     modules: modules,
     category: category,
+    subcategory: subcategory,
     dashboard: dashboardReducer,
     tenant: tenantSlice,
     role: roleSlice,

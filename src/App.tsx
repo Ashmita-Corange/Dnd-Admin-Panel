@@ -22,6 +22,10 @@ import AddRole from "./pages/Role/AddRole";
 import RoleList from "./pages/Role/RoleList";
 import EditRole from "./pages/Role/EditRole";
 import AddSubscriptionPlan from "./pages/plan/AddPlan";
+import EditCategory from "./pages/category/EditCategory";
+import AddSubcategory from "./pages/Subcategory/AddSubcategory";
+import EditSubcategory from "./pages/Subcategory/EditSubcategory";
+import SubcategoryList from "./pages/Subcategory/SubcategoryList";
 
 // Lazy load pages
 
@@ -120,7 +124,14 @@ export default function App() {
               {/* Category Management Routes */}
               <Route path="/category/add" element={<AddCategory />} />
               <Route path="/category/list" element={<CategoryList />} />
-
+              <Route path="/category/edit/:id" element={<EditCategory />} />
+              {/* Category Management Routes */}
+              <Route path="/subcategory/add" element={<AddSubcategory />} />
+              <Route path="/subcategory/list" element={<SubcategoryList />} />
+              <Route
+                path="/subcategory/edit/:id"
+                element={<EditSubcategory />}
+              />
               {/* Module Management Routes */}
               <Route path="/module/add" element={<AddModule />} />
               <Route path="/module/list" element={<ModuleList />} />

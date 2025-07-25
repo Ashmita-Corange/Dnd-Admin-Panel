@@ -92,7 +92,7 @@ export const fetchCategories = createAsyncThunk<
     const data = response.data?.data?.body?.data;
 
     return {
-      categories: data?.result|| [],
+      categories: data?.result || [],
       pagination: {
         total: data?.total || 0,
         page: data?.page || 1,
@@ -110,7 +110,7 @@ export const fetchCategoryById = createAsyncThunk<Category, string>(
   "categories/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/categories/${id}`);
+      const response = await axiosInstance.get(`/category/${id}`);
       return response.data?.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -124,7 +124,11 @@ export const updateCategory = createAsyncThunk<
   { id: string; data: Partial<Category> }
 >("categories/update", async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.put(`/categories/${id}`, data);
+    const response = await axiosInstance.put(`/category/${id}`, data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data?.data;
   } catch (err: any) {
     return rejectWithValue(err.response?.data?.message || err.message);
@@ -136,7 +140,7 @@ export const deleteCategory = createAsyncThunk<string, string>(
   "categories/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/categories/${id}`);
+      await axiosInstance.delete(`/category/${id}`);
       return id;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);

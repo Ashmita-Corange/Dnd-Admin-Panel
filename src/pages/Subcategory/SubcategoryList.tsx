@@ -14,15 +14,15 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import {
-  deleteCategory,
-  fetchCategories,
-  setSearchQuery,
-} from "../../store/slices/categorySlice";
+
 import PageMeta from "../../components/common/PageMeta";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
+import {
+  deleteSubcategory,
+  fetchSubcategories,
+} from "../../store/slices/subCategory";
+import { setSearchQuery } from "../../store/slices/categorySlice";
 
 interface Category {
   _id: string;
@@ -131,17 +131,17 @@ const DeleteModal: React.FC<{
   );
 };
 
-const CategoryList: React.FC = () => {
+const SubcategoryList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { categories, loading, error, pagination, searchQuery, filters } =
-    useAppSelector((state) => state.category);
+  const { subcategories, loading, error, pagination, searchQuery, filters } =
+    useAppSelector((state) => state.subcategory);
 
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
-    null
-  );
+  const [subcategoryToEdit, setSubcategoryToEdit] =
+    useState<Subcategory | null>(null);
+  const [subcategoryToDelete, setSubcategoryToDelete] =
+    useState<Subcategory | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -175,7 +175,7 @@ const CategoryList: React.FC = () => {
     };
 
     dispatch(
-      fetchCategories({
+      fetchSubcategories({
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
@@ -188,7 +188,7 @@ const CategoryList: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       dispatch(
-        fetchCategories({
+        fetchSubcategories({
           page: newPage,
           limit: pagination.limit,
           filters: {
@@ -204,7 +204,7 @@ const CategoryList: React.FC = () => {
 
   const handleLimitChange = (newLimit: number) => {
     dispatch(
-      fetchCategories({
+      fetchSubcategories({
         page: 1,
         limit: newLimit,
         filters: {
@@ -252,7 +252,7 @@ const CategoryList: React.FC = () => {
       isVisible: true,
     });
     dispatch(
-      fetchCategories({
+      fetchSubcategories({
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
@@ -263,25 +263,25 @@ const CategoryList: React.FC = () => {
   };
 
   const openDeleteModal = (category: Category) => {
-    setCategoryToDelete(category);
+    setSubcategoryToDelete(category);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
-    setCategoryToDelete(null);
+    setSubcategoryToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
 
   const handleDeleteConfirm = async () => {
-    if (categoryToDelete) {
+    if (subcategoryToDelete) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteCategory(categoryToDelete._id)).unwrap();
+        await dispatch(deleteSubcategory(subcategoryToDelete._id)).unwrap();
 
         setPopup({
-          message: `Category "${categoryToDelete.name}" deleted successfully`,
+          message: `Subcategory "${subcategoryToDelete.name}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -296,7 +296,7 @@ const CategoryList: React.FC = () => {
         };
 
         dispatch(
-          fetchCategories({
+          fetchSubcategories({
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
@@ -338,13 +338,13 @@ const CategoryList: React.FC = () => {
   return (
     <div>
       <PageMeta
-        title="Category List | TailAdmin"
-        description="List of all course categories in TailAdmin"
+        title="Subcategory List | TailAdmin"
+        description="List of all course subcategories in TailAdmin"
       />
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            Categories
+            Subcategories
           </h1>
           <span className="text-gray-500 text-sm dark:text-gray-400">
             Total: {pagination.total}
@@ -431,9 +431,7 @@ const CategoryList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Subcategories
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Status
                 </th>
@@ -446,7 +444,7 @@ const CategoryList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {categories.map((cat, idx) => (
+              {subcategories.map((cat, idx) => (
                 <tr
                   key={cat._id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -469,11 +467,9 @@ const CategoryList: React.FC = () => {
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
                     {cat.name}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {cat.subCategoryCount}
-                  </td>
+
                   <td className="px-6 py-4 text-sm">
-                    {cat.status === "active" ? (
+                    {cat.status === "Active" ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
@@ -483,7 +479,7 @@ const CategoryList: React.FC = () => {
                     {new Date(cat.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/category/edit/${cat._id}`}>
+                    <Link to={`/subcategory/edit/${cat._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Pencil className="h-5 w-5" />
                       </button>
@@ -550,11 +546,11 @@ const CategoryList: React.FC = () => {
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={categoryToDelete}
+        category={subcategoryToDelete}
         isDeleting={isDeleting}
       />
     </div>
   );
 };
 
-export default CategoryList;
+export default SubcategoryList;
