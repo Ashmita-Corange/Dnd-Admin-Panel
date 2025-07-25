@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
+import { getTenantFromURL } from "../../utils/getTenantFromURL";
 
 // Interfaces
 interface ModulePermission {
@@ -92,9 +93,14 @@ export const fetchRoles = createAsyncThunk<
     // queryParams.append("sortBy", sortField);
     // queryParams.append("sortOrder", sortOrder);
 
-    const response = await axiosInstance.get(`/role?${queryParams.toString()}`);
-    console.log("Full response from API:", response.data);
-    const data = response.data.body.data;
+    const response = await axiosInstance.get(`/role?${queryParams.toString()}`,
+  {
+    headers: {
+      "x-tenant": getTenantFromURL(),
+    },
+  });
+    console.log("Full response from API:", response.data?.body);
+    const data = response.data?.body?.message || response.data;
 
     return {
       roles: data?.result || [],
@@ -116,7 +122,7 @@ export const fetchRoleById = createAsyncThunk<Role, string>(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/role?id=${id}`);
-      return response.data?.body.data;
+      return response.data?.body.message;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }

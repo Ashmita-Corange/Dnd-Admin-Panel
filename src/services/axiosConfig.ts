@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import { getTenantFromURL } from '../utils/getTenantFromURL';
 
 // API base URL
 const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000/';
@@ -9,6 +10,8 @@ const axiosInstance: AxiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+               "x-tenant": getTenantFromURL(),
+
     
     
   }

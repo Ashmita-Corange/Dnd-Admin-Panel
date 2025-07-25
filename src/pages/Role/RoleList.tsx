@@ -124,6 +124,7 @@ const RoleList: React.FC = () => {
   const { roles, loading, error, pagination, searchQuery } = useAppSelector(
     (state) => state.role
   );
+  console?.log("roles",roles)
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
