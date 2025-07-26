@@ -8,6 +8,7 @@ import tenantSlice from "./slices/tenant";
 import roleSlice from "./slices/roles";
 import user from "./slices/user";
 import subcategory from "./slices/subCategory";
+import productSlice from "./slices/product";
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     tenant: tenantSlice,
     role: roleSlice,
+    product: productSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
