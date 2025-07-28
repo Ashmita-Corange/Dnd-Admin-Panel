@@ -52,6 +52,23 @@ const navItems: NavItem[] = [
       { name: "Module List", path: "/modules/all" },
     ],
   },
+  {
+    icon: <ListIcon />,
+    name: "Attributes",
+    subItems: [
+      { name: "Attribute List", path: "/attribute/list" },
+      { name: "Add Attribute", path: "/attribute/add" },
+      
+    ],
+  },
+  {
+    icon: <ListIcon />,
+    name: "Variants",
+    subItems: [
+      { name: "Variant List", path: "/variant/list" },
+      { name: "Add Variant", path: "/variant/add" },
+    ],
+  },
 ];
 
 const AppSidebar: React.FC = () => {
