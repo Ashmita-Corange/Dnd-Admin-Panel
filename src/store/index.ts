@@ -7,9 +7,11 @@ import category from "./slices/categorySlice";
 import tenantSlice from "./slices/tenant";
 import roleSlice from "./slices/roles";
 import user from "./slices/user";
-import subcategory from "./slices/subCategory";
+  import subcategory from "./slices/subCategory";
 import attributeSlice from "./slices/attribute";
 import variantSlice from "./slices/variant";
+import plan from "./slices/plan";
+
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +26,7 @@ export const store = configureStore({
     attribute: attributeSlice,
     variant: variantSlice,
     
+    plan: plan,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

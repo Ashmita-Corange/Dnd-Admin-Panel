@@ -22,6 +22,8 @@ import AddRole from "./pages/Role/AddRole";
 import RoleList from "./pages/Role/RoleList";
 import EditRole from "./pages/Role/EditRole";
 import AddSubscriptionPlan from "./pages/plan/AddPlan";
+import PlanList from "./pages/plan/PlanList";
+import EditPlan from "./pages/plan/EditPlan";
 import EditCategory from "./pages/category/EditCategory";
 import AddSubcategory from "./pages/Subcategory/AddSubcategory";
 import EditSubcategory from "./pages/Subcategory/EditSubcategory";
@@ -171,6 +173,8 @@ export default function App() {
 
               {/* Plan Management Routes */}
               <Route path="/plan/add" element={<AddSubscriptionPlan />} />
+              <Route path="/plan/list" element={<PlanList />} />
+              <Route path="/plan/edit/:id" element={<EditPlan />} />
             </Route>
           </Route>
 
