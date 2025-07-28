@@ -149,6 +149,20 @@ export const deleteSubcategory = createAsyncThunk<string, string>(
   }
 );
 
+export const getSubcategoriesByCategory = createAsyncThunk<
+  Subcategory[],
+  string
+>("subcategories/getByCategory", async (categoryId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get(
+      `/subcategory/category/${categoryId}`
+    );
+    return response.data?.data || [];
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
+  }
+});
+
 // Slice
 const subcategorySlice = createSlice({
   name: "subcategories",

@@ -12,6 +12,7 @@
     "start:tenant2": "cross-env PORT=3002 vite --host=tenant2.localhost"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-react": "^11.0.0",
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/interaction": "^6.1.15",
@@ -23,6 +24,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "apexcharts": "^4.1.0",
     "axios": "^1.9.0",
+    "ckeditor5": "^46.0.0",
     "clsx": "^2.1.1",
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.23.0",

@@ -2,7 +2,11 @@ import { use, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
 import { Plus, Trash2, Upload } from "lucide-react";
-import { createProduct } from "../../store/slices/product";
+import {
+  createProduct,
+  fetchProductById,
+  updateProduct,
+} from "../../store/slices/product";
 import { fetchCategories } from "../../store/slices/categorySlice";
 import {
   fetchSubcategories,
@@ -11,6 +15,7 @@ import {
 import CustomEditor from "../../components/common/TextEditor";
 import { fetchAttributes } from "../../store/slices/attributeSlice";
 import PopupAlert from "../../components/popUpAlert";
+import { useParams } from "react-router";
 
 // Mock interfaces - replace with your actual types
 interface Category {
@@ -44,7 +49,9 @@ interface ProductState {
   status: string;
 }
 
-export default function AddProduct() {
+const Image_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
+
+export default function EditProduct() {
   const [product, setProduct] = useState<ProductState>({
     name: "",
     description: "",
@@ -72,6 +79,8 @@ export default function AddProduct() {
   const { loading, error } = useSelector((state: any) => state.product);
   const { categories } = useSelector((state: any) => state.category);
   const { attributes } = useSelector((state: any) => state.attribute);
+  const params = useParams();
+  const productId = params.id;
 
   const [subcategories, setSubcategories] = useState<Category[]>([]);
   const handleChange = (
@@ -198,17 +207,19 @@ export default function AddProduct() {
 
     // Add images
     product.images.forEach((image, index) => {
-      formData.append(`images[${index}]`, image);
+      typeof image !== "string" && formData.append(`images[${index}]`, image);
     });
 
     // Add thumbnail
     if (product.thumbnail) {
-      formData.append("thumbnail", product.thumbnail);
+      typeof product.thumbnail !== "string" &&
+        formData.append("thumbnail", product.thumbnail);
     }
 
     // Add description images
     product.descriptionImages.forEach((image, index) => {
-      formData.append(`descriptionImages[${index}]`, image);
+      typeof image !== "string" &&
+        formData.append(`descriptionImages[${index}]`, image);
     });
 
     // Add how to use steps
@@ -228,32 +239,32 @@ export default function AddProduct() {
     });
 
     try {
-      const response = await dispatch(createProduct(formData)).unwrap();
+      const response = await dispatch(
+        updateProduct({ id: productId, data: formData })
+      );
       // Reset form
-      if (createProduct.fulfilled) {
-        setProduct({
-          name: "",
-          description: "",
-          category: "",
-          images: [],
-          thumbnail: null,
-          howToUseTitle: "",
-          howToUseVideo: "",
-          howToUseSteps: [{ title: "", description: "" }],
-          descriptionImages: [],
-          descriptionVideo: "",
-          highlights: [""],
-          attributeSet: [],
-          status: "active",
-          subcategory: "",
-        });
+    //   setProduct({
+    //     name: "",
+    //     description: "",
+    //     category: "",
+    //     images: [],
+    //     thumbnail: null,
+    //     howToUseTitle: "",
+    //     howToUseVideo: "",
+    //     howToUseSteps: [{ title: "", description: "" }],
+    //     descriptionImages: [],
+    //     descriptionVideo: "",
+    //     highlights: [""],
+    //     attributeSet: [],
+    //     status: "active",
+    //     subcategory: "",
+    //   });
 
-        setPopup({
-          isVisible: true,
-          message: "Product created successfully!",
-          type: "success",
-        });
-      }
+      setPopup({
+        isVisible: true,
+        message: "Product created successfully!",
+        type: "success",
+      });
     } catch (err: any) {
       setPopup({
         isVisible: true,
@@ -263,7 +274,39 @@ export default function AddProduct() {
     }
   };
 
+  const getProductData = async () => {
+    try {
+      const response = await dispatch(fetchProductById(productId));
+      const data = response.payload;
+      console.log("Fetched product data:", data);
+      setProduct({
+        name: data.name || "",
+        description: data.description || "",
+        category: data.category || "",
+        subcategory: data.subcategory || "",
+        images: data.images || [],
+        thumbnail: data.thumbnail || null,
+        howToUseTitle: data.howToUseTitle || "",
+        howToUseVideo: data.howToUseVideo || "",
+        howToUseSteps: data.howToUseSteps || [{ title: "", description: "" }],
+        descriptionImages: data.descriptionImages || [],
+        descriptionVideo: data.descriptionVideo || "",
+        highlights: data.highlights || [""],
+        attributeSet: data.attributeSet.map((att) => att.attributeId._id) || [],
+        status: data.status || "active",
+      });
+    } catch (error) {
+      console.error("Error fetching product data:", error);
+      setPopup({
+        isVisible: true,
+        message: "Failed to fetch product data.",
+        type: "error",
+      });
+    }
+  };
+
   useEffect(() => {
+    getProductData();
     if (categories.length === 0) {
       dispatch(fetchCategories());
     }
@@ -292,6 +335,16 @@ export default function AddProduct() {
     }
   }, [dispatch, product.category]);
 
+  // Helper to get image URL from either a string (URL) or a File object
+  const getImageUrl = (imagePath: string | File) => {
+    if (typeof imagePath === "string") {
+      return `${Image_URL}/${imagePath}`;
+    } else if (imagePath instanceof File) {
+      return URL.createObjectURL(imagePath);
+    }
+    return "";
+  };
+
   return (
     <div>
       <Toaster position="top-right" />
@@ -299,10 +352,10 @@ export default function AddProduct() {
         <div className="mx-auto w-full">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Add Product
+              Edit Product
             </h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Create a new product with all details
+              Update the product with all details
             </p>
           </div>
 
@@ -421,7 +474,7 @@ export default function AddProduct() {
                       {product.images.map((image, index) => (
                         <div key={index} className="relative">
                           <img
-                            src={URL.createObjectURL(image)}
+                            src={getImageUrl(image)}
                             alt={`Product ${index + 1}`}
                             className="w-full h-20 object-cover rounded border"
                           />
@@ -451,7 +504,7 @@ export default function AddProduct() {
                   {product.thumbnail && (
                     <div className="mt-2">
                       <img
-                        src={URL.createObjectURL(product.thumbnail)}
+                        src={getImageUrl(product.thumbnail)}
                         alt="Thumbnail Preview"
                         className="max-w-xs h-auto rounded border"
                       />
@@ -592,7 +645,7 @@ export default function AddProduct() {
                       {product.descriptionImages.map((image, index) => (
                         <div key={index} className="relative">
                           <img
-                            src={URL.createObjectURL(image)}
+                            src={getImageUrl(image)}
                             alt={`Description ${index + 1}`}
                             className="w-full h-20 object-cover rounded border"
                           />
@@ -702,7 +755,7 @@ export default function AddProduct() {
                 className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? "Adding Product..." : "Add Product"}
+                {loading ? "Updating Product..." : "Update Product"}
               </button>
             </div>
           </div>
