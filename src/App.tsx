@@ -22,11 +22,19 @@ import AddRole from "./pages/Role/AddRole";
 import RoleList from "./pages/Role/RoleList";
 import EditRole from "./pages/Role/EditRole";
 import AddSubscriptionPlan from "./pages/plan/AddPlan";
+import PlanList from "./pages/plan/PlanList";
+import EditPlan from "./pages/plan/EditPlan";
 import EditCategory from "./pages/category/EditCategory";
 import AddSubcategory from "./pages/Subcategory/AddSubcategory";
 import EditSubcategory from "./pages/Subcategory/EditSubcategory";
 import SubcategoryList from "./pages/Subcategory/SubcategoryList";
 import AddProduct from "./pages/products/AddProduct";
+import AttributeList from "./pages/Attribute/AttributeList";
+import AddAttribute from "./pages/Attribute/AddAttribute";
+import EditAttribute from "./pages/Attribute/EditAttribute";
+import VariantList from "./pages/Variant/VariantList";
+import AddVariant from "./pages/Variant/AddVariant";
+import EditVariantList from "./pages/Variant/EditVariantList";
 import ProductList from "./pages/products/ProductLIst";
 import EditProduct from "./pages/products/EditProduct";
 
@@ -154,8 +162,20 @@ export default function App() {
               <Route path="/role/list" element={<RoleList />} />
               <Route path="/role/edit/:id" element={<EditRole />} />
 
+              {/* Attribute Management Routes */}
+              <Route path="/attribute/list" element={<AttributeList />} />
+              <Route path="/attribute/add" element={<AddAttribute />} />
+              <Route path="/attribute/edit/:id" element={<EditAttribute />} />
+
+              {/* Variant Management Routes */}
+              <Route path="/variant/list" element={<VariantList />} />
+              <Route path="/variant/add" element={<AddVariant />} />
+              <Route path="/variant/edit/:id" element={<EditVariantList />} />
+
               {/* Plan Management Routes */}
               <Route path="/plan/add" element={<AddSubscriptionPlan />} />
+              <Route path="/plan/list" element={<PlanList />} />
+              <Route path="/plan/edit/:id" element={<EditPlan />} />
             </Route>
           </Route>
 
