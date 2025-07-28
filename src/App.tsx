@@ -26,12 +26,6 @@ import EditCategory from "./pages/category/EditCategory";
 import AddSubcategory from "./pages/Subcategory/AddSubcategory";
 import EditSubcategory from "./pages/Subcategory/EditSubcategory";
 import SubcategoryList from "./pages/Subcategory/SubcategoryList";
-import AttributeList from "./pages/Attribute/AttributeList";
-import AddAttribute from "./pages/Attribute/AddAttribute";
-import EditAttribute from "./pages/Attribute/EditAttribute";
-import VariantList from "./pages/Variant/VariantList";
-import AddVariant from "./pages/Variant/AddVariant";
-import EditVariantList from "./pages/Variant/EditVariantList";
 
 // Lazy load pages
 
@@ -146,6 +140,11 @@ export default function App() {
               <Route path="/tenant/add" element={<AddTenant />} />
               <Route path="/tenant/list" element={<TenantList />} />
               <Route path="/tenant/edit/:id" element={<EditTenant />} />
+
+              {/* Products Management Routes */}
+              <Route path="/product/add" element={<AddProduct />} />
+              {/* <Route path="/product/list" element={<ProductList />} />
+              <Route path="/product/edit/:id" element={<EditProduct />} /> */}
 
               {/* Role Management Routes */}
               <Route path="/role/add" element={<AddRole />} />
