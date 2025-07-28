@@ -295,8 +295,8 @@ export const updateVariant = createAsyncThunk<
         formData,
         {
           headers: {
-            "x-tenant": getTenantFromURL(),
             "Content-Type": "multipart/form-data",
+            "x-tenant": getTenantFromURL(),
           },
         }
       );

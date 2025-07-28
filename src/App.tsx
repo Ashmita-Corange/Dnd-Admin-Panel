@@ -26,6 +26,13 @@ import EditCategory from "./pages/category/EditCategory";
 import AddSubcategory from "./pages/Subcategory/AddSubcategory";
 import EditSubcategory from "./pages/Subcategory/EditSubcategory";
 import SubcategoryList from "./pages/Subcategory/SubcategoryList";
+import AddProduct from "./pages/products/AddProduct";
+import AttributeList from "./pages/Attribute/AttributeList";
+import AddAttribute from "./pages/Attribute/AddAttribute";
+import EditAttribute from "./pages/Attribute/EditAttribute";
+import VariantList from "./pages/Variant/VariantList";
+import AddVariant from "./pages/Variant/AddVariant";
+import EditVariantList from "./pages/Variant/EditVariantList";
 
 // Lazy load pages
 
