@@ -439,46 +439,55 @@ const RoleList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {roles.map((cat, idx) => (
-                <tr
-                  key={cat._id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {(pagination.page - 1) * pagination.limit + idx + 1}
-                  </td>
+  {roles && roles.length > 0 ? (
+    roles.map((cat, idx) => (
+      <tr
+        key={cat?._id || idx}
+        className="hover:bg-gray-50 dark:hover:bg-gray-800"
+      >
+        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+          {(pagination?.page ?? 1 - 1) * (pagination?.limit ?? 1) + idx + 1}
+        </td>
+        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+          {cat?.name ?? "-"}
+        </td>
+        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+          {cat?.scope ?? "-"}
+        </td>
+        <td className="px-6 py-4 capitalize text-sm text-gray-700 dark:text-gray-300">
+          {cat?.tenantId && typeof cat.tenantId === "object"
+            ? cat.tenantId.companyName ?? "-"
+            : cat?.tenantId ?? "-"}
+        </td>
+        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+          {cat?.createdAt
+            ? new Date(cat.createdAt).toLocaleDateString()
+            : "-"}
+        </td>
+        <td className="px-6 py-4 text-right space-x-2">
+          <Link to={`/role/edit/${cat?._id}`}>
+            <button className="text-blue-500 hover:text-blue-700 transition-colors">
+              <Pencil className="h-5 w-5" />
+            </button>
+          </Link>
+          <button
+            onClick={() => openDeleteModal(cat)}
+            className="text-red-500 hover:text-red-700 transition-colors"
+          >
+            <Trash2 className="h-5 w-5" />
+          </button>
+        </td>
+      </tr>
+    ))
+  ) : (
+    <tr>
+      <td colSpan={6} className="text-center py-6 text-gray-500">
+        No roles found.
+      </td>
+    </tr>
+  )}
+</tbody>
 
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {cat.name}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {cat.scope}
-                  </td>
-                  <td className="px-6 py-4 capitalize text-sm text-gray-700 dark:text-gray-300">
-                    {cat.tenantId?.companyName
-                      ? cat.tenantId?.companyName
-                      : cat.tenantId}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(cat.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/role/edit/${cat._id}`}>
-                      <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                        <Pencil className="h-5 w-5" />
-                      </button>
-                    </Link>
-                    <button
-                      onClick={() => openDeleteModal(cat)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
           </table>
         </div>
 

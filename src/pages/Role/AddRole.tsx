@@ -136,13 +136,6 @@ export default function AddRole() {
       return;
     }
 
-    if (role.modulePermissions.length === 0) {
-      toast.error("At least one module permission is required.", {
-        duration: 8000,
-        position: "top-right",
-      });
-      return;
-    }
 
     try {
       // Prepare role data
