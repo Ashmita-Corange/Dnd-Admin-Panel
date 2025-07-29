@@ -67,8 +67,8 @@ export const fetchProducts = createAsyncThunk<
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("search", search);
-    if (sortField) queryParams.append("sortBy", sortField);
+    if (search) queryParams.append("search", JSON.stringify(search));
+    if (sortField) queryParams.append("sortBy", JSON.stringify(sortField));
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
     const response = await axiosInstance.get(
@@ -207,9 +207,7 @@ const productSlice = createSlice({
       })
 
       .addCase(updateProduct.fulfilled, (state, action) => {
-        state.products = state.products.map((p) =>
-          p._id === action.payload._id ? action.payload : p
-        );
+        state.loading = false;
       })
 
       .addCase(updateProduct.rejected, (state, action) => {

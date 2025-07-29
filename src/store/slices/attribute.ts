@@ -1,4 +1,3 @@
-
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 import { getTenantFromURL } from "../../utils/getTenantFromURL";
@@ -55,38 +54,41 @@ export const fetchAttributes = createAsyncThunk<
     search?: string;
     sort?: Record<string, any>;
   }
->(
-  "attributes/fetchAll",
-  async (params = {}, { rejectWithValue }) => {
-    try {
-      const { page = 1, limit = 10, filters = {}, search = "", sort = {} } = params;
-      // Build query params
-      const query: any = {
-        page,
-        limit,
-        ...filters,
-        search,
-        ...sort,
-      };
-      const response = await axiosInstance.get("/attribute", {
-        headers: { "x-tenant": getTenantFromURL() },
-        params: query,
-      });
-      const data = response.data?.data || {};
-      return {
-        result: data.result || [],
-        pagination: {
-          page: data.page || page,
-          limit: data.limit || limit,
-          total: data.total || (data.result ? data.result.length : 0),
-          totalPages: data.totalPages || 1,
-        },
-      };
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+>("attributes/fetchAll", async (params = {}, { rejectWithValue }) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      filters = {},
+      search = "",
+      sort = {},
+    } = params;
+    // Build query params
+    const query: any = {
+      page,
+      limit,
+      ...filters,
+      search,
+      ...sort,
+    };
+    const response = await axiosInstance.get("/attribute", {
+      headers: { "x-tenant": getTenantFromURL() },
+      params: query,
+    });
+    const data = response.data?.data || {};
+    return {
+      result: data.result || [],
+      pagination: {
+        page: data.page || page,
+        limit: data.limit || limit,
+        total: data.total || (data.result ? data.result.length : 0),
+        totalPages: data.totalPages || 1,
+      },
+    };
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // Create attribute
 export const createAttribute = createAsyncThunk<Attribute, Partial<Attribute>>(
@@ -96,7 +98,7 @@ export const createAttribute = createAsyncThunk<Attribute, Partial<Attribute>>(
       const response = await axiosInstance.post("/attribute", data, {
         headers: { "x-tenant": getTenantFromURL() },
       });
-      return response.data?.data;
+      return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -104,22 +106,22 @@ export const createAttribute = createAsyncThunk<Attribute, Partial<Attribute>>(
 );
 
 // Update attribute
-export const updateAttribute = createAsyncThunk<Attribute, { id: string; data: Partial<Attribute> }>(
-  "attributes/update",
-  async ({ id, data }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.put(`/attribute/${id}`, data, {
-        headers: {
-          "x-tenant": getTenantFromURL(),
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data?.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+export const updateAttribute = createAsyncThunk<
+  Attribute,
+  { id: string; data: Partial<Attribute> }
+>("attributes/update", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(`/attribute/${id}`, data, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+        "Content-Type": "application/json",
+      },
+    });
+    return response.data?.data;
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // Delete attribute
 export const deleteAttribute = createAsyncThunk<string, string>(
@@ -165,21 +167,24 @@ const attributeSlice = createSlice({
       .addCase(fetchAttributes.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-      .addCase(createAttribute.fulfilled, (state, action) => {
-        state.attributes.unshift(action.payload);
       });
+
     builder.addCase(updateAttribute.fulfilled, (state, action) => {
-      const idx = state.attributes.findIndex(attr => attr._id === action.payload._id);
+      const idx = state.attributes.findIndex(
+        (attr) => attr._id === action.payload._id
+      );
       if (idx !== -1) {
         state.attributes[idx] = action.payload;
       }
     });
     builder.addCase(deleteAttribute.fulfilled, (state, action) => {
-      state.attributes = state.attributes.filter(attr => attr._id !== action.payload);
+      state.attributes = state.attributes.filter(
+        (attr) => attr._id !== action.payload
+      );
     });
   },
 });
 
-export const { setSearchQuery, setFilters, resetFilters } = attributeSlice.actions;
+export const { setSearchQuery, setFilters, resetFilters } =
+  attributeSlice.actions;
 export default attributeSlice.reducer;

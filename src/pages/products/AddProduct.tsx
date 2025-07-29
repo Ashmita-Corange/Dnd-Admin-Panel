@@ -71,7 +71,7 @@ export default function AddProduct() {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: any) => state.product);
   const { categories } = useSelector((state: any) => state.category);
-  const { attributes } = useSelector((state: any) => state.attribute);
+  const { attributes } = useSelector((state: any) => state.attributes);
 
   const [subcategories, setSubcategories] = useState<Category[]>([]);
   const handleChange = (

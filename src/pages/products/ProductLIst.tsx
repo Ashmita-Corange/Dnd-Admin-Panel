@@ -162,14 +162,20 @@ const ProductList: React.FC = () => {
 
     dispatch(
       fetchProducts({
-        page: pagination.page,
-        limit: pagination.limit,
+        page: pagination?.page,
+        limit: pagination?.limit,
         filters: activeFilters,
         search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
-  }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters]);
+  }, [
+    dispatch,
+    pagination?.page,
+    pagination?.limit,
+    searchInput,
+    localFilters,
+  ]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -274,8 +280,8 @@ const ProductList: React.FC = () => {
 
   const generatePageNumbers = () => {
     const pages = [];
-    const totalPages = pagination.totalPages;
-    const current = pagination.page;
+    const totalPages = pagination?.totalPages;
+    const current = pagination?.page;
     const maxPages = 5;
 
     const start = Math.max(1, current - Math.floor(maxPages / 2));
@@ -300,7 +306,7 @@ const ProductList: React.FC = () => {
             Products
           </h1>
           <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination.total}
+            Total: {pagination?.total}
           </span>
         </div>
 
@@ -336,7 +342,7 @@ const ProductList: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm dark:text-gray-300">Show:</span>
               <select
-                value={pagination.limit}
+                value={pagination?.limit}
                 onChange={(e) => handleLimitChange(Number(e.target.value))}
                 className="border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
@@ -397,55 +403,58 @@ const ProductList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {products.map((cat, idx) => (
-                <tr
-                  key={cat._id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                >
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {(pagination.page - 1) * pagination.limit + idx + 1}
-                  </td>
-                  <td className="px-6 py-4">
-                    <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}${cat.thumbnail}`}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
-                      }}
-                      alt={cat?.name || "No image"}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {cat.name}
-                  </td>
+              {products?.length > 0 &&
+                products.map((cat, idx) => (
+                  <tr
+                    key={cat._id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {(pagination.page - 1) * pagination.limit + idx + 1}
+                    </td>
+                    <td className="px-6 py-4">
+                      <img
+                        src={`${import.meta.env.VITE_IMAGE_URL}${
+                          cat.thumbnail
+                        }`}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src =
+                            "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
+                        }}
+                        alt={cat?.name || "No image"}
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      {cat.name}
+                    </td>
 
-                  <td className="px-6 py-4 text-sm">
-                    {cat.status === "active" ? (
-                      <CheckCircle className="text-green-500 h-5 w-5" />
-                    ) : (
-                      <XCircle className="text-red-500 h-5 w-5" />
-                    )}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(cat.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/product/edit/${cat._id}`}>
-                      <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                        <Pencil className="h-5 w-5" />
+                    <td className="px-6 py-4 text-sm">
+                      {cat.status === "active" ? (
+                        <CheckCircle className="text-green-500 h-5 w-5" />
+                      ) : (
+                        <XCircle className="text-red-500 h-5 w-5" />
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(cat.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <Link to={`/product/edit/${cat._id}`}>
+                        <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                          <Pencil className="h-5 w-5" />
+                        </button>
+                      </Link>
+                      <button
+                        onClick={() => openDeleteModal(cat)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <Trash2 className="h-5 w-5" />
                       </button>
-                    </Link>
-                    <button
-                      onClick={() => openDeleteModal(cat)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
-                    >
-                      <Trash2 className="h-5 w-5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -453,8 +462,8 @@ const ProductList: React.FC = () => {
         {/* Pagination */}
         <div className="flex justify-end gap-2 mt-4">
           <button
-            onClick={() => handlePageChange(pagination.page - 1)}
-            disabled={pagination.page === 1}
+            onClick={() => handlePageChange(pagination?.page - 1)}
+            disabled={pagination?.page === 1}
             className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -479,8 +488,8 @@ const ProductList: React.FC = () => {
             )
           )}
           <button
-            onClick={() => handlePageChange(pagination.page + 1)}
-            disabled={pagination.page === pagination.totalPages}
+            onClick={() => handlePageChange(pagination?.page + 1)}
+            disabled={pagination?.page === pagination?.totalPages}
             className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <ChevronRight className="w-5 h-5" />

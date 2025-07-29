@@ -8,7 +8,7 @@ import PopupAlert from "../../components/popUpAlert";
 
 const AddAttribute = () => {
   const dispatch = useAppDispatch();
-  const { loading } = useAppSelector((state) => state.attribute);
+  const { loading } = useAppSelector((state) => state.attributes);
 
   const [form, setForm] = useState({
     name: "",
@@ -23,7 +23,9 @@ const AddAttribute = () => {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value, type } = e.target;
 
@@ -49,12 +51,15 @@ const AddAttribute = () => {
   };
 
   const removeValueField = (idx: number) => {
-    setForm((prev) => ({ ...prev, values: prev.values.filter((_, i) => i !== idx) }));
+    setForm((prev) => ({
+      ...prev,
+      values: prev.values.filter((_, i) => i !== idx),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!form.name) {
       toast.error("Attribute name is required.", {
         duration: 8000,
@@ -62,7 +67,7 @@ const AddAttribute = () => {
       });
       return;
     }
-    
+
     if (!form.values.filter((v) => v.trim()).length) {
       toast.error("At least one value is required.", {
         duration: 8000,
@@ -70,32 +75,35 @@ const AddAttribute = () => {
       });
       return;
     }
-    
+
     try {
-      await dispatch(createAttribute({
-        name: form.name,
-        description: form.description,
-        values: form.values.filter((v) => v.trim()),
-        status: form.status,
-      })).unwrap();
-      
-      setPopup({ 
-        isVisible: true, 
-        message: "Attribute created successfully!", 
-        type: "success" 
+      await dispatch(
+        createAttribute({
+          name: form.name,
+          description: form.description,
+          values: form.values.filter((v) => v.trim()),
+          status: form.status,
+        })
+      ).unwrap();
+
+      setPopup({
+        isVisible: true,
+        message: "Attribute created successfully!",
+        type: "success",
       });
-      
-      setForm({ 
-        name: "", 
-        description: "", 
+
+      setForm({
+        name: "",
+        description: "",
         values: [""],
         status: "Active",
       });
     } catch (err) {
-      setPopup({ 
-        isVisible: true, 
-        message: "Failed to create attribute. Please try again.", 
-        type: "error" 
+      console.log("Error creating attribute:", err);
+      setPopup({
+        isVisible: true,
+        message: "Failed to create attribute. Please try again.",
+        type: "error",
       });
     }
   };
@@ -111,7 +119,6 @@ const AddAttribute = () => {
         <div className="mx-auto w-full">
           <PageBreadcrumb pageTitle="Add Attribute" />
           <form onSubmit={handleSubmit} className="space-y-6">
-            
             {/* Basic Information Section */}
             <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -174,7 +181,7 @@ const AddAttribute = () => {
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                 Attribute Values
               </h3>
-              
+
               <div>
                 <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Values <span className="text-red-500">*</span>
@@ -202,7 +209,7 @@ const AddAttribute = () => {
                     </div>
                   ))}
                 </div>
-                
+
                 <button
                   type="button"
                   onClick={addValueField}
@@ -211,7 +218,8 @@ const AddAttribute = () => {
                   + Add Value
                 </button>
                 <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  Add multiple values for this attribute (e.g., Red, Blue, Green for Color attribute)
+                  Add multiple values for this attribute (e.g., Red, Blue, Green
+                  for Color attribute)
                 </p>
               </div>
             </div>
@@ -229,7 +237,7 @@ const AddAttribute = () => {
           </form>
         </div>
       </div>
-      
+
       <PopupAlert
         message={popup.message}
         type={popup.type}

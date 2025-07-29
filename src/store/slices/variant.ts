@@ -58,10 +58,7 @@ const initialState: VariantState = {
 };
 
 // Fetch variants
-export const fetchVariants = createAsyncThunk<
-  Variant[],
-  { tenant: string }
->(
+export const fetchVariants = createAsyncThunk<Variant[], { tenant: string }>(
   "variants/fetchAll",
   async ({ tenant }, { rejectWithValue }) => {
     try {
@@ -86,21 +83,18 @@ export const fetchVariants = createAsyncThunk<
 export const deleteAttribute = createAsyncThunk<
   string,
   { attributeId: string; tenant: string }
->(
-  "attributes/delete",
-  async ({ attributeId, tenant }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.delete(`/attribute/${attributeId}`, {
-        headers: { "x-tenant": getTenantFromURL() },
-        data: "" // Send empty body as per curl
-      });
-      // Return deleted attributeId for reducer
-      return attributeId;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+>("attributes/delete", async ({ attributeId, tenant }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.delete(`/variant/${attributeId}`, {
+      headers: { "x-tenant": getTenantFromURL() },
+      data: "", // Send empty body as per curl
+    });
+    // Return deleted attributeId for reducer
+    return attributeId;
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 export const fetchAttributes = createAsyncThunk<
   {
     result: AttributeDropdown[];
@@ -113,68 +107,68 @@ export const fetchAttributes = createAsyncThunk<
     search?: string;
     sort?: Record<string, any>;
   }
->(
-  "attributes/fetchAll",
-  async (params = {}, { rejectWithValue }) => {
-    try {
-      const { page = 1, limit = 10, filters = {}, search = "", sort = {} } = params;
-      const query: any = {
-        page,
-        limit,
-        ...filters,
-        search,
-        ...sort,
-      };
-      const response = await axiosInstance.get("/attribute", {
-        headers: { "x-tenant": getTenantFromURL() },
-        params: query,
-      });
-      console.log("Fetched attributes response:", response.data);
-      const data = response.data?.data || {};
-      // Map API result to dropdown format
-      const result = Array.isArray(data.result)
-        ? data.result.map((attr: any) => ({
-            _id: attr._id,
-            attributeId: attr._id,
-            value: attr.name,
-          }))
-        : [];
-      return {
-        result,
-        pagination: {
-          page: data.currentPage || page,
-          limit: data.result?.length || limit,
-          total: data.totalDocuments || (data.result ? data.result.length : 0),
-          totalPages: data.totalPages || 1,
-        },
-      };
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+>("attributes/fetchAll", async (params = {}, { rejectWithValue }) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      filters = {},
+      search = "",
+      sort = {},
+    } = params;
+    const query: any = {
+      page,
+      limit,
+      ...filters,
+      search,
+      ...sort,
+    };
+    const response = await axiosInstance.get("/attribute", {
+      headers: { "x-tenant": getTenantFromURL() },
+      params: query,
+    });
+    console.log("Fetched attributes response:", response.data);
+    const data = response.data?.data || {};
+    // Map API result to dropdown format
+    const result = Array.isArray(data.result)
+      ? data.result.map((attr: any) => ({
+          _id: attr._id,
+          attributeId: attr._id,
+          value: attr.name,
+        }))
+      : [];
+    return {
+      result,
+      pagination: {
+        page: data.currentPage || page,
+        limit: data.result?.length || limit,
+        total: data.totalDocuments || (data.result ? data.result.length : 0),
+        totalPages: data.totalPages || 1,
+      },
+    };
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 export const fetchProducts = createAsyncThunk<
   Array<{ _id: string; name: string }>,
   { tenant: string }
->(
-  "products/fetchAll",
-  async ({ tenant }, { rejectWithValue }) => {
-    try {
-      const response = await axiosInstance.get("/product", {
-        headers: { "x-tenant": getTenantFromURL() },
-      });
-      console.log("Fetched products response:", response.data);
+>("products/fetchAll", async ({ tenant }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get("/product", {
+      headers: { "x-tenant": getTenantFromURL() },
+    });
+    console.log("Fetched products response:", response.data);
 
-      return Array.isArray(response.data?.products?.data?.result)
-        ? response.data.products.data?.result
-        : [];
-    } catch (err: any) {
-      console.log("Error fetching products:", err);
-      return rejectWithValue(err.response?.data?.message || err.message);
-    }
+    return Array.isArray(response.data?.products?.data?.result)
+      ? response.data.products.data?.result
+      : [];
+  } catch (err: any) {
+    console.log("Error fetching products:", err);
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 export const createVariant = createAsyncThunk<
   any,
@@ -190,39 +184,37 @@ export const createVariant = createAsyncThunk<
     images?: File[];
     attributes: Array<{ attributeId: string; value: string }>;
   }
->(
-  "variants/create",
-  async (payload, { rejectWithValue }) => {
-    try {
-      const formData = new FormData();
-      formData.append("productId", payload.productId);
-      formData.append("title", payload.title);
-      formData.append("sku", payload.sku);
-      formData.append("price", String(payload.price));
-      if (payload.salePrice) formData.append("salePrice", String(payload.salePrice));
-      formData.append("stock", String(payload.stock));
-      if (payload.offerTag) formData.append("offerTag", payload.offerTag);
-      if (payload.images) {
-        payload.images.forEach((img, idx) => {
-          formData.append(`images[${idx}]`, img);
-        });
-      }
-      payload.attributes.forEach((attr, idx) => {
-        formData.append(`attributes[${idx}][attributeId]`, attr.attributeId);
-        formData.append(`attributes[${idx}][value]`, attr.value);
+>("variants/create", async (payload, { rejectWithValue }) => {
+  try {
+    const formData = new FormData();
+    formData.append("productId", payload.productId);
+    formData.append("title", payload.title);
+    formData.append("sku", payload.sku);
+    formData.append("price", String(payload.price));
+    if (payload.salePrice)
+      formData.append("salePrice", String(payload.salePrice));
+    formData.append("stock", String(payload.stock));
+    if (payload.offerTag) formData.append("offerTag", payload.offerTag);
+    if (payload.images) {
+      payload.images.forEach((img, idx) => {
+        formData.append(`images[${idx}]`, img);
       });
-      const response = await axiosInstance.post("/variant", formData, {
-        headers: {
-          "x-tenant": getTenantFromURL(),
-           "Content-Type": "multipart/form-data",
-        },
-      });
-      return response.data?.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
     }
+    payload.attributes.forEach((attr, idx) => {
+      formData.append(`attributes[${idx}][attributeId]`, attr.attributeId);
+      formData.append(`attributes[${idx}][value]`, attr.value);
+    });
+    const response = await axiosInstance.post("/variant", formData, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return response.data?.data;
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
+});
 
 // Updated updateVariant to handle existing images properly
 export const updateVariant = createAsyncThunk<
@@ -241,77 +233,83 @@ export const updateVariant = createAsyncThunk<
     existingImages?: string[];
     attributes: Array<{ attributeId: string; value: string }>;
   }
->(
-  "variants/update",
-  async (payload, { rejectWithValue }) => {
-    try {
-      console.log("🟡 [updateVariant] Payload received:", payload);
+>("variants/update", async (payload, { rejectWithValue }) => {
+  try {
+    console.log("🟡 [updateVariant] Payload received:", payload);
 
-      const formData = new FormData();
+    const formData = new FormData();
 
-      // Basic fields
-      formData.append("productId", payload.productId);
-      formData.append("title", payload.title);
-      formData.append("sku", payload.sku);
-      formData.append("price", String(payload.price));
-      if (payload.salePrice !== undefined)
-        formData.append("salePrice", String(payload.salePrice));
-      formData.append("stock", String(payload.stock));
-      if (payload.offerTag) formData.append("offerTag", payload.offerTag);
+    // Basic fields
+    formData.append("productId", payload.productId);
+    formData.append("title", payload.title);
+    formData.append("sku", payload.sku);
+    formData.append("price", String(payload.price));
+    if (payload.salePrice !== undefined)
+      formData.append("salePrice", String(payload.salePrice));
+    formData.append("stock", String(payload.stock));
+    if (payload.offerTag) formData.append("offerTag", payload.offerTag);
 
-      // Existing images
-      if (payload.existingImages?.length) {
-        payload.existingImages.forEach((img, idx) => {
-          formData.append(`existingImages[${idx}]`, img);
-        });
-        console.log("📸 [updateVariant] Included existingImages:", payload.existingImages);
-      }
-
-      // New images
-      if (payload.images?.length) {
-        payload.images.forEach((img, idx) => {
-          formData.append(`newImages[${idx}]`, img);
-        });
-        console.log("🖼️ [updateVariant] Included newImages:", payload.images.map(f => f.name));
-      }
-
-      // Attributes
-      if (payload.attributes?.length) {
-        payload.attributes.forEach((attr, idx) => {
-          formData.append(`attributes[${idx}][attributeId]`, attr.attributeId);
-          formData.append(`attributes[${idx}][value]`, attr.value);
-        });
-        console.log("🧬 [updateVariant] Attributes included:", payload.attributes);
-      }
-
-      // Log FormData content (for dev/debug only)
-      console.log("📦 [updateVariant] FormData content:");
-      for (let [key, value] of formData.entries()) {
-        console.log(` - ${key}:`, value);
-      }
-
-      const response = await axiosInstance.put(
-        `/variant/${payload.variantId}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            "x-tenant": getTenantFromURL(),
-          },
-        }
+    // Existing images
+    if (payload.existingImages?.length) {
+      payload.existingImages.forEach((img, idx) => {
+        formData.append(`existingImages[${idx}]`, img);
+      });
+      console.log(
+        "📸 [updateVariant] Included existingImages:",
+        payload.existingImages
       );
-
-      console.log("✅ [updateVariant] Update successful:", response.data?.data);
-      return response.data?.data;
-    } catch (err: any) {
-      console.error("❌ [updateVariant] Error:", err.response?.data || err.message);
-      return rejectWithValue(err.response?.data?.message || err.message);
     }
+
+    // New images
+    if (payload.images?.length) {
+      payload.images.forEach((img, idx) => {
+        formData.append(`newImages[${idx}]`, img);
+      });
+      console.log(
+        "🖼️ [updateVariant] Included newImages:",
+        payload.images.map((f) => f.name)
+      );
+    }
+
+    // Attributes
+    if (payload.attributes?.length) {
+      payload.attributes.forEach((attr, idx) => {
+        formData.append(`attributes[${idx}][attributeId]`, attr.attributeId);
+        formData.append(`attributes[${idx}][value]`, attr.value);
+      });
+      console.log(
+        "🧬 [updateVariant] Attributes included:",
+        payload.attributes
+      );
+    }
+
+    // Log FormData content (for dev/debug only)
+    console.log("📦 [updateVariant] FormData content:");
+    for (let [key, value] of formData.entries()) {
+      console.log(` - ${key}:`, value);
+    }
+
+    const response = await axiosInstance.put(
+      `/variant/${payload.variantId}`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "x-tenant": getTenantFromURL(),
+        },
+      }
+    );
+
+    console.log("✅ [updateVariant] Update successful:", response.data?.data);
+    return response.data?.data;
+  } catch (err: any) {
+    console.error(
+      "❌ [updateVariant] Error:",
+      err.response?.data || err.message
+    );
+    return rejectWithValue(err.response?.data?.message || err.message);
   }
-);
-
-
-
+});
 
 const variantSlice = createSlice({
   name: "variants",
@@ -339,7 +337,7 @@ const variantSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Fetch products
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
@@ -353,21 +351,33 @@ const variantSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Fetch attributes
       .addCase(fetchAttributes.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAttributes.fulfilled, (state, action: PayloadAction<{ result: AttributeDropdown[]; pagination: Pagination }>) => {
-        state.loading = false;
-        state.attributes = action.payload.result;
-        state.attributesPagination = action.payload.pagination;
-      })
-      .addCase(fetchAttributes.rejected, (state, action: PayloadAction<any>) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
+      .addCase(
+        fetchAttributes.fulfilled,
+        (
+          state,
+          action: PayloadAction<{
+            result: AttributeDropdown[];
+            pagination: Pagination;
+          }>
+        ) => {
+          state.loading = false;
+          state.attributes = action.payload.result;
+          state.attributesPagination = action.payload.pagination;
+        }
+      )
+      .addCase(
+        fetchAttributes.rejected,
+        (state, action: PayloadAction<any>) => {
+          state.loading = false;
+          state.error = action.payload as string;
+        }
+      )
 
       // Delete attribute
       .addCase(deleteAttribute.pending, (state) => {
@@ -377,13 +387,15 @@ const variantSlice = createSlice({
       .addCase(deleteAttribute.fulfilled, (state, action) => {
         state.loading = false;
         // Remove deleted attribute from state.attributes
-        state.attributes = state.attributes.filter(attr => attr._id !== action.payload);
+        state.attributes = state.attributes.filter(
+          (attr) => attr._id !== action.payload
+        );
       })
       .addCase(deleteAttribute.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Create variant
       .addCase(createVariant.pending, (state) => {
         state.loading = true;
@@ -399,7 +411,7 @@ const variantSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      
+
       // Update variant
       .addCase(updateVariant.pending, (state) => {
         state.loading = true;
@@ -410,7 +422,9 @@ const variantSlice = createSlice({
         // Use action.payload.data for the updated variant
         const updatedVariant = action.payload?.data;
         if (updatedVariant) {
-          const index = state.variants.findIndex(v => v._id === updatedVariant._id);
+          const index = state.variants.findIndex(
+            (v) => v._id === updatedVariant._id
+          );
           if (index !== -1) {
             state.variants[index] = updatedVariant;
           }
@@ -419,9 +433,7 @@ const variantSlice = createSlice({
       .addCase(updateVariant.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      })
-      
-      
+      });
   },
 });
 

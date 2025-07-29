@@ -16,15 +16,22 @@ import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
-import { fetchAttributes,deleteAttribute } from "../../store/slices/attribute";
-
+import { fetchAttributes, deleteAttribute } from "../../store/slices/attribute";
 
 const AttributeList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { attributes, loading, error, pagination = { page: 1, limit: 10, total: 0, totalPages: 1 }, filters = {}, searchQuery = "" } = useAppSelector((state: any) => state.attribute);
+  const {
+    attributes,
+    loading,
+    error,
+    pagination = { page: 1, limit: 10, total: 0, totalPages: 1 },
+    filters = {},
+    searchQuery = "",
+  } = useAppSelector((state: any) => state.attributes);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
-  const [localFilters, setLocalFilters] = useState<Record<string, any>>(filters);
+  const [localFilters, setLocalFilters] =
+    useState<Record<string, any>>(filters);
   const [popup, setPopup] = useState({
     message: "",
     type: "success",
@@ -65,13 +72,15 @@ const AttributeList: React.FC = () => {
         type: "success",
         isVisible: true,
       });
-      dispatch(fetchAttributes({
-        page: pagination.page,
-        limit: pagination.limit,
-        filters: localFilters,
-        search: searchInput || "",
-        sort: { createdAt: "desc" },
-      }));
+      dispatch(
+        fetchAttributes({
+          page: pagination.page,
+          limit: pagination.limit,
+          filters: localFilters,
+          search: searchInput || "",
+          sort: { createdAt: "desc" },
+        })
+      );
     } catch (err: any) {
       setPopup({
         message: err || "Failed to delete attribute.",
@@ -134,11 +143,18 @@ const AttributeList: React.FC = () => {
 
   return (
     <div>
-      <PageMeta title="Attribute List | TailAdmin" description="List of all attributes in TailAdmin" />
+      <PageMeta
+        title="Attribute List | TailAdmin"
+        description="List of all attributes in TailAdmin"
+      />
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">Attributes</h1>
-          <span className="text-gray-500 text-sm dark:text-gray-400">Total: {pagination.total}</span>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
+            Attributes
+          </h1>
+          <span className="text-gray-500 text-sm dark:text-gray-400">
+            Total: {pagination.total}
+          </span>
         </div>
 
         {/* Search & Filter */}
@@ -212,23 +228,48 @@ const AttributeList: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">#</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Values</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Created</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  #
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Values
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Created
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {attributes
-                .map((attr: any, idx: number) => (
-                  <tr key={attr._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{(pagination.page - 1) * pagination.limit + idx + 1}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{attr.name}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{attr.description}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">{Array.isArray(attr.values) ? attr.values.join(", ") : ""}</td>
+              {attributes?.length > 0 &&
+                attributes.map((attr: any, idx: number) => (
+                  <tr
+                    key={attr._id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {(pagination.page - 1) * pagination.limit + idx + 1}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                      {attr.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {attr.description}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {Array.isArray(attr.values) ? attr.values.join(", ") : ""}
+                    </td>
                     <td className="px-6 py-4 text-sm">
                       {attr.status === "active" ? (
                         <CheckCircle className="text-green-500 h-5 w-5" />
@@ -236,7 +277,9 @@ const AttributeList: React.FC = () => {
                         <XCircle className="text-red-500 h-5 w-5" />
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">{new Date(attr.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {new Date(attr.createdAt).toLocaleDateString()}
+                    </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <Link to={`/attribute/edit/${attr._id}`}>
                         <button className="text-blue-500 hover:text-blue-700 transition-colors">

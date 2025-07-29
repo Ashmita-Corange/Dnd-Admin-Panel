@@ -243,32 +243,40 @@ export default function EditProduct() {
         updateProduct({ id: productId, data: formData })
       );
       // Reset form
-    //   setProduct({
-    //     name: "",
-    //     description: "",
-    //     category: "",
-    //     images: [],
-    //     thumbnail: null,
-    //     howToUseTitle: "",
-    //     howToUseVideo: "",
-    //     howToUseSteps: [{ title: "", description: "" }],
-    //     descriptionImages: [],
-    //     descriptionVideo: "",
-    //     highlights: [""],
-    //     attributeSet: [],
-    //     status: "active",
-    //     subcategory: "",
-    //   });
+      //   setProduct({
+      //     name: "",
+      //     description: "",
+      //     category: "",
+      //     images: [],
+      //     thumbnail: null,
+      //     howToUseTitle: "",
+      //     howToUseVideo: "",
+      //     howToUseSteps: [{ title: "", description: "" }],
+      //     descriptionImages: [],
+      //     descriptionVideo: "",
+      //     highlights: [""],
+      //     attributeSet: [],
+      //     status: "active",
+      //     subcategory: "",
+      //   });
+
+      if (updateProduct.fulfilled.match(response)) {
+        return setPopup({
+          isVisible: true,
+          message: "Product updated successfully!",
+          type: "success",
+        });
+      }
 
       setPopup({
         isVisible: true,
-        message: "Product created successfully!",
-        type: "success",
+        message: "Failed to update product. Please try again.",
+        type: "error",
       });
     } catch (err: any) {
       setPopup({
         isVisible: true,
-        message: "Failed to create product. Please try again.",
+        message: "Failed to update product. Please try again.",
         type: "error",
       });
     }

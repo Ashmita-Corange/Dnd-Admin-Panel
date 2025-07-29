@@ -178,9 +178,9 @@ const attributeSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAttributes.fulfilled, (state, action) => {
-        console.log("payload =====> :");
+        console.log("payload =====> :", action);
         state.loading = false;
-        state.attributes = action.payload.attributes;
+        state.attributes = action.payload.attributes || action.payload.result;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchAttributes.rejected, (state, action) => {
