@@ -264,11 +264,11 @@ export default function AddProduct() {
   };
 
   useEffect(() => {
-    if (categories.length === 0) {
-      dispatch(fetchCategories());
+    if (categories?.length === 0) {
+      dispatch(fetchCategories()).unwrap();
     }
-    if (attributes.length === 0) {
-      dispatch(fetchAttributes());
+    if (attributes?.length === 0) {
+      dispatch(fetchAttributes()).unwrap();
     }
   }, []);
 
@@ -292,6 +292,7 @@ export default function AddProduct() {
     }
   }, [dispatch, product.category]);
 
+  console.log("attributes:", attributes);
   return (
     <div>
       <Toaster position="top-right" />
@@ -672,25 +673,26 @@ export default function AddProduct() {
               </h3>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {attributes.map((attribute) => (
-                  <div key={attribute._id} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`attr-${attribute._id}`}
-                      checked={product.attributeSet.includes(attribute._id)}
-                      onChange={(e) =>
-                        handleAttributeChange(attribute._id, e.target.checked)
-                      }
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label
-                      htmlFor={`attr-${attribute._id}`}
-                      className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
-                    >
-                      {attribute.name}
-                    </label>
-                  </div>
-                ))}
+                {attributes &&
+                  attributes.map((attribute) => (
+                    <div key={attribute._id} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`attr-${attribute._id}`}
+                        checked={product.attributeSet.includes(attribute._id)}
+                        onChange={(e) =>
+                          handleAttributeChange(attribute._id, e.target.checked)
+                        }
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+                      />
+                      <label
+                        htmlFor={`attr-${attribute._id}`}
+                        className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
+                      >
+                        {attribute.name}
+                      </label>
+                    </div>
+                  ))}
               </div>
             </div>
 
