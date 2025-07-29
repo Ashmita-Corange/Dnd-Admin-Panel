@@ -166,8 +166,8 @@ export const fetchProducts = createAsyncThunk<
       });
       console.log("Fetched products response:", response.data);
 
-      return Array.isArray(response.data?.products?.data)
-        ? response.data.products.data
+      return Array.isArray(response.data?.products?.data?.result)
+        ? response.data.products.data?.result
         : [];
     } catch (err: any) {
       console.log("Error fetching products:", err);

@@ -119,20 +119,46 @@ export default function AddVariant() {
               <input type="text" name="sku" value={variant.sku} onChange={handleChange} required className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white" placeholder="SKU" />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Price <span className="text-red-500">*</span></label>
-              <input type="number" name="price" value={variant.price} onChange={handleChange} required className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white" min="0" />
+              <input
+              type="number"
+              name="price"
+              value={variant.price === 0 ? "" : variant.price}
+              onChange={handleChange}
+              required
+              className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              min={0}
+              step="any"
+              />
             </div>
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Sale Price</label>
-              <input type="number" name="salePrice" value={variant.salePrice} onChange={handleChange} className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white" min="0" />
+              <input
+              type="number"
+              name="salePrice"
+              value={variant.salePrice === 0 ? "" : variant.salePrice}
+              onChange={handleChange}
+              className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              min={0}
+              step="any"
+              />
             </div>
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Stock <span className="text-red-500">*</span></label>
-              <input type="number" name="stock" value={variant.stock} onChange={handleChange} required className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white" min="0" />
+              <input
+              type="number"
+              name="stock"
+              value={variant.stock === 0 ? "" : variant.stock}
+              onChange={handleChange}
+              required
+              className="w-full rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              min={0}
+              step="1"
+              />
             </div>
-          </div>
+            </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Offer Tag</label>
