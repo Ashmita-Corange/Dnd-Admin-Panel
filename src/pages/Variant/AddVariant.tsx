@@ -9,6 +9,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
+import axiosInstance from "../../services/axiosConfig";
 
 export default function AddVariant() {
   const dispatch = useDispatch<AppDispatch>();
@@ -22,6 +23,7 @@ export default function AddVariant() {
     message: "",
     type: "",
   });
+  const [attributesList, setAttributesList] = useState([]);
   const [variant, setVariant] = useState({
     productId: "",
     title: "",
@@ -131,6 +133,27 @@ export default function AddVariant() {
       });
     }
   };
+
+  const getAttributeOptions = async () => {
+    try {
+      const response = await axiosInstance.get(
+        `/product/attribute/${variant.productId}`
+      );
+      setAttributesList(response.data.data);
+      console.log("Fetched attributes: ===>", response.data);
+    } catch (error) {
+      console.error("Failed to fetch attributes:", error);
+      setPopup({
+        isVisible: true,
+        message: "Failed to fetch attributes. Please try again.",
+        type: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    getAttributeOptions();
+  }, [variant.productId]);
 
   return (
     <div>
@@ -293,9 +316,9 @@ export default function AddVariant() {
                 className="flex-1 rounded border border-gray-300 px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
                 <option value="">Select Attribute</option>
-                {attributes.map((attribute) => (
+                {attributesList.map((attribute) => (
                   <option key={attribute._id} value={attribute._id}>
-                    {attribute.value}
+                    {attribute.name}
                   </option>
                 ))}
               </select>
