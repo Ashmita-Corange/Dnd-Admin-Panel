@@ -8,7 +8,7 @@ import tenantSlice from "./slices/tenant";
 import roleSlice from "./slices/roles";
 import user from "./slices/user";
 import subcategory from "./slices/subCategory";
-import attributeSlice from "./slices/attribute";
+import attributeSlice from "./slices/attributeSlice";
 import variantSlice from "./slices/variant";
 import plan from "./slices/plan";
 import productSlice from "./slices/product";
@@ -23,7 +23,7 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     tenant: tenantSlice,
     role: roleSlice,
-    attribute: attributeSlice,
+    attributes: attributeSlice,
     variant: variantSlice,
     product: productSlice,
     plan: plan,
