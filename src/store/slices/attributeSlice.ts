@@ -87,10 +87,20 @@ export const fetchAttributes = createAsyncThunk<
     const response = await axiosInstance.get(
       `/attribute?${queryParams.toString()}`
     );
+
     const data = response.data?.data;
+    console.log("Fetched attributes:", {
+      attributes: Array.isArray(data?.result) ? data.result : [],
+      pagination: {
+        total: data?.totalDocuments || 0,
+        page: data?.currentPage || 1,
+        limit,
+        totalPages: data?.totalPages || 0,
+      },
+    });
 
     return {
-      attributes: data?.result || [],
+      attributes: Array.isArray(data?.result) ? data.result : [],
       pagination: {
         total: data?.totalDocuments || 0,
         page: data?.currentPage || 1,
@@ -99,6 +109,7 @@ export const fetchAttributes = createAsyncThunk<
       },
     };
   } catch (err: any) {
+    console.log("Error fetching attributes:", err);
     return rejectWithValue(err.response?.data?.message || err.message);
   }
 });
@@ -167,11 +178,13 @@ const attributeSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchAttributes.fulfilled, (state, action) => {
+        console.log("payload =====> :");
         state.loading = false;
         state.attributes = action.payload.attributes;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchAttributes.rejected, (state, action) => {
+        console.log("fetchAttributes rejected ====> :");
         state.loading = false;
         state.error = action.payload as string;
       })
