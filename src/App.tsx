@@ -37,6 +37,7 @@ import AddVariant from "./pages/Variant/AddVariant";
 import EditVariantList from "./pages/Variant/EditVariantList";
 import ProductList from "./pages/products/ProductLIst";
 import EditProduct from "./pages/products/EditProduct";
+import ProductPageBuilder from "./pages/CustomTemple/page";
 
 // Lazy load pages
 
@@ -176,6 +177,12 @@ export default function App() {
               <Route path="/plan/add" element={<AddSubscriptionPlan />} />
               <Route path="/plan/list" element={<PlanList />} />
               <Route path="/plan/edit/:id" element={<EditPlan />} />
+
+              {/* Plan Management Routes */}
+              <Route
+                path="/custom-temple/add"
+                element={<ProductPageBuilder />}
+              />
             </Route>
           </Route>
 

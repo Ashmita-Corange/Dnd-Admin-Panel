@@ -58,7 +58,6 @@ const navItems: NavItem[] = [
     subItems: [
       { name: "Attribute List", path: "/attribute/list" },
       { name: "Add Attribute", path: "/attribute/add" },
-      
     ],
   },
   {
@@ -355,7 +354,6 @@ const AppSidebar: React.FC = () => {
   const getData = async () => {
     try {
       const response = await axiosInstance.get("/module");
-
 
       const formattedItems: NavItem[] = response.data.modules.map(
         (module: any) => {
