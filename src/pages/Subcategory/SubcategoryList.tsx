@@ -306,9 +306,9 @@ const SubcategoryList: React.FC = () => {
         );
 
         // Optional: Show success message
-        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
+        // console.log(`Subcategory "${categoryToDelete.name}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete Subcategry:", error);
         setPopup({
           message: "Failed to delete category. Please try again.",
           type: "error",
@@ -454,7 +454,7 @@ const SubcategoryList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat.image}`}
+                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src =

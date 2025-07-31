@@ -313,11 +313,15 @@ export default function EditCategory() {
                   {category.image && (
                     <div className="mt-2">
                       <img
-                        src={
-                          URL.createObjectURL(category.image) || category.image
-                        }
-                        alt="Category Preview"
-                        className="max-w-xs h-auto rounded border"
+                      src={
+                        category.image instanceof File
+                        ? URL.createObjectURL(category.image)
+                        : typeof category.image === "string"
+                        ? `${import.meta.env.VITE_IMAGE_URL}/${category?.image}`
+                        : undefined
+                      }
+                      alt="Category Preview"
+                      className="max-w-xs h-auto rounded border"
                       />
                     </div>
                   )}
@@ -337,12 +341,15 @@ export default function EditCategory() {
                   {category.thumbnail && (
                     <div className="mt-2">
                       <img
-                        src={
-                          URL.createObjectURL(category.thumbnail) ||
-                          category.thumbnail
-                        }
-                        alt="Thumbnail Preview"
-                        className="max-w-xs h-auto rounded border"
+                      src={
+                        category.thumbnail instanceof File
+                        ? URL.createObjectURL(category.thumbnail)
+                        : typeof category.thumbnail === "string"
+                        ? `${import.meta.env.VITE_IMAGE_URL}/${category?.thumbnail}`
+                        : undefined
+                      }
+                      alt="Thumbnail Preview"
+                      className="max-w-xs h-auto rounded border"
                       />
                     </div>
                   )}

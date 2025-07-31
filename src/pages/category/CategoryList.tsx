@@ -456,7 +456,7 @@ const CategoryList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat.image}`}
+                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src =
@@ -473,7 +473,7 @@ const CategoryList: React.FC = () => {
                     {cat.subCategoryCount}
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {cat.status === "active" ? (
+                    {cat.status == "active" || cat?.status == "Active" ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
