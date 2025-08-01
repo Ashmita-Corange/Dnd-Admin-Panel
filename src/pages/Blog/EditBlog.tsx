@@ -181,17 +181,17 @@ export default function EditBlog() {
       console.log("Fetched Blog Data:", response);
 
       setBlog({
-        title: response.title,
-        slug: response.slug,
-        content: response.content,
-        author: response.author,
-        tags: response.tags,
-        thumbnail: response.thumbnail.url,
-        thumbnailAlt: response.thumbnail.alt,
+        title: response?.title,
+        slug: response?.slug,
+        content: response?.content,
+        author: response?.author,
+        tags: response?.tags,
+        thumbnail: response?.thumbnail?.url,
+        thumbnailAlt: response?.thumbnail?.alt,
       });
-      const images = response.images.map((img: any) => ({
-        file: img.url,
-        alt: img.alt,
+      const images = response?.images?.map((img: any) => ({
+        file: img?.url,
+        alt: img?.alt,
       }));
       setImages(images);
     } catch (error) {
@@ -433,7 +433,7 @@ export default function EditBlog() {
                 className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? "Adding Blog..." : "Add Blog"}
+                {loading ? "Updating Blog..." : "Update Blog"}
               </button>
             </div>
           </form>

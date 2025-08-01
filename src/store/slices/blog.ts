@@ -94,13 +94,12 @@ export const fetchBlogs = createAsyncThunk<
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
     const response = await axiosInstance.get(`/blog?${queryParams.toString()}`);
-    console.log("Fetch Blogs Response:", response.data);
-    const data = response.data?.data?.body?.data;
-
+    const data = response.data;
+    console.log("Fetched Blogs:", data);
     return {
-      blogs: data?.result || [],
+      blogs: data?.data || [],
       pagination: {
-        total: data?.total || 0,
+        total: data?.totalDocuments || 0,
         page: data?.page || 1,
         limit,
         totalPages: data?.totalPages || 0,

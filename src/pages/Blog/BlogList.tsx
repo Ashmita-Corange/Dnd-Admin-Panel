@@ -174,11 +174,11 @@ const BlogList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchQuery || "", // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
       })
     );
-  }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
+  }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -190,7 +190,7 @@ const BlogList: React.FC = () => {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-          search: searchQuery || "", // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
           sort: { createdAt: "desc" },
         })
       );
@@ -206,7 +206,7 @@ const BlogList: React.FC = () => {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
-        search: searchQuery || "", // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
       })
     );
@@ -251,7 +251,7 @@ const BlogList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchQuery || "", // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
       })
     );
@@ -295,7 +295,7 @@ const BlogList: React.FC = () => {
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-            search: searchQuery || "", // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
             sort: { createdAt: "desc" },
           })
         );
@@ -424,14 +424,12 @@ const BlogList: React.FC = () => {
                   Image
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Name
+                  Title
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Subcategories
+                  author
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Status
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </th>
@@ -451,34 +449,30 @@ const BlogList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
+                      src={`${import.meta.env.VITE_IMAGE_URL}/${
+                        cat?.thumbnail?.url
+                      }`}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src =
                           "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
                       }}
-                      alt={cat?.name || "No image"}
+                      alt={cat?.thumbnail?.url || "No image"}
                       className="w-10 h-10 rounded-full object-cover"
                     />
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {cat.name}
+                    {cat.title}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {cat.subCategoryCount}
+                    {cat.author}
                   </td>
-                  <td className="px-6 py-4 text-sm">
-                    {cat.status == "active" || cat?.status == "Active" ? (
-                      <CheckCircle className="text-green-500 h-5 w-5" />
-                    ) : (
-                      <XCircle className="text-red-500 h-5 w-5" />
-                    )}
-                  </td>
+
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                     {new Date(cat.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/category/edit/${cat._id}`}>
+                    <Link to={`/blog/edit/${cat._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Pencil className="h-5 w-5" />
                       </button>
