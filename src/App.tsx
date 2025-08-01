@@ -39,6 +39,11 @@ import ProductList from "./pages/products/ProductLIst";
 import EditProduct from "./pages/products/EditProduct";
 import ProductPageBuilder from "./pages/CustomTemple/page";
 import TemplateList from "./pages/CustomTemple/TempleteList";
+import CouponList from "./pages/coupons/CouponList";
+import AddCoupon from "./pages/coupons/AddCoupon";
+import AddBlog from "./pages/Blog/AddBlog";
+import BlogList from "./pages/Blog/BlogList";
+import EditBlog from "./pages/Blog/EditBlog";
 
 // Lazy load pages
 
@@ -178,13 +183,19 @@ export default function App() {
               <Route path="/plan/add" element={<AddSubscriptionPlan />} />
               <Route path="/plan/list" element={<PlanList />} />
               <Route path="/plan/edit/:id" element={<EditPlan />} />
-
+              {/* Coupon & Promo Management Routes */}
+              <Route path="/coupon&promo/list" element={<CouponList />} />
+              <Route path="/coupon&promo/add" element={<AddCoupon />} />
               {/* Plan Management Routes */}
               <Route
                 path="/custom-temple/add"
                 element={<ProductPageBuilder />}
               />
               <Route path="/custom-temple/list" element={<TemplateList />} />
+              {/* Blog Management Routes */}
+              <Route path="/blog/add" element={<AddBlog />} />
+              <Route path="/blog/list" element={<BlogList />} />
+              <Route path="/blog/edit/:id" element={<EditBlog />} />
             </Route>
           </Route>
 

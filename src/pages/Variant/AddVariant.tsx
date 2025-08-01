@@ -137,17 +137,20 @@ export default function AddVariant() {
   const getAttributeOptions = async () => {
     try {
       const response = await axiosInstance.get(
-        `/product/attribute/${variant.productId}`
+        `/product/attribute/${variant.productId}`,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
       );
       setAttributesList(response.data.data);
       console.log("Fetched attributes: ===>", response.data);
     } catch (error) {
       console.error("Failed to fetch attributes:", error);
-      setPopup({
-        isVisible: true,
-        message: "Failed to fetch attributes. Please try again.",
-        type: "error",
-      });
+      // setPopup({
+      //   isVisible: true,
+      //   message: "Failed to fetch attributes. Please try again.",
+      //   type: "error",
+      // });
     }
   };
 

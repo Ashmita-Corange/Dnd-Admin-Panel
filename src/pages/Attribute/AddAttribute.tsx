@@ -68,13 +68,7 @@ const AddAttribute = () => {
       return;
     }
 
-    if (!form.values.filter((v) => v.trim()).length) {
-      toast.error("At least one value is required.", {
-        duration: 8000,
-        position: "top-right",
-      });
-      return;
-    }
+  
 
     try {
       await dispatch(
@@ -96,7 +90,7 @@ const AddAttribute = () => {
         name: "",
         description: "",
         values: [""],
-        status: "Active",
+        status: "active",
       });
     } catch (err) {
       console.log("Error creating attribute:", err);
@@ -177,7 +171,7 @@ const AddAttribute = () => {
             </div>
 
             {/* Attribute Values Section */}
-            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+            {/* <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
               <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                 Attribute Values
               </h3>
@@ -222,7 +216,7 @@ const AddAttribute = () => {
                   for Color attribute)
                 </p>
               </div>
-            </div>
+            </div> */}
 
             {/* Submit Button */}
             <div className="pt-6">

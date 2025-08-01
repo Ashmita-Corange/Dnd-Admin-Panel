@@ -77,7 +77,7 @@ export const fetchProducts = createAsyncThunk<
     const data = response.data?.products.data;
     console.log("Fetched products:", response);
     return {
-      products: data?.result || [],
+      products: data || [],
       pagination: {
         total: data?.totalDocuments || 0,
         page: data?.currentPage || 1,

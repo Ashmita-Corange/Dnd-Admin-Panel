@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
 // Interfaces
-interface Subcategory {
+export interface Subcategory {
   _id: string;
   name: string;
   slug: string;

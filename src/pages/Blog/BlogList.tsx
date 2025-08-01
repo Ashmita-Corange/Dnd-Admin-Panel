@@ -14,11 +14,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import { setSearchQuery } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
-import { deleteRole, fetchRoles } from "../../store/slices/roles";
+import { deleteBlog, fetchBlogs } from "../../store/slices/blog";
 
 interface Category {
   _id: string;
@@ -60,7 +59,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Role
+                Delete Category
               </h3>
             </div>
             <button
@@ -74,13 +73,21 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the Role{" "}
+              Are you sure you want to delete the category{" "}
               <strong className="text-gray-900 dark:text-white">
                 "{category.name}"
               </strong>
               ?
             </p>
-
+            {category.subCategoryCount > 0 && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Warning:</strong> This category has{" "}
+                  {category.subCategoryCount} subcategory(ies). Deleting this
+                  category may affect related subcategories.
+                </p>
+              </div>
+            )}
             <p className="text-sm text-gray-500 dark:text-gray-400">
               This action cannot be undone.
             </p>
@@ -119,14 +126,14 @@ const DeleteModal: React.FC<{
   );
 };
 
-const RoleList: React.FC = () => {
+const BlogList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { roles, loading, error, pagination, searchQuery } = useAppSelector(
-    (state) => state.role
-  );
-  console?.log("roles",roles)
+  const { blogs, loading, error, pagination, searchQuery, filters } =
+    useAppSelector((state) => state.blog);
 
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
     null
   );
@@ -163,34 +170,27 @@ const RoleList: React.FC = () => {
     };
 
     dispatch(
-      fetchRoles({
+      fetchBlogs({
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchInput ? { name: searchInput } : undefined, // Changed from searchFields to search
+        search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
-  }, [
-    dispatch,
-    pagination.page,
-    pagination.limit,
-    searchQuery,
-    localFilters,
-    searchInput,
-  ]);
+  }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       dispatch(
-        fetchRoles({
+        fetchBlogs({
           page: newPage,
           limit: pagination.limit,
           filters: {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-          search: searchInput ? { name: searchInput } : undefined, // Changed from searchFields to search// Changed from searchFields to search
+          search: searchQuery || "", // Changed from searchFields to search
           sort: { createdAt: "desc" },
         })
       );
@@ -199,14 +199,14 @@ const RoleList: React.FC = () => {
 
   const handleLimitChange = (newLimit: number) => {
     dispatch(
-      fetchRoles({
+      fetchBlogs({
         page: 1,
         limit: newLimit,
         filters: {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
-        search: searchInput ? { name: searchInput } : undefined,
+        search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
@@ -247,11 +247,11 @@ const RoleList: React.FC = () => {
       isVisible: true,
     });
     dispatch(
-      fetchRoles({
+      fetchBlogs({
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchInput ? { name: searchInput } : undefined, // Changed from searchFields to search
+        search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
@@ -273,10 +273,10 @@ const RoleList: React.FC = () => {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteRole(categoryToDelete._id)).unwrap();
+        await dispatch(deleteBlog(categoryToDelete._id)).unwrap();
 
         setPopup({
-          message: `Role "${categoryToDelete.name}" deleted successfully`,
+          message: `Category "${categoryToDelete.name}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -291,20 +291,21 @@ const RoleList: React.FC = () => {
         };
 
         dispatch(
-          fetchRoles({
+          fetchBlogs({
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-            search: searchInput ? { name: searchInput } : undefined, // Changed from searchFields to search            sort: { createdAt: "desc" },
+            search: searchQuery || "", // Changed from searchFields to search
+            sort: { createdAt: "desc" },
           })
         );
 
         // Optional: Show success message
-        console.log(`Role "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete role:", error);
+        console.error("Failed to delete category:", error);
         setPopup({
-          message: "Failed to delete role. Please try again.",
+          message: "Failed to delete category. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -332,13 +333,13 @@ const RoleList: React.FC = () => {
   return (
     <div>
       <PageMeta
-        title="Role List | TailAdmin"
-        description="List of all roles in TailAdmin"
+        title="Blog List | TailAdmin"
+        description="List of all blog posts in TailAdmin"
       />
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            Role
+            Blog List
           </h1>
           <span className="text-gray-500 text-sm dark:text-gray-400">
             Total: {pagination.total}
@@ -360,7 +361,7 @@ const RoleList: React.FC = () => {
             </div>
 
             {/* Status Filter */}
-            {/* <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <select
                 value={localFilters.status || ""}
@@ -371,7 +372,7 @@ const RoleList: React.FC = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </div> */}
+            </div>
 
             {/* Limit */}
             <div className="flex items-center gap-2">
@@ -419,17 +420,18 @@ const RoleList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   #
                 </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  name
+                  Image
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  scope
+                  Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  tenant
+                  Subcategories
                 </th>
-
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Status
+                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </th>
@@ -439,55 +441,58 @@ const RoleList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-  {roles && roles.length > 0 ? (
-    roles.map((cat, idx) => (
-      <tr
-        key={cat?._id || idx}
-        className="hover:bg-gray-50 dark:hover:bg-gray-800"
-      >
-        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-          {(pagination?.page ?? 1 - 1) * (pagination?.limit ?? 1) + idx + 1}
-        </td>
-        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-          {cat?.name ?? "-"}
-        </td>
-        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-          {cat?.scope ?? "-"}
-        </td>
-        <td className="px-6 py-4 capitalize text-sm text-gray-700 dark:text-gray-300">
-          {cat?.tenantId && typeof cat.tenantId === "object"
-            ? cat.tenantId.companyName ?? "-"
-            : cat?.tenantId ?? "-"}
-        </td>
-        <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-          {cat?.createdAt
-            ? new Date(cat.createdAt).toLocaleDateString()
-            : "-"}
-        </td>
-        <td className="px-6 py-4 text-right space-x-2">
-          <Link to={`/role/edit/${cat?._id}`}>
-            <button className="text-blue-500 hover:text-blue-700 transition-colors">
-              <Pencil className="h-5 w-5" />
-            </button>
-          </Link>
-          <button
-            onClick={() => openDeleteModal(cat)}
-            className="text-red-500 hover:text-red-700 transition-colors"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={6} className="text-center py-6 text-gray-500">
-        No roles found.
-      </td>
-    </tr>
-  )}
-</tbody>
-
+              {blogs.map((cat, idx) => (
+                <tr
+                  key={cat._id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {(pagination.page - 1) * pagination.limit + idx + 1}
+                  </td>
+                  <td className="px-6 py-4">
+                    <img
+                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.src =
+                          "https://tse1.mm.bing.net/th/id/OIP.FR4m6MpuRDxDsAZlyvKadQHaFL?pid=Api&P=0&h=180";
+                      }}
+                      alt={cat?.name || "No image"}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                    {cat.name}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {cat.subCategoryCount}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {cat.status == "active" || cat?.status == "Active" ? (
+                      <CheckCircle className="text-green-500 h-5 w-5" />
+                    ) : (
+                      <XCircle className="text-red-500 h-5 w-5" />
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(cat.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-2">
+                    <Link to={`/category/edit/${cat._id}`}>
+                      <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                        <Pencil className="h-5 w-5" />
+                      </button>
+                    </Link>
+                    <button
+                      onClick={() => openDeleteModal(cat)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
 
@@ -547,4 +552,4 @@ const RoleList: React.FC = () => {
   );
 };
 
-export default RoleList;
+export default BlogList;

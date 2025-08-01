@@ -4,7 +4,9 @@ import { useDispatch, useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
 import {
-  createCategory,
+  createSubcategory,
+} from "../../store/slices/subCategory";
+import {
   fetchCategories,
 } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
@@ -41,14 +43,14 @@ export default function AddSubcategory() {
   });
 
   const dispatch = useDispatch<AppDispatch>();
-  const loading = useSelector((state: RootState) => state.category.loading);
+  const loading = useSelector((state: RootState) => state.subcategory.loading);
 
   useEffect(() => {
     // Fetch categories if needed
     if (allCategories.length === 0) {
       dispatch(fetchCategories());
     }
-  }, []);
+  }, [allCategories.length, dispatch]);
 
   // Auto-generate slug from name
   const generateSlug = (name: string) => {
@@ -132,18 +134,18 @@ export default function AddSubcategory() {
     }
 
     try {
-      // Create the main category and get the result (should include the new category's ID)
-      const createdCategory = await dispatch(createCategory(formData)).unwrap();
+      // Create the subcategory and get the result
+      // @ts-expect-error: FormData is accepted by the thunk for file upload
+      const createdSubcategory = await dispatch(createSubcategory(formData)).unwrap();
 
       console.log(
-        "Created Category:",
-
-        createdCategory
+        "Created Subcategory:",
+        createdSubcategory
       );
 
       setPopup({
         isVisible: true,
-        message: "Category created successfully!",
+        message: "Subcategory created successfully!",
         type: "success",
       });
       setCategory({
@@ -159,10 +161,10 @@ export default function AddSubcategory() {
         sortOrder: 0,
         isFeatured: false,
       });
-    } catch (err: any) {
+    } catch {
       setPopup({
         isVisible: true,
-        message: "Failed to create Category. Please try again.",
+        message: "Failed to create Subcategory. Please try again.",
         type: "error",
       });
     }
@@ -192,23 +194,23 @@ export default function AddSubcategory() {
                   </label>
                   <select
                     name="parentCategory"
-                    value={category.parentCategory}
+                    value={category.parentCategory ?? ""}
                     onChange={handleChange}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     required
                   >
                     <option value="">Select Parent Category</option>
                     {/* Map through categories to create options */}
-                    {allCategories?.map((cat) => (
+                    {allCategories?.map((cat: any) => (
                       <option key={cat?._id} value={cat?._id}>
-                        {cat.name}
+                        {cat?.name}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Category Name <span className="text-red-500">*</span>
+                    Sub-Category Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -302,7 +304,7 @@ export default function AddSubcategory() {
                     htmlFor="isFeatured"
                     className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300"
                   >
-                    Featured Category
+                    Featured SubCategory
                   </label>
                 </div>
               </div>
@@ -317,7 +319,7 @@ export default function AddSubcategory() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Category Image
+                    Subcategory Image
                   </label>
                   <input
                     type="file"
@@ -413,7 +415,7 @@ export default function AddSubcategory() {
                 className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={loading}
               >
-                {loading ? "Adding Category..." : "Add Category"}
+                {loading ? "Adding Subcategory..." : "Add Subcategory"}
               </button>
             </div>
           </form>
