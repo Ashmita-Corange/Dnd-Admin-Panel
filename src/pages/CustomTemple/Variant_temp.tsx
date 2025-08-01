@@ -1,23 +1,23 @@
 "use client";
 
 import React from "react";
-import {
-  BookOpen,
-  Star,
-  Image,
-  FileText,
-  ShoppingCart,
-  Heart,
-  Share2,
-  Eye,
-  Check,
-  Award,
-  Clock,
-  Users,
+import { 
+  BookOpen, 
+  Star, 
+  Image, 
+  FileText, 
+  ShoppingCart, 
+  Heart, 
+  Share2, 
+  Eye, 
+  Check, 
+  Award, 
+  Clock, 
+  Users, 
   Zap,
   Shield,
   Truck,
-  Gift,
+  Gift
 } from "lucide-react";
 
 // Component types
@@ -31,9 +31,9 @@ export const COMPONENT_TYPES = {
 // Component variants configuration
 export const COMPONENT_VARIANTS = {
   [COMPONENT_TYPES.IMAGES]: {
-    modern: {
-      label: "Modern",
-      description: "Clean modern design with hover effects",
+    classic: {
+      label: "Classic",
+      description: "Traditional product image layout",
     },
     gallery: {
       label: "Gallery",
@@ -41,49 +41,49 @@ export const COMPONENT_VARIANTS = {
     },
     showcase: {
       label: "Showcase",
-      description: "Premium showcase with detailed view",
+      description: "Large featured image with thumbnails",
     },
   },
   [COMPONENT_TYPES.DETAILS]: {
-    modern: {
-      label: "Modern",
-      description: "Professional clean layout",
+    standard: {
+      label: "Standard",
+      description: "Basic product information layout",
     },
-    card: {
-      label: "Card",
-      description: "Compact card-style layout",
-    },
-    premium: {
-      label: "Premium",
-      description: "Luxury showcase design",
-    },
-  },
-  [COMPONENT_TYPES.HOW_TO_USE]: {
-    guided: {
-      label: "Guided",
-      description: "Interactive step-by-step guide",
-    },
-    visual: {
-      label: "Visual",
-      description: "Modern card-based layout",
+    detailed: {
+      label: "Detailed",
+      description: "Enhanced layout with badges and highlights",
     },
     minimal: {
       label: "Minimal",
-      description: "Clean and simple format",
+      description: "Clean, minimal design approach",
+    },
+  },
+  [COMPONENT_TYPES.HOW_TO_USE]: {
+    steps: {
+      label: "Step by Step",
+      description: "Numbered steps format",
+    },
+    simple: {
+      label: "Simple",
+      description: "Basic instructions format",
+    },
+    illustrated: {
+      label: "Illustrated",
+      description: "Visual guide with icons",
     },
   },
   [COMPONENT_TYPES.REVIEWS]: {
     cards: {
-      label: "Cards",
-      description: "Modern card-based layout",
+      label: "Card Layout",
+      description: "Individual review cards",
+    },
+    list: {
+      label: "List View",
+      description: "Compact list format",
     },
     testimonial: {
       label: "Testimonial",
       description: "Featured testimonial style",
-    },
-    compact: {
-      label: "Compact",
-      description: "Minimal and clean format",
     },
   },
 };
@@ -109,15 +109,11 @@ export function ProductImages({
   isPreviewMode?: boolean;
   COMPONENT_SPANS: any;
 }) {
-  const imageSettings = {
-    ...{
-      showThumbnails: true,
-      imageSize: "medium",
-      span: component.span || 1,
-      variant: "modern",
-    },
-    ...settings[component.id],
-    variant: component.variant || settings[component.id]?.variant || "modern",
+  const imageSettings = settings[component.id] || {
+    showThumbnails: true,
+    imageSize: "medium",
+    span: component.span || 1,
+    variant: "modern",
   };
 
   // Dummy images if product images are not available
@@ -128,10 +124,9 @@ export function ProductImages({
     "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=600&h=600&fit=crop",
   ];
 
-  const images =
-    product?.images?.length > 0
-      ? product.images.map((img: string) => `${imageUrl}/${img}`)
-      : dummyImages;
+  const images = product?.images?.length > 0 ? 
+    product.images.map((img: string) => `${imageUrl}/${img}`) : 
+    dummyImages;
 
   // Modern/Elegant Variant - Clean modern design with hover effects
   const renderModernVariant = () => (
@@ -207,7 +202,7 @@ export function ProductImages({
             </div>
           </div>
         </div>
-
+        
         {images.slice(1, 3).map((img: string, idx: number) => (
           <div key={idx} className="relative group overflow-hidden rounded-xl">
             <img
@@ -233,7 +228,7 @@ export function ProductImages({
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-50 via-white to-purple-50 p-8">
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-full" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-purple-100 to-transparent rounded-tr-full" />
-
+        
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -241,9 +236,7 @@ export function ProductImages({
                 <Award size={20} className="text-white" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">
-                  Featured Product
-                </h3>
+                <h3 className="text-lg font-bold text-gray-900">Featured Product</h3>
                 <p className="text-sm text-gray-600">Premium Collection</p>
               </div>
             </div>
@@ -288,7 +281,10 @@ export function ProductImages({
       {imageSettings.showThumbnails && images.length > 1 && (
         <div className="flex gap-4 justify-center">
           {images.slice(1, 4).map((img: string, idx: number) => (
-            <div key={idx} className="relative group cursor-pointer">
+            <div
+              key={idx}
+              className="relative group cursor-pointer"
+            >
               <div className="w-20 h-20 rounded-2xl overflow-hidden border-3 border-transparent group-hover:border-blue-200 transition-colors duration-300">
                 <img
                   src={img}
@@ -364,16 +360,12 @@ export function ProductDetails({
   isPreviewMode?: boolean;
   COMPONENT_SPANS: any;
 }) {
-  const detailSettings = {
-    ...{
-      showPrice: true,
-      showDescription: true,
-      showFeatures: true,
-      span: component.span || 1,
-      variant: "modern",
-    },
-    ...settings[component.id],
-    variant: component.variant || settings[component.id]?.variant || "modern",
+  const detailSettings = settings[component.id] || {
+    showPrice: true,
+    showDescription: true,
+    showFeatures: true,
+    span: component.span || 1,
+    variant: "modern",
   };
 
   // Dummy data for missing product details
@@ -381,19 +373,18 @@ export function ProductDetails({
     name: "Premium Wireless Headphones",
     price: 199.99,
     originalPrice: 299.99,
-    description:
-      "Experience premium sound quality with our latest wireless headphones featuring active noise cancellation, premium comfort, and extended battery life.",
+    description: "Experience premium sound quality with our latest wireless headphones featuring active noise cancellation, premium comfort, and extended battery life.",
     features: [
       "Active Noise Cancellation",
       "30-hour Battery Life",
       "Premium Comfort Fit",
       "Hi-Fi Audio Quality",
-      "Quick Charge Technology",
+      "Quick Charge Technology"
     ],
     rating: 4.8,
     reviews: 1247,
     availability: "In Stock",
-    brand: "TechPro",
+    brand: "TechPro"
   };
 
   const productData = {
@@ -466,8 +457,7 @@ export function ProductDetails({
               )}
               {productData.originalPrice > productData.price && (
                 <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                  Save $
-                  {(productData.originalPrice - productData.price).toFixed(2)}
+                  Save ${(productData.originalPrice - productData.price).toFixed(2)}
                 </span>
               )}
             </div>
@@ -484,27 +474,18 @@ export function ProductDetails({
       {/* Description */}
       {detailSettings.showDescription && (
         <div className="bg-gray-50 rounded-xl p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
-            Description
-          </h3>
-          <p className="text-gray-700 leading-relaxed">
-            {productData.description}
-          </p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Description</h3>
+          <p className="text-gray-700 leading-relaxed">{productData.description}</p>
         </div>
       )}
 
       {/* Features */}
       {detailSettings.showFeatures && productData.features && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Key Features
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Features</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {productData.features.map((feature: string, idx: number) => (
-              <div
-                key={idx}
-                className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:shadow-sm transition-shadow"
-              >
+              <div key={idx} className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl hover:shadow-sm transition-shadow">
                 <div className="p-1.5 bg-blue-100 rounded-lg">
                   <Check size={14} className="text-blue-600" />
                 </div>
@@ -547,10 +528,8 @@ export function ProductDetails({
               </button>
             </div>
           </div>
-
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
-            {productData.name}
-          </h2>
+          
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{productData.name}</h2>
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
@@ -586,12 +565,7 @@ export function ProductDetails({
                 )}
               </div>
               <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-md">
-                {Math.round(
-                  ((productData.originalPrice - productData.price) /
-                    productData.originalPrice) *
-                    100
-                )}
-                % OFF
+                {Math.round(((productData.originalPrice - productData.price) / productData.originalPrice) * 100)}% OFF
               </span>
             </div>
           </div>
@@ -602,14 +576,12 @@ export function ProductDetails({
           <div className="space-y-2">
             <h4 className="text-sm font-semibold text-gray-900">Highlights</h4>
             <div className="space-y-2">
-              {productData.features
-                .slice(0, 3)
-                .map((feature: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2 text-sm">
-                    <Check size={12} className="text-green-500" />
-                    <span className="text-gray-700">{feature}</span>
-                  </div>
-                ))}
+              {productData.features.slice(0, 3).map((feature: string, idx: number) => (
+                <div key={idx} className="flex items-center gap-2 text-sm">
+                  <Check size={12} className="text-green-500" />
+                  <span className="text-gray-700">{feature}</span>
+                </div>
+              ))}
             </div>
           </div>
         )}
@@ -630,7 +602,7 @@ export function ProductDetails({
       <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 rounded-3xl"></div>
       <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-200/30 to-transparent rounded-full blur-2xl"></div>
       <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-indigo-200/30 to-transparent rounded-full blur-2xl"></div>
-
+      
       <div className="relative z-10 p-8 space-y-6">
         {/* Premium Header */}
         <div className="flex items-start justify-between">
@@ -640,9 +612,7 @@ export function ProductDetails({
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-sm font-bold text-amber-600">
-                  PREMIUM
-                </span>
+                <span className="text-sm font-bold text-amber-600">PREMIUM</span>
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
                     <Star
@@ -653,12 +623,8 @@ export function ProductDetails({
                   ))}
                 </div>
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {productData.name}
-              </h1>
-              <p className="text-sm text-gray-600">
-                {productData.brand} • Limited Edition
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900">{productData.name}</h1>
+              <p className="text-sm text-gray-600">{productData.brand} • Limited Edition</p>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -713,9 +679,7 @@ export function ProductDetails({
               <Zap size={18} className="text-blue-600" />
               Product Excellence
             </h3>
-            <p className="text-gray-700 leading-relaxed">
-              {productData.description}
-            </p>
+            <p className="text-gray-700 leading-relaxed">{productData.description}</p>
           </div>
         )}
 
@@ -728,10 +692,7 @@ export function ProductDetails({
             </h3>
             <div className="grid grid-cols-1 gap-3">
               {productData.features.map((feature: string, idx: number) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-4 p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/70 transition-colors"
-                >
+                <div key={idx} className="flex items-center gap-4 p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/70 transition-colors">
                   <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl">
                     <Check size={16} className="text-white" />
                   </div>
@@ -836,51 +797,42 @@ export function HowToUse({
   isPreviewMode?: boolean;
   COMPONENT_SPANS: any;
 }) {
-  const howToUseSettings = {
-    ...{
-      showIcon: true,
-      bgColor: "blue",
-      span: component.span || 1,
-      variant: "guided",
-    },
-    ...settings[component.id],
-    variant: component.variant || settings[component.id]?.variant || "guided",
+  const howToUseSettings = settings[component.id] || {
+    showIcon: true,
+    bgColor: "blue",
+    span: component.span || 1,
+    variant: "guided",
   };
 
   // Dummy data for missing how-to-use steps
   const dummySteps = [
     {
       title: "Unbox & Setup",
-      description:
-        "Carefully remove your device from the packaging and locate all included accessories.",
+      description: "Carefully remove your device from the packaging and locate all included accessories.",
       icon: "📦",
-      duration: "2 mins",
+      duration: "2 mins"
     },
     {
       title: "Power On & Pair",
-      description:
-        "Press and hold the power button until you see the LED indicator, then enable Bluetooth on your device.",
+      description: "Press and hold the power button until you see the LED indicator, then enable Bluetooth on your device.",
       icon: "🔌",
-      duration: "3 mins",
+      duration: "3 mins"
     },
     {
       title: "Connect & Configure",
-      description:
-        "Select your device from the Bluetooth list and follow the on-screen setup instructions.",
+      description: "Select your device from the Bluetooth list and follow the on-screen setup instructions.",
       icon: "📱",
-      duration: "2 mins",
+      duration: "2 mins"
     },
     {
       title: "Enjoy Your Experience",
-      description:
-        "Start using your device with all features enabled and enjoy the premium experience.",
+      description: "Start using your device with all features enabled and enjoy the premium experience.",
       icon: "🎉",
-      duration: "Ongoing",
-    },
+      duration: "Ongoing"
+    }
   ];
 
-  const steps =
-    product?.howToUseSteps?.length > 0 ? product.howToUseSteps : dummySteps;
+  const steps = product?.howToUseSteps?.length > 0 ? product.howToUseSteps : dummySteps;
 
   // Guided/Step-by-Step Variant - Interactive step guide
   const renderGuidedVariant = () => (
@@ -901,7 +853,7 @@ export function HowToUse({
       <div className="relative">
         {/* Progress Line */}
         <div className="absolute left-8 top-16 bottom-16 w-0.5 bg-gradient-to-b from-blue-500 to-purple-500 opacity-30"></div>
-
+        
         <div className="space-y-8">
           {steps.map((step: any, idx: number) => (
             <div key={idx} className="relative flex items-start gap-6">
@@ -931,7 +883,7 @@ export function HowToUse({
                 </p>
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-gray-100 rounded-full h-2">
-                    <div
+                    <div 
                       className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${((idx + 1) / steps.length) * 100}%` }}
                     ></div>
@@ -991,7 +943,7 @@ export function HowToUse({
                     </div>
                   </div>
                 </div>
-
+                
                 <p className="text-gray-700 text-sm leading-relaxed">
                   {step.description}
                 </p>
@@ -999,7 +951,7 @@ export function HowToUse({
                 {/* Progress indicator */}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 bg-gray-200 rounded-full h-1.5">
-                    <div
+                    <div 
                       className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full"
                       style={{ width: `${((idx + 1) / steps.length) * 100}%` }}
                     ></div>
@@ -1025,9 +977,7 @@ export function HowToUse({
           </div>
           <div>
             <h4 className="font-bold text-green-900">Need Help?</h4>
-            <p className="text-sm text-green-700">
-              Our support team is here 24/7
-            </p>
+            <p className="text-sm text-green-700">Our support team is here 24/7</p>
           </div>
         </div>
       </div>
@@ -1043,23 +993,18 @@ export function HowToUse({
         </div>
         <div>
           <h3 className="text-lg font-bold text-gray-900">Quick Guide</h3>
-          <p className="text-sm text-gray-600">
-            Easy setup in {steps.length} steps
-          </p>
+          <p className="text-sm text-gray-600">Easy setup in {steps.length} steps</p>
         </div>
       </div>
 
       <div className="space-y-3">
         {steps.map((step: any, idx: number) => (
-          <div
-            key={idx}
-            className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-          >
+          <div key={idx} className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
             {/* Simple Number */}
             <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center text-sm font-bold">
               {idx + 1}
             </div>
-
+            
             {/* Content */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -1074,7 +1019,9 @@ export function HowToUse({
             </div>
 
             {/* Icon */}
-            <div className="text-2xl opacity-60">{step.icon || "📝"}</div>
+            <div className="text-2xl opacity-60">
+              {step.icon || "📝"}
+            </div>
           </div>
         ))}
       </div>
@@ -1084,9 +1031,7 @@ export function HowToUse({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-blue-800">
             <Shield size={16} />
-            <span className="text-sm font-medium">
-              Setup guaranteed in under 10 minutes
-            </span>
+            <span className="text-sm font-medium">Setup guaranteed in under 10 minutes</span>
           </div>
           <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
             Need help? →
@@ -1156,16 +1101,12 @@ export function Reviews({
   isPreviewMode?: boolean;
   COMPONENT_SPANS: any;
 }) {
-  const reviewSettings = {
-    ...{
-      showRating: true,
-      maxReviews: 3,
-      layout: "card",
-      span: component.span || 1,
-      variant: "cards",
-    },
-    ...settings[component.id],
-    variant: component.variant || settings[component.id]?.variant || "cards",
+  const reviewSettings = settings[component.id] || {
+    showRating: true,
+    maxReviews: 3,
+    layout: "card",
+    span: component.span || 1,
+    variant: "cards",
   };
 
   // Enhanced dummy reviews with more realistic data
@@ -1173,60 +1114,47 @@ export function Reviews({
     {
       id: 1,
       name: "Sarah Johnson",
-      avatar:
-        "https://images.unsplash.com/photo-1494790108755-2616b62c113e?w=40&h=40&fit=crop&crop=face",
-      comment:
-        "Absolutely love this product! The quality is outstanding and it exceeded my expectations. Highly recommend to anyone looking for premium features.",
+      avatar: "https://images.unsplash.com/photo-1494790108755-2616b62c113e?w=40&h=40&fit=crop&crop=face",
+      comment: "Absolutely love this product! The quality is outstanding and it exceeded my expectations. Highly recommend to anyone looking for premium features.",
       rating: 5,
       date: "2 days ago",
       verified: true,
-      helpful: 12,
+      helpful: 12
     },
     {
       id: 2,
       name: "Mike Chen",
-      avatar:
-        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
-      comment:
-        "Great value for money. Setup was easy and the performance is solid. Only minor issue is the delivery took a bit longer than expected.",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face",
+      comment: "Great value for money. Setup was easy and the performance is solid. Only minor issue is the delivery took a bit longer than expected.",
       rating: 4,
       date: "1 week ago",
       verified: true,
-      helpful: 8,
+      helpful: 8
     },
     {
       id: 3,
       name: "Emily Rodriguez",
-      avatar:
-        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
-      comment:
-        "Perfect for my needs! The design is sleek and modern. Customer service was also very helpful when I had questions.",
+      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face",
+      comment: "Perfect for my needs! The design is sleek and modern. Customer service was also very helpful when I had questions.",
       rating: 5,
       date: "2 weeks ago",
       verified: true,
-      helpful: 15,
+      helpful: 15
     },
     {
       id: 4,
       name: "David Thompson",
-      avatar:
-        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-      comment:
-        "Good product overall. Works as advertised and the build quality feels premium. Would purchase again.",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+      comment: "Good product overall. Works as advertised and the build quality feels premium. Would purchase again.",
       rating: 4,
       date: "3 weeks ago",
       verified: false,
-      helpful: 6,
-    },
+      helpful: 6
+    }
   ];
 
-  const displayReviews =
-    product?.reviews?.length > 0 ? product.reviews : dummyReviews;
-  const averageRating =
-    displayReviews.reduce(
-      (acc: number, review: any) => acc + review.rating,
-      0
-    ) / displayReviews.length;
+  const displayReviews = product?.reviews?.length > 0 ? product.reviews : dummyReviews;
+  const averageRating = displayReviews.reduce((acc: number, review: any) => acc + review.rating, 0) / displayReviews.length;
 
   // Cards Variant - Modern card-based layout
   const renderCardsVariant = () => (
@@ -1235,9 +1163,7 @@ export function Reviews({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div>
-            <h3 className="text-2xl font-bold text-gray-900">
-              Customer Reviews
-            </h3>
+            <h3 className="text-2xl font-bold text-gray-900">Customer Reviews</h3>
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
@@ -1262,82 +1188,70 @@ export function Reviews({
           </div>
         </div>
         <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600">
-            {Math.round(averageRating * 20)}%
-          </div>
+          <div className="text-3xl font-bold text-blue-600">{Math.round(averageRating * 20)}%</div>
           <div className="text-sm text-gray-600">Satisfaction</div>
         </div>
       </div>
 
       {/* Reviews Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {displayReviews
-          .slice(0, reviewSettings.maxReviews)
-          .map((review: any, idx: number) => (
-            <div
-              key={review.id || idx}
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow"
-            >
-              {/* Review Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={
-                      review.avatar ||
-                      `https://ui-avatars.com/api/?name=${review.name}&background=random`
-                    }
-                    alt={review.name}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-900">
-                        {review.name}
-                      </h4>
-                      {review.verified && (
-                        <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs">
-                          <Check size={12} />
-                          <span>Verified</span>
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-sm text-gray-600">{review.date}</p>
+        {displayReviews.slice(0, reviewSettings.maxReviews).map((review: any, idx: number) => (
+          <div key={review.id || idx} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+            {/* Review Header */}
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={review.avatar || `https://ui-avatars.com/api/?name=${review.name}&background=random`}
+                  alt={review.name}
+                  className="w-12 h-12 rounded-full object-cover"
+                />
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-semibold text-gray-900">{review.name}</h4>
+                    {review.verified && (
+                      <div className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-full text-xs">
+                        <Check size={12} />
+                        <span>Verified</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={14}
-                      className={`${
-                        i < review.rating
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-300"
-                      }`}
-                    />
-                  ))}
+                  <p className="text-sm text-gray-600">{review.date}</p>
                 </div>
               </div>
-
-              {/* Review Content */}
-              <p className="text-gray-700 leading-relaxed mb-4">
-                {review.comment}
-              </p>
-
-              {/* Review Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                  <Heart size={14} />
-                  <span>Helpful ({review.helpful || 0})</span>
-                </button>
-                <div className="flex gap-2">
-                  <button className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
-                    <Share2 size={14} className="text-gray-600" />
-                  </button>
-                </div>
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    size={14}
+                    className={`${
+                      i < review.rating
+                        ? "text-yellow-400 fill-current"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
-          ))}
+
+            {/* Review Content */}
+            <p className="text-gray-700 leading-relaxed mb-4">
+              {review.comment}
+            </p>
+
+            {/* Review Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <button className="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                <Heart size={14} />
+                <span>Helpful ({review.helpful || 0})</span>
+              </button>
+              <div className="flex gap-2">
+                <button className="p-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                  <Share2 size={14} className="text-gray-600" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* View All Reviews Button */}
@@ -1361,27 +1275,21 @@ export function Reviews({
           <div className="flex items-center justify-center mb-6">
             <div className="text-6xl text-blue-200">"</div>
           </div>
-
+          
           <div className="text-center mb-8">
             <blockquote className="text-xl text-gray-900 font-medium leading-relaxed mb-6 max-w-3xl mx-auto">
-              {displayReviews[0]?.comment ||
-                "This product has completely transformed my experience. The quality and attention to detail are exceptional."}
+              {displayReviews[0]?.comment || "This product has completely transformed my experience. The quality and attention to detail are exceptional."}
             </blockquote>
-
+            
             <div className="flex items-center justify-center gap-4">
               <img
-                src={
-                  displayReviews[0]?.avatar ||
-                  `https://ui-avatars.com/api/?name=${
-                    displayReviews[0]?.name || "Customer"
-                  }&background=random`
-                }
-                alt={displayReviews[0]?.name || "Customer"}
+                src={displayReviews[0]?.avatar || `https://ui-avatars.com/api/?name=${displayReviews[0]?.name || 'Customer'}&background=random`}
+                alt={displayReviews[0]?.name || 'Customer'}
                 className="w-16 h-16 rounded-full object-cover shadow-lg"
               />
               <div className="text-left">
                 <h4 className="font-bold text-gray-900 text-lg">
-                  {displayReviews[0]?.name || "Satisfied Customer"}
+                  {displayReviews[0]?.name || 'Satisfied Customer'}
                 </h4>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="flex items-center">
@@ -1398,7 +1306,7 @@ export function Reviews({
                     ))}
                   </div>
                   <span className="text-sm text-gray-600">
-                    {displayReviews[0]?.date || "Recently"}
+                    {displayReviews[0]?.date || 'Recently'}
                   </span>
                 </div>
               </div>
@@ -1408,15 +1316,11 @@ export function Reviews({
           {/* Trust Indicators */}
           <div className="flex items-center justify-center gap-8 pt-6 border-t border-blue-200">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {averageRating.toFixed(1)}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{averageRating.toFixed(1)}</div>
               <div className="text-sm text-gray-600">Average Rating</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {displayReviews.length}+
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{displayReviews.length}+</div>
               <div className="text-sm text-gray-600">Happy Customers</div>
             </div>
             <div className="text-center">
@@ -1430,10 +1334,7 @@ export function Reviews({
       {/* Additional Reviews */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {displayReviews.slice(1, 4).map((review: any, idx: number) => (
-          <div
-            key={review.id || idx}
-            className="bg-white rounded-xl p-5 shadow-md border border-gray-100"
-          >
+          <div key={review.id || idx} className="bg-white rounded-xl p-5 shadow-md border border-gray-100">
             <div className="flex items-center gap-1 mb-3">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -1452,17 +1353,12 @@ export function Reviews({
             </p>
             <div className="flex items-center gap-2">
               <img
-                src={
-                  review.avatar ||
-                  `https://ui-avatars.com/api/?name=${review.name}&background=random`
-                }
+                src={review.avatar || `https://ui-avatars.com/api/?name=${review.name}&background=random`}
                 alt={review.name}
                 className="w-8 h-8 rounded-full object-cover"
               />
               <div>
-                <p className="text-sm font-medium text-gray-900">
-                  {review.name}
-                </p>
+                <p className="text-sm font-medium text-gray-900">{review.name}</p>
                 <p className="text-xs text-gray-600">{review.date}</p>
               </div>
             </div>
@@ -1513,77 +1409,60 @@ export function Reviews({
 
       {/* Compact Review List */}
       <div className="space-y-4">
-        {displayReviews
-          .slice(0, reviewSettings.maxReviews)
-          .map((review: any, idx: number) => (
-            <div
-              key={review.id || idx}
-              className="flex gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-            >
-              <img
-                src={
-                  review.avatar ||
-                  `https://ui-avatars.com/api/?name=${review.name}&background=random`
-                }
-                alt={review.name}
-                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-medium text-gray-900 truncate">
-                    {review.name}
-                  </h4>
-                  <div className="flex items-center gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={12}
-                        className={`${
-                          i < review.rating
-                            ? "text-yellow-400 fill-current"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-600">{review.date}</span>
+        {displayReviews.slice(0, reviewSettings.maxReviews).map((review: any, idx: number) => (
+          <div key={review.id || idx} className="flex gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+            <img
+              src={review.avatar || `https://ui-avatars.com/api/?name=${review.name}&background=random`}
+              alt={review.name}
+              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h4 className="font-medium text-gray-900 truncate">{review.name}</h4>
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      size={12}
+                      className={`${
+                        i < review.rating
+                          ? "text-yellow-400 fill-current"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  ))}
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {review.comment.length > 120
-                    ? `${review.comment.substring(0, 120)}...`
-                    : review.comment}
-                </p>
-                {review.verified && (
-                  <div className="flex items-center gap-1 mt-2">
-                    <Check size={12} className="text-green-600" />
-                    <span className="text-xs text-green-700 font-medium">
-                      Verified Purchase
-                    </span>
-                  </div>
-                )}
+                <span className="text-xs text-gray-600">{review.date}</span>
               </div>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {review.comment.length > 120 
+                  ? `${review.comment.substring(0, 120)}...`
+                  : review.comment
+                }
+              </p>
+              {review.verified && (
+                <div className="flex items-center gap-1 mt-2">
+                  <Check size={12} className="text-green-600" />
+                  <span className="text-xs text-green-700 font-medium">Verified Purchase</span>
+                </div>
+              )}
             </div>
-          ))}
+          </div>
+        ))}
       </div>
 
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
         <div className="text-center">
-          <div className="text-xl font-bold text-gray-900">
-            {Math.round(averageRating * 20)}%
-          </div>
+          <div className="text-xl font-bold text-gray-900">{Math.round(averageRating * 20)}%</div>
           <div className="text-xs text-gray-600">Satisfaction</div>
         </div>
         <div className="text-center">
-          <div className="text-xl font-bold text-gray-900">
-            {displayReviews.filter((r: any) => r.rating >= 4).length}
-          </div>
+          <div className="text-xl font-bold text-gray-900">{displayReviews.filter((r: any) => r.rating >= 4).length}</div>
           <div className="text-xs text-gray-600">4+ Stars</div>
         </div>
         <div className="text-center">
-          <div className="text-xl font-bold text-gray-900">
-            {displayReviews.filter((r: any) => r.verified).length}
-          </div>
+          <div className="text-xl font-bold text-gray-900">{displayReviews.filter((r: any) => r.verified).length}</div>
           <div className="text-xs text-gray-600">Verified</div>
         </div>
       </div>
@@ -1628,51 +1507,4 @@ export function Reviews({
       {renderVariant()}
     </div>
   );
-}
-
-// Component renderer
-export function ComponentRenderer({
-  component,
-  product,
-  settings,
-  onUpdateSettings,
-  onUpdateSpan,
-  totalColumns = 3,
-  isPreviewMode = false,
-  COMPONENT_SPANS,
-}: {
-  component: { id: string; type: string; span: number; variant: string };
-  product: object;
-  settings: object;
-  onUpdateSettings: (componentId: string, newSettings: object) => void;
-  onUpdateSpan: (componentId: string, newSpan: number) => void;
-  totalColumns?: number;
-  isPreviewMode?: boolean;
-  COMPONENT_SPANS: { [key: string]: { value: number; label: string } };
-}) {
-  const isFullWidth = component.span === totalColumns;
-
-  const commonProps = {
-    component,
-    product,
-    settings,
-    onUpdateSettings,
-    onUpdateSpan,
-    isFullWidth,
-    isPreviewMode,
-    COMPONENT_SPANS,
-  };
-
-  switch (component.type) {
-    case COMPONENT_TYPES.IMAGES:
-      return <ProductImages {...commonProps} />;
-    case COMPONENT_TYPES.DETAILS:
-      return <ProductDetails {...commonProps} />;
-    case COMPONENT_TYPES.HOW_TO_USE:
-      return <HowToUse {...commonProps} />;
-    case COMPONENT_TYPES.REVIEWS:
-      return <Reviews {...commonProps} />;
-    default:
-      return null;
-  }
 }

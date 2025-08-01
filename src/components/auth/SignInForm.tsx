@@ -31,7 +31,7 @@ export default function SignInForm() {
   const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({
     email: "tenant1@gmail.com", // Changed from username to email
-    password: "Tenant@112",
+    password: "tenant@112",
   });
   const [formErrors, setFormErrors] = useState({
     email: "", // Changed from username to email

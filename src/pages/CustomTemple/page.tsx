@@ -1277,6 +1277,11 @@ function ComponentLibrary({
   columnGap,
   componentGap,
   rowGap,
+  selectedComponent,
+  componentSettings,
+  onUpdateSettings,
+  onUpdateSpan,
+  COMPONENT_SPANS,
 }) {
   const availableComponents = [
     { type: COMPONENT_TYPES.IMAGES, title: "Product Images", icon: Image },
@@ -1336,7 +1341,7 @@ function ComponentLibrary({
         })}
       </div>
 
-      <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+      {/* <div className="mt-6 p-3 bg-blue-50 rounded-lg">
         <h3 className="font-semibold text-blue-900 mb-2 text-sm">Features</h3>
         <ul className="text-xs text-blue-800 space-y-1">
           <li>• Multiple component variants</li>
@@ -1350,8 +1355,8 @@ function ComponentLibrary({
           <li>• Adjustable gaps</li>
           <li>• Section-based layout</li>
         </ul>
-      </div>
-
+      </div> */}
+      {/* 
       <div className="mt-4 p-3 bg-green-50 rounded-lg">
         <h3 className="font-semibold text-green-900 mb-2 text-sm">
           Component Variants
@@ -1374,9 +1379,9 @@ function ComponentLibrary({
             <div className="pl-2">Cards, List, Testimonial</div>
           </div>
         </div>
-      </div>
+      </div> */}
 
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+      {/* <div className="mt-4 p-3 bg-gray-50 rounded-lg">
         <h3 className="font-semibold text-gray-900 mb-2 text-sm">
           Current Configuration
         </h3>
@@ -1434,7 +1439,230 @@ function ComponentLibrary({
             </span>
           </div>
         </div>
-      </div>
+      </div> */}
+
+      {/* Component Settings Panel */}
+      {selectedComponent && (
+        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h3 className="font-semibold text-yellow-900 mb-3 text-sm flex items-center gap-2">
+            <Settings size={14} />
+            Component Settings
+          </h3>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Selected: {selectedComponent.title}
+              </label>
+            </div>
+
+            {/* Component Span */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Width
+              </label>
+              <select
+                value={selectedComponent.span || 1}
+                onChange={(e) =>
+                  onUpdateSpan(selectedComponent.id, parseInt(e.target.value))
+                }
+                className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+              >
+                {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
+                  <option key={value} value={value}>
+                    {config.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Component Variant */}
+            {COMPONENT_VARIANTS[selectedComponent.type] && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Variant
+                </label>
+                <select
+                  value={
+                    componentSettings[selectedComponent.id]?.variant ||
+                    "default"
+                  }
+                  onChange={(e) =>
+                    onUpdateSettings(selectedComponent.id, {
+                      ...componentSettings[selectedComponent.id],
+                      variant: e.target.value,
+                    })
+                  }
+                  className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                >
+                  {Object.entries(
+                    COMPONENT_VARIANTS[selectedComponent.type]
+                  ).map(([key, variant]) => (
+                    <option key={key} value={key}>
+                      {variant.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Component-specific settings */}
+            {selectedComponent.type === COMPONENT_TYPES.IMAGES && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Image Size
+                  </label>
+                  <select
+                    value={
+                      componentSettings[selectedComponent.id]?.imageSize ||
+                      "medium"
+                    }
+                    onChange={(e) =>
+                      onUpdateSettings(selectedComponent.id, {
+                        ...componentSettings[selectedComponent.id],
+                        imageSize: e.target.value,
+                      })
+                    }
+                    className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="small">Small</option>
+                    <option value="medium">Medium</option>
+                    <option value="large">Large</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={
+                        componentSettings[selectedComponent.id]
+                          ?.showThumbnails !== false
+                      }
+                      onChange={(e) =>
+                        onUpdateSettings(selectedComponent.id, {
+                          ...componentSettings[selectedComponent.id],
+                          showThumbnails: e.target.checked,
+                        })
+                      }
+                    />
+                    Show Thumbnails
+                  </label>
+                </div>
+              </>
+            )}
+
+            {selectedComponent.type === COMPONENT_TYPES.DETAILS && (
+              <>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Layout
+                  </label>
+                  <select
+                    value={
+                      componentSettings[selectedComponent.id]?.layout ||
+                      "vertical"
+                    }
+                    onChange={(e) =>
+                      onUpdateSettings(selectedComponent.id, {
+                        ...componentSettings[selectedComponent.id],
+                        layout: e.target.value,
+                      })
+                    }
+                    className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="vertical">Vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={
+                        componentSettings[selectedComponent.id]?.showPrice !==
+                        false
+                      }
+                      onChange={(e) =>
+                        onUpdateSettings(selectedComponent.id, {
+                          ...componentSettings[selectedComponent.id],
+                          showPrice: e.target.checked,
+                        })
+                      }
+                    />
+                    Show Price
+                  </label>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={
+                        componentSettings[selectedComponent.id]
+                          ?.showFeatures !== false
+                      }
+                      onChange={(e) =>
+                        onUpdateSettings(selectedComponent.id, {
+                          ...componentSettings[selectedComponent.id],
+                          showFeatures: e.target.checked,
+                        })
+                      }
+                    />
+                    Show Features
+                  </label>
+                </div>
+              </>
+            )}
+
+            {selectedComponent.type === COMPONENT_TYPES.HOW_TO_USE && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Background Color
+                </label>
+                <select
+                  value={
+                    componentSettings[selectedComponent.id]?.bgColor || "blue"
+                  }
+                  onChange={(e) =>
+                    onUpdateSettings(selectedComponent.id, {
+                      ...componentSettings[selectedComponent.id],
+                      bgColor: e.target.value,
+                    })
+                  }
+                  className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="blue">Blue</option>
+                  <option value="green">Green</option>
+                  <option value="purple">Purple</option>
+                  <option value="gray">Gray</option>
+                </select>
+              </div>
+            )}
+
+            {selectedComponent.type === COMPONENT_TYPES.REVIEWS && (
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Max Reviews
+                </label>
+                <select
+                  value={
+                    componentSettings[selectedComponent.id]?.maxReviews || 3
+                  }
+                  onChange={(e) =>
+                    onUpdateSettings(selectedComponent.id, {
+                      ...componentSettings[selectedComponent.id],
+                      maxReviews: parseInt(e.target.value),
+                    })
+                  }
+                  className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value={2}>2</option>
+                  <option value={3}>3</option>
+                </select>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1502,6 +1730,8 @@ export default function ProductPageBuilder() {
     {}
   );
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [selectedComponent, setSelectedComponent] =
+    useState<ComponentType | null>(null);
   const [draggedComponent, setDraggedComponent] =
     useState<ComponentType | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -2147,9 +2377,7 @@ export default function ProductPageBuilder() {
       console.log("Saving template data:", templateData);
 
       // Call the Redux action to create template
-      const result = await dispatch(
-        updateTemplate({ id: "688b2517677656ae9f8a73aa", data: templateData })
-      );
+      const result = await dispatch(createTemplate(templateData));
 
       if (result.type === "templates/create/fulfilled") {
         alert("Template saved successfully!");
@@ -2201,6 +2429,11 @@ export default function ProductPageBuilder() {
           columnGap={columnGap}
           componentGap={componentGap}
           rowGap={rowGap}
+          selectedComponent={selectedComponent}
+          componentSettings={componentSettings}
+          onUpdateSettings={updateComponentSettings}
+          onUpdateSpan={updateComponentSpan}
+          COMPONENT_SPANS={COMPONENT_SPANS}
         />
       )}
 
@@ -2336,19 +2569,35 @@ export default function ProductPageBuilder() {
                         <div className="w-full">
                           <div
                             className={`relative ${
-                              isPreviewMode ? "" : "group"
+                              isPreviewMode ? "" : "group cursor-pointer"
+                            } ${
+                              selectedComponent?.id === row.component.id
+                                ? "ring-2 ring-blue-500 rounded-lg"
+                                : ""
                             }`}
+                            onClick={() =>
+                              !isPreviewMode &&
+                              setSelectedComponent(row.component)
+                            }
                           >
                             {!isPreviewMode && (
-                              <button
-                                onClick={() =>
-                                  removeComponent(row.component.id)
-                                }
-                                className="absolute top-2 left-2 z-40 p-1 bg-red-500 text-white rounded hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                                title="Remove component"
-                              >
-                                <Trash2 size={12} />
-                              </button>
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeComponent(row.component.id);
+                                  }}
+                                  className="absolute top-2 left-2 z-40 p-1 bg-red-500 text-white rounded hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                  title="Remove component"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                                {selectedComponent?.id === row.component.id && (
+                                  <div className="absolute top-2 right-2 z-40 px-2 py-1 bg-blue-500 text-white text-xs rounded shadow-lg">
+                                    Selected
+                                  </div>
+                                )}
+                              </>
                             )}
                             <ComponentRenderer
                               component={row.component}
@@ -2425,17 +2674,40 @@ export default function ProductPageBuilder() {
                                   totalColumns={3}
                                   isPreviewMode={isPreviewMode}
                                 >
-                                  <div className="relative">
+                                  <div
+                                    className={`relative ${
+                                      isPreviewMode
+                                        ? ""
+                                        : "group cursor-pointer"
+                                    } ${
+                                      selectedComponent?.id === component.id
+                                        ? "ring-2 ring-blue-500 rounded-lg"
+                                        : ""
+                                    }`}
+                                    onClick={() =>
+                                      !isPreviewMode &&
+                                      setSelectedComponent(component)
+                                    }
+                                  >
                                     {!isPreviewMode && (
-                                      <button
-                                        onClick={() =>
-                                          removeComponent(component.id)
-                                        }
-                                        className="absolute top-2 left-2 z-10 p-1 bg-red-500 text-white rounded hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                                        title="Remove component"
-                                      >
-                                        <Trash2 size={12} />
-                                      </button>
+                                      <>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeComponent(component.id);
+                                          }}
+                                          className="absolute top-2 left-2 z-10 p-1 bg-red-500 text-white rounded hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                                          title="Remove component"
+                                        >
+                                          <Trash2 size={12} />
+                                        </button>
+                                        {selectedComponent?.id ===
+                                          component.id && (
+                                          <div className="absolute top-2 right-2 z-10 px-2 py-1 bg-blue-500 text-white text-xs rounded shadow-lg">
+                                            Selected
+                                          </div>
+                                        )}
+                                      </>
                                     )}
                                     <ComponentRenderer
                                       component={component}

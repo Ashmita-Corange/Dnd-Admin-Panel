@@ -38,6 +38,7 @@ import EditVariantList from "./pages/Variant/EditVariantList";
 import ProductList from "./pages/products/ProductLIst";
 import EditProduct from "./pages/products/EditProduct";
 import ProductPageBuilder from "./pages/CustomTemple/page";
+import TemplateList from "./pages/CustomTemple/TempleteList";
 
 // Lazy load pages
 
@@ -183,6 +184,7 @@ export default function App() {
                 path="/custom-temple/add"
                 element={<ProductPageBuilder />}
               />
+              <Route path="/custom-temple/list" element={<TemplateList />} />
             </Route>
           </Route>
 

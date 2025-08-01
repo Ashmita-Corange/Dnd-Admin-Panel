@@ -78,11 +78,11 @@ export const fetchTemplates = createAsyncThunk<
         headers: { "x-tenant": getTenantFromURL() },
       }
     );
-
-    const data = response.data?.body?.message || response.data;
+    console.log("Fetched templates:", response.data?.data);
+    const data = response.data?.data;
 
     return {
-      templates: data.result || [],
+      templates: data.templates || [],
       pagination: {
         total: data.totalDocuments || 0,
         page: data.currentPage || page,
