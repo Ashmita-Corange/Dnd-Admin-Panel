@@ -26,21 +26,31 @@ interface HowToUseStep {
   description: string;
 }
 
+interface Image {
+  file: File | string | null;
+  alt: string;
+}
+
 interface Ingredient {
   name: string;
   quantity: string;
   description: string;
   image: File | string | null;
+  alt: string;
 }
 
 interface Benefit {
   title: string;
   description: string;
+  image?: File | string | null;
+  alt?: string;
 }
 
 interface Precaution {
   title: string;
   description: string;
+  image?: File | string | null;
+  alt?: string;
 }
 
 interface ProductState {
@@ -48,12 +58,12 @@ interface ProductState {
   description: string;
   category: string;
   subcategory: string;
-  images: (File | string)[];
-  thumbnail: File | string | null;
+  images: Image[];
+  thumbnail: Image | null;
   howToUseTitle: string;
   howToUseVideo: string;
   howToUseSteps: HowToUseStep[];
-  descriptionImages: (File | string)[];
+  descriptionImages: Image[];
   descriptionVideo: string;
   highlights: string[];
   attributeSet: string[];
@@ -83,9 +93,9 @@ export default function EditProduct() {
     highlights: [""],
     attributeSet: [],
     status: "active",
-    ingredients: [{ name: "", quantity: "", description: "", image: null }],
-    benefits: [{ title: "", description: "" }],
-    precautions: [{ title: "", description: "" }],
+    ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+    benefits: [{ title: "", description: "", image: null, alt: "" }],
+    precautions: [{ title: "", description: "", image: null, alt: "" }],
     searchKeywords: [""],
   });
 
@@ -117,41 +127,90 @@ export default function EditProduct() {
   const [subcategories, setSubcategories] = useState<Category[]>([]);
 
   // Handlers
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setProduct({ ...product, [name]: value });
   };
 
-  const handleMultipleImagesChange = (e: React.ChangeEvent<HTMLInputElement>, fieldName: "images" | "descriptionImages") => {
+  const handleMultipleImagesChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: "images" | "descriptionImages"
+  ) => {
     if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setProduct({ ...product, [fieldName]: [...product[fieldName], ...filesArray] });
+      const filesArray = Array.from(e.target.files).map((file) => ({
+        file,
+        alt: "",
+      }));
+      setProduct({
+        ...product,
+        [fieldName]: [...product[fieldName], ...filesArray],
+      });
     }
+  };
+
+  const updateImageAlt = (
+    index: number,
+    fieldName: "images" | "descriptionImages",
+    value: string
+  ) => {
+    const updatedImages = product[fieldName].map((img, i) =>
+      i === index ? { ...img, alt: value } : img
+    );
+    setProduct({ ...product, [fieldName]: updatedImages });
   };
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setProduct({ ...product, thumbnail: e.target.files[0] });
+      setProduct({
+        ...product,
+        thumbnail: { file: e.target.files[0], alt: "" },
+      });
     }
   };
 
-  const removeImage = (index: number, fieldName: "images" | "descriptionImages") => {
+  const updateThumbnailAlt = (value: string) => {
+    if (product.thumbnail) {
+      setProduct({
+        ...product,
+        thumbnail: { ...product.thumbnail, alt: value },
+      });
+    }
+  };
+
+  const removeImage = (
+    index: number,
+    fieldName: "images" | "descriptionImages"
+  ) => {
     const updatedImages = product[fieldName].filter((_, i) => i !== index);
     setProduct({ ...product, [fieldName]: updatedImages });
   };
 
   const addHowToUseStep = () => {
-    setProduct({ ...product, howToUseSteps: [...product.howToUseSteps, { title: "", description: "" }] });
+    setProduct({
+      ...product,
+      howToUseSteps: [...product.howToUseSteps, { title: "", description: "" }],
+    });
   };
 
   const removeHowToUseStep = (index: number) => {
     if (product.howToUseSteps.length > 1) {
-      setProduct({ ...product, howToUseSteps: product.howToUseSteps.filter((_, i) => i !== index) });
+      setProduct({
+        ...product,
+        howToUseSteps: product.howToUseSteps.filter((_, i) => i !== index),
+      });
     }
   };
 
-  const updateHowToUseStep = (index: number, field: "title" | "description", value: string) => {
-    const updatedSteps = product.howToUseSteps.map((step, i) => i === index ? { ...step, [field]: value } : step);
+  const updateHowToUseStep = (
+    index: number,
+    field: "title" | "description",
+    value: string
+  ) => {
+    const updatedSteps = product.howToUseSteps.map((step, i) =>
+      i === index ? { ...step, [field]: value } : step
+    );
     setProduct({ ...product, howToUseSteps: updatedSteps });
   };
 
@@ -161,12 +220,17 @@ export default function EditProduct() {
 
   const removeHighlight = (index: number) => {
     if (product.highlights.length > 1) {
-      setProduct({ ...product, highlights: product.highlights.filter((_, i) => i !== index) });
+      setProduct({
+        ...product,
+        highlights: product.highlights.filter((_, i) => i !== index),
+      });
     }
   };
 
   const updateHighlight = (index: number, value: string) => {
-    const updatedHighlights = product.highlights.map((highlight, i) => i === index ? value : highlight);
+    const updatedHighlights = product.highlights.map((highlight, i) =>
+      i === index ? value : highlight
+    );
     setProduct({ ...product, highlights: updatedHighlights });
   };
 
@@ -185,71 +249,155 @@ export default function EditProduct() {
 
   const removeSearchKeyword = (index: number) => {
     if (product.searchKeywords.length > 1) {
-      setProduct({ ...product, searchKeywords: product.searchKeywords.filter((_, i) => i !== index) });
+      setProduct({
+        ...product,
+        searchKeywords: product.searchKeywords.filter((_, i) => i !== index),
+      });
     }
   };
 
   const updateSearchKeyword = (index: number, value: string) => {
     setProduct({
       ...product,
-      searchKeywords: product.searchKeywords.map((kw, i) => i === index ? value : kw),
+      searchKeywords: product.searchKeywords.map((kw, i) =>
+        i === index ? value : kw
+      ),
     });
   };
 
   const addIngredient = () => {
     setProduct({
       ...product,
-      ingredients: [...product.ingredients, { name: "", quantity: "", description: "", image: null }],
+      ingredients: [
+        ...product.ingredients,
+        { name: "", quantity: "", description: "", image: null, alt: "" },
+      ],
     });
   };
 
   const removeIngredient = (index: number) => {
     if (product.ingredients.length > 1) {
-      setProduct({ ...product, ingredients: product.ingredients.filter((_, i) => i !== index) });
+      setProduct({
+        ...product,
+        ingredients: product.ingredients.filter((_, i) => i !== index),
+      });
     }
   };
 
-  const updateIngredient = (index: number, field: "name" | "quantity" | "description", value: string) => {
-    const updated = product.ingredients.map((ing, i) => i === index ? { ...ing, [field]: value } : ing);
+  const updateIngredient = (
+    index: number,
+    field: "name" | "quantity" | "description",
+    value: string
+  ) => {
+    const updated = product.ingredients.map((ing, i) =>
+      i === index ? { ...ing, [field]: value } : ing
+    );
     setProduct({ ...product, ingredients: updated });
   };
 
   const updateIngredientImage = (index: number, file: File | null) => {
-    const updated = product.ingredients.map((ing, i) => i === index ? { ...ing, image: file } : ing);
+    const updated = product.ingredients.map((ing, i) =>
+      i === index ? { ...ing, image: file, alt: file ? ing.alt : "" } : ing
+    );
+    setProduct({ ...product, ingredients: updated });
+  };
+
+  const updateIngredientAlt = (index: number, value: string) => {
+    const updated = product.ingredients.map((ing, i) =>
+      i === index ? { ...ing, alt: value } : ing
+    );
     setProduct({ ...product, ingredients: updated });
   };
 
   const addBenefit = () => {
-    setProduct({ ...product, benefits: [...product.benefits, { title: "", description: "" }] });
+    setProduct({
+      ...product,
+      benefits: [
+        ...product.benefits,
+        { title: "", description: "", image: null, alt: "" },
+      ],
+    });
   };
 
   const removeBenefit = (index: number) => {
     if (product.benefits.length > 1) {
-      setProduct({ ...product, benefits: product.benefits.filter((_, i) => i !== index) });
+      setProduct({
+        ...product,
+        benefits: product.benefits.filter((_, i) => i !== index),
+      });
     }
   };
 
-  const updateBenefit = (index: number, field: "title" | "description", value: string) => {
-    const updated = product.benefits.map((b, i) => i === index ? { ...b, [field]: value } : b);
+  const updateBenefit = (
+    index: number,
+    field: "title" | "description",
+    value: string
+  ) => {
+    const updated = product.benefits.map((b, i) =>
+      i === index ? { ...b, [field]: value } : b
+    );
+    setProduct({ ...product, benefits: updated });
+  };
+
+  const updateBenefitImage = (index: number, file: File | null) => {
+    const updated = product.benefits.map((b, i) =>
+      i === index ? { ...b, image: file, alt: file ? b.alt : "" } : b
+    );
+    setProduct({ ...product, benefits: updated });
+  };
+
+  const updateBenefitAlt = (index: number, value: string) => {
+    const updated = product.benefits.map((b, i) =>
+      i === index ? { ...b, alt: value } : b
+    );
     setProduct({ ...product, benefits: updated });
   };
 
   const addPrecaution = () => {
-    setProduct({ ...product, precautions: [...product.precautions, { title: "", description: "" }] });
+    setProduct({
+      ...product,
+      precautions: [
+        ...product.precautions,
+        { title: "", description: "", image: null, alt: "" },
+      ],
+    });
   };
 
   const removePrecaution = (index: number) => {
     if (product.precautions.length > 1) {
-      setProduct({ ...product, precautions: product.precautions.filter((_, i) => i !== index) });
+      setProduct({
+        ...product,
+        precautions: product.precautions.filter((_, i) => i !== index),
+      });
     }
   };
 
-  const updatePrecaution = (index: number, field: "title" | "description", value: string) => {
-    const updated = product.precautions.map((p, i) => i === index ? { ...p, [field]: value } : p);
+  const updatePrecaution = (
+    index: number,
+    field: "title" | "description",
+    value: string
+  ) => {
+    const updated = product.precautions.map((p, i) =>
+      i === index ? { ...p, [field]: value } : p
+    );
     setProduct({ ...product, precautions: updated });
   };
 
-  const getImageUrl = (image: string | File) => {
+  const updatePrecautionImage = (index: number, file: File | null) => {
+    const updated = product.precautions.map((p, i) =>
+      i === index ? { ...p, image: file, alt: file ? p.alt : "" } : p
+    );
+    setProduct({ ...product, precautions: updated });
+  };
+
+  const updatePrecautionAlt = (index: number, value: string) => {
+    const updated = product.precautions.map((p, i) =>
+      i === index ? { ...p, alt: value } : p
+    );
+    setProduct({ ...product, precautions: updated });
+  };
+
+  const getImageUrl = (image: File | string | null) => {
     if (typeof image === "string") {
       return `${Image_URL}/${image}`;
     } else if (image instanceof File) {
@@ -260,12 +408,18 @@ export default function EditProduct() {
 
   const handleSubmit = async () => {
     if (!product.name) {
-      toast.error("Product name is required.", { duration: 8000, position: "top-right" });
+      toast.error("Product name is required.", {
+        duration: 8000,
+        position: "top-right",
+      });
       return;
     }
 
     if (!product.category) {
-      toast.error("Category is required.", { duration: 8000, position: "top-right" });
+      toast.error("Category is required.", {
+        duration: 8000,
+        position: "top-right",
+      });
       return;
     }
 
@@ -284,19 +438,24 @@ export default function EditProduct() {
     });
 
     product.images.forEach((image, index) => {
-      if (image instanceof File) {
-        formData.append(`images[${index}]`, image);
+      if (image.file instanceof File) {
+        formData.append(`images[${index}].file`, image.file);
       }
+      formData.append(`images[${index}].alt`, image.alt);
     });
 
-    if (product.thumbnail instanceof File) {
-      formData.append("thumbnail", product.thumbnail);
+    if (product.thumbnail && product.thumbnail.file) {
+      if (product.thumbnail.file instanceof File) {
+        formData.append("thumbnail.file", product.thumbnail.file);
+      }
+      formData.append("thumbnail.alt", product.thumbnail.alt);
     }
 
     product.descriptionImages.forEach((image, index) => {
-      if (image instanceof File) {
-        formData.append(`descriptionImages[${index}]`, image);
+      if (image.file instanceof File) {
+        formData.append(`descriptionImages[${index}].file`, image.file);
       }
+      formData.append(`descriptionImages[${index}].alt`, image.alt);
     });
 
     product.howToUseSteps.forEach((step, index) => {
@@ -319,16 +478,25 @@ export default function EditProduct() {
       if (ing.image instanceof File) {
         formData.append(`ingredients[${index}].image`, ing.image);
       }
+      formData.append(`ingredients[${index}].alt`, ing.alt);
     });
 
     product.benefits.forEach((b, index) => {
       formData.append(`benefits[${index}].title`, b.title);
       formData.append(`benefits[${index}].description`, b.description);
+      if (b.image instanceof File) {
+        formData.append(`benefits[${index}].image`, b.image);
+      }
+      formData.append(`benefits[${index}].alt`, b.alt);
     });
 
     product.precautions.forEach((p, index) => {
       formData.append(`precautions[${index}].title`, p.title);
       formData.append(`precautions[${index}].description`, p.description);
+      if (p.image instanceof File) {
+        formData.append(`precautions[${index}].image`, p.image);
+      }
+      formData.append(`precautions[${index}].alt`, p.alt);
     });
 
     try {
@@ -369,19 +537,41 @@ export default function EditProduct() {
         description: data.description || "",
         category: data.category?._id || data.category || "",
         subcategory: data.subcategory?._id || data.subcategory || "",
-        images: data.images || [],
-        thumbnail: data.thumbnail || null,
+        images: data.images?.map((img: any) => ({
+          file: img.url || img,
+          alt: img.alt || "",
+        })) || [],
+        thumbnail: data.thumbnail ? { file: data.thumbnail.url || data.thumbnail, alt: data.thumbnail.alt || "" } : null,
         howToUseTitle: data.howToUseTitle || "",
         howToUseVideo: data.howToUseVideo || "",
         howToUseSteps: data.howToUseSteps || [{ title: "", description: "" }],
-        descriptionImages: data.descriptionImages || [],
+        descriptionImages: data.descriptionImages?.map((img: any) => ({
+          file: img.url || img,
+          alt: img.alt || "",
+        })) || [],
         descriptionVideo: data.descriptionVideo || "",
         highlights: data.highlights || [""],
-        attributeSet: data.attributeSet?.map((att) => att.attributeId?._id || att.attributeId) || [],
+        attributeSet: data.attributeSet?.map((att: any) => att.attributeId?._id || att.attributeId) || [],
         status: data.status || "active",
-        ingredients: data.ingredients || [{ name: "", quantity: "", description: "", image: null }],
-        benefits: data.benefits || [{ title: "", description: "" }],
-        precautions: data.precautions || [{ title: "", description: "" }],
+        ingredients: data.ingredients?.map((ing: any) => ({
+          name: ing.name || "",
+          quantity: ing.quantity || "",
+          description: ing.description || "",
+          image: ing.image?.url || ing.image || null,
+          alt: ing.image?.alt || "",
+        })) || [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+        benefits: data.benefits?.map((b: any) => ({
+          title: b.title || "",
+          description: b.description || "",
+          image: b.image?.url || b.image || null,
+          alt: b.image?.alt || "",
+        })) || [{ title: "", description: "", image: null, alt: "" }],
+        precautions: data.precautions?.map((p: any) => ({
+          title: p.title || "",
+          description: p.description || "",
+          image: p.image?.url || p.image || null,
+          alt: p.image?.alt || "",
+        })) || [{ title: "", description: "", image: null, alt: "" }],
         searchKeywords: data.searchKeywords || [""],
       });
     } catch (error) {
@@ -469,7 +659,9 @@ export default function EditProduct() {
                 >
                   <option value="">Select Category</option>
                   {categories.map((cat: Category) => (
-                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -485,7 +677,9 @@ export default function EditProduct() {
                 >
                   <option value="">Select Subcategory</option>
                   {subcategories.map((sub: Category) => (
-                    <option key={sub._id} value={sub._id}>{sub.name}</option>
+                    <option key={sub._id} value={sub._id}>
+                      {sub.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -546,9 +740,16 @@ export default function EditProduct() {
                     {product.images.map((image, index) => (
                       <div key={index} className="relative group">
                         <img
-                          src={getImageUrl(image)}
-                          alt={`Product ${index + 1}`}
+                          src={getImageUrl(image.file)}
+                          alt={image.alt || `Product ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg border shadow-sm"
+                        />
+                        <input
+                          type="text"
+                          value={image.alt}
+                          onChange={(e) => updateImageAlt(index, "images", e.target.value)}
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder={`Alt text for image ${index + 1}`}
                         />
                         <button
                           type="button"
@@ -581,12 +782,19 @@ export default function EditProduct() {
                     </p>
                   </label>
                 </div>
-                {product.thumbnail && (
-                  <div className="relative group">
+                {product.thumbnail && product.thumbnail.file && (
+                  <div className="space-y-2">
                     <img
-                      src={getImageUrl(product.thumbnail)}
-                      alt="Thumbnail Preview"
+                      src={getImageUrl(product.thumbnail.file)}
+                      alt={product.thumbnail.alt || "Thumbnail Preview"}
                       className="w-full h-32 object-cover rounded-lg border shadow-sm"
+                    />
+                    <input
+                      type="text"
+                      value={product.thumbnail.alt}
+                      onChange={(e) => updateThumbnailAlt(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                      placeholder="Alt text for thumbnail"
                     />
                   </div>
                 )}
@@ -640,10 +848,15 @@ export default function EditProduct() {
                 </button>
               </div>
               {product.howToUseSteps.map((step, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-6 mb-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700">
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-6 mb-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700"
+                >
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">{index + 1}</span>
+                      <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                        {index + 1}
+                      </span>
                       Step {index + 1}
                     </h4>
                     {product.howToUseSteps.length > 1 && (
@@ -705,9 +918,16 @@ export default function EditProduct() {
                     {product.descriptionImages.map((image, index) => (
                       <div key={index} className="relative group">
                         <img
-                          src={getImageUrl(image)}
-                          alt={`Description ${index + 1}`}
+                          src={getImageUrl(image.file)}
+                          alt={image.alt || `Description ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg border shadow-sm"
+                        />
+                        <input
+                          type="text"
+                          value={image.alt}
+                          onChange={(e) => updateImageAlt(index, "descriptionImages", e.target.value)}
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder={`Alt text for description image ${index + 1}`}
                         />
                         <button
                           type="button"
@@ -754,8 +974,13 @@ export default function EditProduct() {
               </button>
             </div>
             {product.highlights.map((highlight, index) => (
-              <div key={index} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 dark:border-gray-700">
-                <div className="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">{index + 1}</div>
+              <div
+                key={index}
+                className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 dark:border-gray-700"
+              >
+                <div className="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                  {index + 1}
+                </div>
                 <input
                   type="text"
                   value={highlight}
@@ -785,7 +1010,10 @@ export default function EditProduct() {
               </label>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {attributes.map((attribute: Attribute) => (
-                  <div key={attribute._id} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 dark:border-gray-700 dark:hover:bg-indigo-900/20 transition-colors duration-200">
+                  <div
+                    key={attribute._id}
+                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 dark:border-gray-700 dark:hover:bg-indigo-900/20 transition-colors duration-200"
+                  >
                     <input
                       type="checkbox"
                       id={`attribute-${attribute._id}`}
@@ -793,7 +1021,10 @@ export default function EditProduct() {
                       onChange={(e) => handleAttributeChange(attribute._id, e.target.checked)}
                       className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     />
-                    <label htmlFor={`attribute-${attribute._id}`} className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+                    <label
+                      htmlFor={`attribute-${attribute._id}`}
+                      className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+                    >
                       {attribute.name}
                     </label>
                   </div>
@@ -819,10 +1050,15 @@ export default function EditProduct() {
               </button>
             </div>
             {product.ingredients.map((ingredient, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 dark:border-gray-700">
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/20 dark:border-gray-700"
+              >
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                    <span className="bg-teal-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">{index + 1}</span>
+                    <span className="bg-teal-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                      {index + 1}
+                    </span>
                     Ingredient {index + 1}
                   </h4>
                   {product.ingredients.length > 1 && (
@@ -854,22 +1090,36 @@ export default function EditProduct() {
                     <input
                       type="file"
                       accept="image/*"
-                      onChange={(e) => updateIngredientImage(index, e.target.files ? e.target.files[0] : null)}
+                      onChange={(e) =>
+                        updateIngredientImage(index, e.target.files ? e.target.files[0] : null)
+                      }
                       className="hidden"
                       id={`ingredient-image-${index}`}
                     />
-                    <label htmlFor={`ingredient-image-${index}`} className="cursor-pointer">
+                    <label
+                      htmlFor={`ingredient-image-${index}`}
+                      className="cursor-pointer"
+                    >
                       <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Upload Image</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Upload Image
+                      </p>
                     </label>
                   </div>
                 </div>
                 {ingredient.image && (
-                  <div className="mb-4">
+                  <div className="mb-4 space-y-2">
                     <img
                       src={getImageUrl(ingredient.image)}
-                      alt={`Ingredient ${index + 1}`}
+                      alt={ingredient.alt || `Ingredient ${index + 1}`}
                       className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                    />
+                    <input
+                      type="text"
+                      value={ingredient.alt}
+                      onChange={(e) => updateIngredientAlt(index, e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                      placeholder="Alt text for ingredient image"
                     />
                   </div>
                 )}
@@ -900,8 +1150,13 @@ export default function EditProduct() {
               </button>
             </div>
             {product.searchKeywords.map((keyword, index) => (
-              <div key={index} className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 dark:border-gray-700">
-                <div className="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">{index + 1}</div>
+              <div
+                key={index}
+                className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-pink-50 to-pink-100 dark:from-pink-900/20 dark:to-pink-800/20 dark:border-gray-700"
+              >
+                <div className="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+                  {index + 1}
+                </div>
                 <input
                   type="text"
                   value={keyword}
@@ -939,10 +1194,15 @@ export default function EditProduct() {
               </button>
             </div>
             {product.benefits.map((benefit, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 dark:border-gray-700">
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 dark:border-gray-700"
+              >
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                    <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">{index + 1}</span>
+                    <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                      {index + 1}
+                    </span>
                     Benefit {index + 1}
                   </h4>
                   {product.benefits.length > 1 && (
@@ -963,6 +1223,42 @@ export default function EditProduct() {
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                     placeholder="Benefit title"
                   />
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-3 text-center hover:border-red-400 transition-colors duration-200">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        updateBenefitImage(index, e.target.files ? e.target.files[0] : null)
+                      }
+                      className="hidden"
+                      id={`benefit-image-${index}`}
+                    />
+                    <label
+                      htmlFor={`benefit-image-${index}`}
+                      className="cursor-pointer"
+                    >
+                      <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Upload Benefit Image
+                      </p>
+                    </label>
+                  </div>
+                  {benefit.image && (
+                    <div className="mb-4 space-y-2">
+                      <img
+                        src={getImageUrl(benefit.image)}
+                        alt={benefit.alt || `Benefit ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                      />
+                      <input
+                        type="text"
+                        value={benefit.alt}
+                        onChange={(e) => updateBenefitAlt(index, e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Alt text for benefit image"
+                      />
+                    </div>
+                  )}
                   <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                     <CustomEditor
                       value={benefit.description}
@@ -991,10 +1287,15 @@ export default function EditProduct() {
               </button>
             </div>
             {product.precautions.map((precaution, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700">
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700"
+              >
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-                    <span className="bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">{index + 1}</span>
+                    <span className="bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                      {index + 1}
+                    </span>
                     Precaution {index + 1}
                   </h4>
                   {product.precautions.length > 1 && (
@@ -1015,6 +1316,42 @@ export default function EditProduct() {
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                     placeholder="Precaution title"
                   />
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-3 text-center hover:border-gray-400 transition-colors duration-200">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        updatePrecautionImage(index, e.target.files ? e.target.files[0] : null)
+                      }
+                      className="hidden"
+                      id={`precaution-image-${index}`}
+                    />
+                    <label
+                      htmlFor={`precaution-image-${index}`}
+                      className="cursor-pointer"
+                    >
+                      <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Upload Precaution Image
+                      </p>
+                    </label>
+                  </div>
+                  {precaution.image && (
+                    <div className="mb-4 space-y-2">
+                      <img
+                        src={getImageUrl(precaution.image)}
+                        alt={precaution.alt || `Precaution ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                      />
+                      <input
+                        type="text"
+                        value={precaution.alt}
+                        onChange={(e) => updatePrecautionAlt(index, e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Alt text for precaution image"
+                      />
+                    </div>
+                  )}
                   <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                     <CustomEditor
                       value={precaution.description}
@@ -1053,7 +1390,11 @@ export default function EditProduct() {
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${activeTab === tab.id ? tab.color : 'bg-gray-200 dark:bg-gray-700'} text-white`}>
+                    <div
+                      className={`p-2 rounded-lg ${
+                        activeTab === tab.id ? tab.color : "bg-gray-200 dark:bg-gray-700"
+                      } text-white`}
+                    >
                       <IconComponent size={16} />
                     </div>
                     {tab.name}
@@ -1094,7 +1435,10 @@ export default function EditProduct() {
           </div>
         </div>
       </div>
-      <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#363636', color: '#fff' } }} />
+      <Toaster
+        position="top-right"
+        toastOptions={{ duration: 4000, style: { background: "#363636", color: "#fff" } }}
+      />
       {popup.isVisible && (
         <PopupAlert
           message={popup.message}
