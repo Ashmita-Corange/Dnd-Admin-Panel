@@ -12,7 +12,7 @@ import CustomEditor from "../../components/common/TextEditor";
 import { fetchAttributes } from "../../store/slices/attributeSlice";
 import PopupAlert from "../../components/popUpAlert";
 
-// Mock interfaces - replace with your actual types
+// Interfaces
 interface Category {
   _id: string;
   name: string;
@@ -28,21 +28,31 @@ interface HowToUseStep {
   description: string;
 }
 
+interface Image {
+  file: File | null;
+  alt: string;
+}
+
 interface Ingredient {
   name: string;
   quantity: string;
   description: string;
   image: File | null;
+  alt: string;
 }
 
 interface Benefit {
   title: string;
   description: string;
+  image?: File | null;
+  alt?: string;
 }
 
 interface Precaution {
   title: string;
   description: string;
+  image?: File | null;
+  alt?: string;
 }
 
 interface ProductState {
@@ -50,12 +60,12 @@ interface ProductState {
   description: string;
   category: string;
   subcategory: string;
-  images: File[];
-  thumbnail: File | null;
+  images: Image[];
+  thumbnail: Image | null;
   howToUseTitle: string;
   howToUseVideo: string;
   howToUseSteps: HowToUseStep[];
-  descriptionImages: File[];
+  descriptionImages: Image[];
   descriptionVideo: string;
   highlights: string[];
   attributeSet: string[];
@@ -83,9 +93,9 @@ export default function AddProduct() {
     highlights: [""],
     attributeSet: [],
     status: "active",
-    ingredients: [{ name: "", quantity: "", description: "", image: null }],
-    benefits: [{ title: "", description: "" }],
-    precautions: [{ title: "", description: "" }],
+    ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+    benefits: [{ title: "", description: "", image: null, alt: "" }],
+    precautions: [{ title: "", description: "", image: null, alt: "" }],
     searchKeywords: [""],
   });
 
@@ -129,7 +139,7 @@ export default function AddProduct() {
       ...product,
       ingredients: [
         ...product.ingredients,
-        { name: "", quantity: "", description: "", image: null },
+        { name: "", quantity: "", description: "", image: null, alt: "" },
       ],
     });
   };
@@ -154,7 +164,14 @@ export default function AddProduct() {
 
   const updateIngredientImage = (index: number, file: File | null) => {
     const updated = product.ingredients.map((ing, i) =>
-      i === index ? { ...ing, image: file } : ing
+      i === index ? { ...ing, image: file, alt: file ? ing.alt : "" } : ing
+    );
+    setProduct({ ...product, ingredients: updated });
+  };
+
+  const updateIngredientAlt = (index: number, value: string) => {
+    const updated = product.ingredients.map((ing, i) =>
+      i === index ? { ...ing, alt: value } : ing
     );
     setProduct({ ...product, ingredients: updated });
   };
@@ -163,15 +180,17 @@ export default function AddProduct() {
   const addBenefit = () => {
     setProduct({
       ...product,
-      benefits: [...product.benefits, { title: "", description: "" }],
+      benefits: [...product.benefits, { title: "", description: "", image: null, alt: "" }],
     });
   };
+
   const removeBenefit = (index: number) => {
     if (product.benefits.length > 1) {
       const updated = product.benefits.filter((_, i) => i !== index);
       setProduct({ ...product, benefits: updated });
     }
   };
+
   const updateBenefit = (
     index: number,
     field: "title" | "description",
@@ -183,19 +202,35 @@ export default function AddProduct() {
     setProduct({ ...product, benefits: updated });
   };
 
+  const updateBenefitImage = (index: number, file: File | null) => {
+    const updated = product.benefits.map((b, i) =>
+      i === index ? { ...b, image: file, alt: file ? b.alt : "" } : b
+    );
+    setProduct({ ...product, benefits: updated });
+  };
+
+  const updateBenefitAlt = (index: number, value: string) => {
+    const updated = product.benefits.map((b, i) =>
+      i === index ? { ...b, alt: value } : b
+    );
+    setProduct({ ...product, benefits: updated });
+  };
+
   // Precaution handlers
   const addPrecaution = () => {
     setProduct({
       ...product,
-      precautions: [...product.precautions, { title: "", description: "" }],
+      precautions: [...product.precautions, { title: "", description: "", image: null, alt: "" }],
     });
   };
+
   const removePrecaution = (index: number) => {
     if (product.precautions.length > 1) {
       const updated = product.precautions.filter((_, i) => i !== index);
       setProduct({ ...product, precautions: updated });
     }
   };
+
   const updatePrecaution = (
     index: number,
     field: "title" | "description",
@@ -203,6 +238,20 @@ export default function AddProduct() {
   ) => {
     const updated = product.precautions.map((p, i) =>
       i === index ? { ...p, [field]: value } : p
+    );
+    setProduct({ ...product, precautions: updated });
+  };
+
+  const updatePrecautionImage = (index: number, file: File | null) => {
+    const updated = product.precautions.map((p, i) =>
+      i === index ? { ...p, image: file, alt: file ? p.alt : "" } : p
+    );
+    setProduct({ ...product, precautions: updated });
+  };
+
+  const updatePrecautionAlt = (index: number, value: string) => {
+    const updated = product.precautions.map((p, i) =>
+      i === index ? { ...p, alt: value } : p
     );
     setProduct({ ...product, precautions: updated });
   };
@@ -219,7 +268,7 @@ export default function AddProduct() {
   const { attributes } = useSelector((state: any) => state.attributes);
 
   const [subcategories, setSubcategories] = useState<Category[]>([]);
-  
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -234,7 +283,10 @@ export default function AddProduct() {
     fieldName: "images" | "descriptionImages"
   ) => {
     if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
+      const filesArray = Array.from(e.target.files).map((file) => ({
+        file,
+        alt: "",
+      }));
       setProduct({
         ...product,
         [fieldName]: [...product[fieldName], ...filesArray],
@@ -242,9 +294,32 @@ export default function AddProduct() {
     }
   };
 
+  const updateImageAlt = (
+    index: number,
+    fieldName: "images" | "descriptionImages",
+    value: string
+  ) => {
+    const updatedImages = product[fieldName].map((img, i) =>
+      i === index ? { ...img, alt: value } : img
+    );
+    setProduct({ ...product, [fieldName]: updatedImages });
+  };
+
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setProduct({ ...product, thumbnail: e.target.files[0] });
+      setProduct({
+        ...product,
+        thumbnail: { file: e.target.files[0], alt: "" },
+      });
+    }
+  };
+
+  const updateThumbnailAlt = (value: string) => {
+    if (product.thumbnail) {
+      setProduct({
+        ...product,
+        thumbnail: { ...product.thumbnail, alt: value },
+      });
     }
   };
 
@@ -347,19 +422,22 @@ export default function AddProduct() {
       formData.append(`searchKeywords[${index}]`, kw);
     });
 
-    // Add images
+    // Add images with alt text
     product.images.forEach((image, index) => {
-      formData.append(`images[${index}]`, image);
+      formData.append(`images[${index}].url`, image.file);
+      formData.append(`images[${index}].alt`, image.alt);
     });
 
-    // Add thumbnail
-    if (product.thumbnail) {
-      formData.append("thumbnail", product.thumbnail);
+    // Add thumbnail with alt text
+    if (product.thumbnail && product.thumbnail.file) {
+      formData.append("thumbnail.url", product.thumbnail.file);
+      formData.append("thumbnail.alt", product.thumbnail.alt);
     }
 
-    // Add description images
+    // Add description images with alt text
     product.descriptionImages.forEach((image, index) => {
-      formData.append(`descriptionImages[${index}]`, image);
+      formData.append(`descriptionImages[${index}].url`, image.file);
+      formData.append(`descriptionImages[${index}].alt`, image.alt);
     });
 
     // Add how to use steps
@@ -378,7 +456,7 @@ export default function AddProduct() {
       formData.append(`attributeSet[${index}].attributeId`, attributeId);
     });
 
-    // Add ingredients
+    // Add ingredients with alt text
     product.ingredients.forEach((ing, index) => {
       formData.append(`ingredients[${index}].name`, ing.name);
       formData.append(`ingredients[${index}].quantity`, ing.quantity);
@@ -386,18 +464,27 @@ export default function AddProduct() {
       if (ing.image) {
         formData.append(`ingredients[${index}].image`, ing.image);
       }
+      formData.append(`ingredients[${index}].alt`, ing.alt);
     });
 
-    // Add benefits
+    // Add benefits with alt text
     product.benefits.forEach((b, index) => {
       formData.append(`benefits[${index}].title`, b.title);
       formData.append(`benefits[${index}].description`, b.description);
+      if (b.image) {
+        formData.append(`benefits[${index}].image`, b.image);
+      }
+      formData.append(`benefits[${index}].alt`, b.alt);
     });
 
-    // Add precautions
+    // Add precautions with alt text
     product.precautions.forEach((p, index) => {
       formData.append(`precautions[${index}].title`, p.title);
       formData.append(`precautions[${index}].description`, p.description);
+      if (p.image) {
+        formData.append(`precautions[${index}].image`, p.image);
+      }
+      formData.append(`precautions[${index}].alt`, p.alt);
     });
 
     try {
@@ -418,9 +505,9 @@ export default function AddProduct() {
           highlights: [""],
           attributeSet: [],
           status: "active",
-          ingredients: [{ name: "", quantity: "", description: "", image: null }],
-          benefits: [{ title: "", description: "" }],
-          precautions: [{ title: "", description: "" }],
+          ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+          benefits: [{ title: "", description: "", image: null, alt: "" }],
+          precautions: [{ title: "", description: "", image: null, alt: "" }],
           searchKeywords: [""],
         });
 
@@ -446,7 +533,7 @@ export default function AddProduct() {
     if (attributes?.length === 0) {
       dispatch(fetchAttributes()).unwrap();
     }
-  }, []);
+  }, [dispatch]);
 
   const getSubcategories = async () => {
     try {
@@ -501,7 +588,7 @@ export default function AddProduct() {
                   required
                 >
                   <option value="">Select Category</option>
-                  {categories.map((cat) => (
+                  {categories.map((cat: Category) => (
                     <option key={cat._id} value={cat._id}>
                       {cat.name}
                     </option>
@@ -536,7 +623,7 @@ export default function AddProduct() {
               <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                 <CustomEditor
                   value={product.description}
-                  onChange={(value) => {
+                  onChange={(value: string) => {
                     setProduct({ ...product, description: value });
                   }}
                 />
@@ -585,13 +672,20 @@ export default function AddProduct() {
                   </label>
                 </div>
                 {product.images.length > 0 && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-4">
                     {product.images.map((image, index) => (
                       <div key={index} className="relative group">
                         <img
-                          src={URL.createObjectURL(image)}
-                          alt={`Product ${index + 1}`}
+                          src={URL.createObjectURL(image.file)}
+                          alt={image.alt || `Product ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg border shadow-sm"
+                        />
+                        <input
+                          type="text"
+                          value={image.alt}
+                          onChange={(e) => updateImageAlt(index, "images", e.target.value)}
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder={`Alt text for image ${index + 1}`}
                         />
                         <button
                           type="button"
@@ -625,12 +719,19 @@ export default function AddProduct() {
                     </p>
                   </label>
                 </div>
-                {product.thumbnail && (
-                  <div className="relative group">
+                {product.thumbnail && product.thumbnail.file && (
+                  <div className="space-y-2">
                     <img
-                      src={URL.createObjectURL(product.thumbnail)}
-                      alt="Thumbnail Preview"
+                      src={URL.createObjectURL(product.thumbnail.file)}
+                      alt={product.thumbnail.alt || "Thumbnail Preview"}
                       className="w-full h-32 object-cover rounded-lg border shadow-sm"
+                    />
+                    <input
+                      type="text"
+                      value={product.thumbnail.alt}
+                      onChange={(e) => updateThumbnailAlt(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                      placeholder="Alt text for thumbnail"
                     />
                   </div>
                 )}
@@ -722,7 +823,7 @@ export default function AddProduct() {
                     <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                       <CustomEditor
                         value={step.description}
-                        onChange={(value) =>
+                        onChange={(value: string) =>
                           updateHowToUseStep(index, "description", value)
                         }
                       />
@@ -761,19 +862,24 @@ export default function AddProduct() {
                   </label>
                 </div>
                 {product.descriptionImages.length > 0 && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-4">
                     {product.descriptionImages.map((image, index) => (
                       <div key={index} className="relative group">
                         <img
-                          src={URL.createObjectURL(image)}
-                          alt={`Description ${index + 1}`}
+                          src={URL.createObjectURL(image.file)}
+                          alt={image.alt || `Description ${index + 1}`}
                           className="w-full h-24 object-cover rounded-lg border shadow-sm"
+                        />
+                        <input
+                          type="text"
+                          value={image.alt}
+                          onChange={(e) => updateImageAlt(index, "descriptionImages", e.target.value)}
+                          className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                          placeholder={`Alt text for description image ${index + 1}`}
                         />
                         <button
                           type="button"
-                          onClick={() =>
-                            removeImage(index, "descriptionImages")
-                          }
+                          onClick={() => removeImage(index, "descriptionImages")}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           <Trash2 size={14} />
@@ -784,7 +890,7 @@ export default function AddProduct() {
                 )}
               </div>
 
-           <div className="space-y-4">
+              <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Description Video URL
                 </label>
@@ -967,11 +1073,18 @@ export default function AddProduct() {
                 </div>
 
                 {ingredient.image && (
-                  <div className="mb-4">
+                  <div className="mb-4 space-y-2">
                     <img
                       src={URL.createObjectURL(ingredient.image)}
-                      alt={`Ingredient ${index + 1}`}
+                      alt={ingredient.alt || `Ingredient ${index + 1}`}
                       className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                    />
+                    <input
+                      type="text"
+                      value={ingredient.alt}
+                      onChange={(e) => updateIngredientAlt(index, e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                      placeholder="Alt text for ingredient image"
                     />
                   </div>
                 )}
@@ -979,7 +1092,7 @@ export default function AddProduct() {
                 <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                   <CustomEditor
                     value={ingredient.description}
-                    onChange={(value) =>
+                    onChange={(value: string) =>
                       updateIngredient(index, "description", value)
                     }
                   />
@@ -1084,10 +1197,49 @@ export default function AddProduct() {
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                     placeholder="Benefit title"
                   />
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-3 text-center hover:border-red-400 transition-colors duration-200">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        updateBenefitImage(
+                          index,
+                          e.target.files ? e.target.files[0] : null
+                        )
+                      }
+                      className="hidden"
+                      id={`benefit-image-${index}`}
+                    />
+                    <label
+                      htmlFor={`benefit-image-${index}`}
+                      className="cursor-pointer"
+                    >
+                      <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Upload Benefit Image
+                      </p>
+                    </label>
+                  </div>
+                  {benefit.image && (
+                    <div className="mb-4 space-y-2">
+                      <img
+                        src={URL.createObjectURL(benefit.image)}
+                        alt={benefit.alt || `Benefit ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                      />
+                      <input
+                        type="text"
+                        value={benefit.alt}
+                        onChange={(e) => updateBenefitAlt(index, e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Alt text for benefit image"
+                      />
+                    </div>
+                  )}
                   <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                     <CustomEditor
                       value={benefit.description}
-                      onChange={(value) =>
+                      onChange={(value: string) =>
                         updateBenefit(index, "description", value)
                       }
                     />
@@ -1147,10 +1299,49 @@ export default function AddProduct() {
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                     placeholder="Precaution title"
                   />
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-3 text-center hover:border-gray-400 transition-colors duration-200">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) =>
+                        updatePrecautionImage(
+                          index,
+                          e.target.files ? e.target.files[0] : null
+                        )
+                      }
+                      className="hidden"
+                      id={`precaution-image-${index}`}
+                    />
+                    <label
+                      htmlFor={`precaution-image-${index}`}
+                      className="cursor-pointer"
+                    >
+                      <Image className="mx-auto h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Upload Precaution Image
+                      </p>
+                    </label>
+                  </div>
+                  {precaution.image && (
+                    <div className="mb-4 space-y-2">
+                      <img
+                        src={URL.createObjectURL(precaution.image)}
+                        alt={precaution.alt || `Precaution ${index + 1}`}
+                        className="w-20 h-20 object-cover rounded-lg border shadow-sm"
+                      />
+                      <input
+                        type="text"
+                        value={precaution.alt}
+                        onChange={(e) => updatePrecautionAlt(index, e.target.value)}
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                        placeholder="Alt text for precaution image"
+                      />
+                    </div>
+                  )}
                   <div className="border border-gray-300 rounded-lg dark:border-gray-700">
                     <CustomEditor
                       value={precaution.description}
-                      onChange={(value) =>
+                      onChange={(value: string) =>
                         updatePrecaution(index, "description", value)
                       }
                     />
@@ -1169,7 +1360,7 @@ export default function AddProduct() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-gray-800  shadow-2xl overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
             <h1 className="text-3xl font-bold text-white mb-2">Add New Product</h1>
@@ -1191,9 +1382,11 @@ export default function AddProduct() {
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300"
                     }`}
                   >
-                    <div className={`p-2 rounded-lg ${
-                      activeTab === tab.id ? tab.color : 'bg-gray-200 dark:bg-gray-700'
-                    } text-white`}>
+                    <div
+                      className={`p-2 rounded-lg ${
+                        activeTab === tab.id ? tab.color : "bg-gray-200 dark:bg-gray-700"
+                      } text-white`}
+                    >
                       <IconComponent size={16} />
                     </div>
                     {tab.name}
@@ -1204,9 +1397,7 @@ export default function AddProduct() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-8">
-            {renderTabContent()}
-          </div>
+          <div className="p-8">{renderTabContent()}</div>
 
           {/* Footer with Submit Button */}
           <div className="bg-gray-50 dark:bg-gray-900 px-8 py-6 border-t border-gray-200 dark:border-gray-700">
@@ -1229,9 +1420,9 @@ export default function AddProduct() {
                     highlights: [""],
                     attributeSet: [],
                     status: "active",
-                    ingredients: [{ name: "", quantity: "", description: "", image: null }],
-                    benefits: [{ title: "", description: "" }],
-                    precautions: [{ title: "", description: "" }],
+                    ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+                    benefits: [{ title: "", description: "", image: null, alt: "" }],
+                    precautions: [{ title: "", description: "", image: null, alt: "" }],
                     searchKeywords: [""],
                   });
                 }}
@@ -1268,8 +1459,8 @@ export default function AddProduct() {
         toastOptions={{
           duration: 4000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
           },
         }}
       />
