@@ -44,6 +44,9 @@ import AddCoupon from "./pages/coupons/AddCoupon";
 import AddBlog from "./pages/Blog/AddBlog";
 import BlogList from "./pages/Blog/BlogList";
 import EditBlog from "./pages/Blog/EditBlog";
+import AddCustomers from "./pages/Customers/AddCustomers";
+import CustomersList from "./pages/Customers/CustomersList";
+
 
 // Lazy load pages
 
@@ -196,6 +199,12 @@ export default function App() {
               <Route path="/blog/add" element={<AddBlog />} />
               <Route path="/blog/list" element={<BlogList />} />
               <Route path="/blog/edit/:id" element={<EditBlog />} />
+
+              {/* Customers Management Routes */}
+              <Route path="/customers/add" element={<AddCustomers />} />
+              <Route path="/customers/list" element={<CustomersList />} />
+              {/* <Route path="/customer/edit/:id" element={<EditCustomer />} /> */}
+
             </Route>
           </Route>
 
