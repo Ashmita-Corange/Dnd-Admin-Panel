@@ -51,6 +51,9 @@ import EditPage from "./pages/pages/EditPages";
 import AddShipping from "./pages/Shipping/AddShipping";
 import ShippingList from "./pages/Shipping/ShippingList";
 import EditShipping from "./pages/Shipping/EditShipping";
+import AddCustomers from "./pages/Customers/AddCustomers";
+import CustomersList from "./pages/Customers/CustomersList";
+import EditCustomer from "./pages/Customers/EditCustomer";
 
 // Lazy load pages
 
@@ -194,6 +197,10 @@ export default function App() {
               <Route path="/coupon&promo/list" element={<CouponList />} />
               <Route path="/coupon&promo/add" element={<AddCoupon />} />
               <Route path="/coupon&promo/edit/:id" element={<EditCoupon />} />
+              {/* Customers Management Routes */}
+              <Route path="/customers/add" element={<AddCustomers />} />
+              <Route path="/customers/list" element={<CustomersList />} />
+              <Route path="/customers/edit/:id" element={<EditCustomer />} />
 
               {/* Plan Management Routes */}
               <Route
