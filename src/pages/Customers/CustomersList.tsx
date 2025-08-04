@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Pencil,
   Trash2,
@@ -26,19 +27,33 @@ import {
   setLimit,
   resetFilters,
 } from "../../store/slices/customersSlice";
+import { fetchRoles } from "../../store/slices/roles";
 import { Link } from "react-router-dom";
 import { Customer } from "../../store/slices/customersSlice";
 
 const CustomersList: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { customers, loading, error, searchQuery, filters, page, limit, total } =
     useAppSelector((state) => state.customers);
+  const { roles } = useAppSelector((state) => state.role);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState(filters);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(filters.role || "");
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    isOpen: boolean;
+    customer: Customer | null;
+  }>({ isOpen: false, customer: null });
 
+  // Fetch roles on component mount
+  useEffect(() => {
+    dispatch(fetchRoles({ page: 1, limit: 100 }));
+  }, [dispatch]);
+
+  // Handle search input changes with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchInput !== searchQuery) {
@@ -48,11 +63,24 @@ const CustomersList: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  // Handle role filter changes
   useEffect(() => {
-    dispatch(
-      fetchCustomers()
-    );
-  }, [dispatch, searchQuery, page, limit]);
+    const newFilters = { ...filters };
+    if (selectedRole) {
+      newFilters.role = selectedRole;
+      console.log("Setting role filter:", selectedRole);
+    } else {
+      delete newFilters.role;
+      console.log("Clearing role filter");
+    }
+    console.log("Updated filters:", newFilters);
+    dispatch(setFilters(newFilters));
+  }, [selectedRole]);
+
+  // Fetch customers when dependencies change
+  useEffect(() => {
+    dispatch(fetchCustomers());
+  }, [dispatch, searchQuery, page, limit, filters]);
 
   const handlePageChange = (newPage: number) => {
     dispatch(setPage(newPage));
@@ -65,12 +93,38 @@ const CustomersList: React.FC = () => {
 
   const handleResetFilters = () => {
     setSearchInput("");
+    setSelectedRole("");
     dispatch(resetFilters());
   };
 
   const handleViewDetails = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsModalOpen(true);
+  };
+
+  const handleEditCustomer = (customer: Customer) => {
+    navigate(`/customers/edit/${customer._id}`);
+  };
+
+  const handleDeleteCustomer = (customer: Customer) => {
+    setDeleteConfirmModal({ isOpen: true, customer });
+  };
+
+  const confirmDelete = async () => {
+    if (deleteConfirmModal.customer) {
+      try {
+        await dispatch(deleteCustomer(deleteConfirmModal.customer._id)).unwrap();
+        setDeleteConfirmModal({ isOpen: false, customer: null });
+        // Optionally show success message
+      } catch (error) {
+        console.error("Failed to delete customer:", error);
+        // Error will be handled by the slice and shown in the UI
+      }
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirmModal({ isOpen: false, customer: null });
   };
 
   const closeModal = () => {
@@ -117,6 +171,22 @@ const CustomersList: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <span className="text-sm dark:text-gray-300">Role:</span>
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white min-w-[150px]"
+            >
+              <option value="">All Roles</option>
+              {roles.map((role) => (
+                <option key={role._id} value={role._id}>
+                  {role.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
             <span className="text-sm dark:text-gray-300">Show:</span>
             <select
               value={limit}
@@ -158,25 +228,25 @@ const CustomersList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     #
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Name
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Email
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Created
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Active
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Actions
                   </th>
                 </tr>
@@ -221,19 +291,21 @@ const CustomersList: React.FC = () => {
                           className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
                           title="View Details"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-5 h-5" />
                         </button>
                         <button
+                          onClick={() => handleEditCustomer(customer)}
                           className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/20"
                           title="Edit"
                         >
-                          <Pencil className="w-4 h-4" />
+                          <Pencil className="w-5 h-5" />
                         </button>
                         <button
+                          onClick={() => handleDeleteCustomer(customer)}
                           className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
                           title="Delete"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
                     </td>
@@ -484,6 +556,72 @@ const CustomersList: React.FC = () => {
                 Close
               </button>
              
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmModal.isOpen && deleteConfirmModal.customer && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-md w-full">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-100 dark:bg-red-900/20 rounded-full">
+                  <Trash2 className="w-5 h-5 text-red-600 dark:text-red-400" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Delete Customer
+                </h2>
+              </div>
+              <button
+                onClick={cancelDelete}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
+                Are you sure you want to delete the customer{" "}
+                <span className="font-semibold text-gray-900 dark:text-white">
+                  {deleteConfirmModal.customer.name}
+                </span>
+                ?
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                This action cannot be undone. The customer's data will be permanently removed.
+              </p>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800 rounded-md transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={loading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-md transition-colors flex items-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>

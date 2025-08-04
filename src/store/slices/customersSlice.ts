@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 import { getTenantFromURL } from "../../utils/getTenantFromURL";
+import { RootState } from "../index";
 
 // Interfaces
 export interface CustomerRole {
@@ -33,6 +34,27 @@ interface FetchCustomersParams {
   sort?: Record<string, any>;
   page?: number;
   limit?: number;
+  role?: string;
+}
+
+interface CreateCustomerParams {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+  isSuperAdmin: boolean;
+}
+
+interface UpdateCustomerParams {
+  id: string;
+  data: Partial<{
+    name: string;
+    email: string;
+    role: string;
+    isSuperAdmin: boolean;
+    isActive: boolean;
+    isDeleted: boolean;
+  }>;
 }
 
 interface CustomerState {
@@ -57,6 +79,32 @@ const initialState: CustomerState = {
   limit: 10,
 };
 
+// ✅ Fetch Single Customer by ID
+export const fetchCustomerById = createAsyncThunk<
+  Customer,
+  string,
+  { rejectValue: string }
+>("customers/fetchById", async (customerId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get(`/user/${customerId}`, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+      },
+    });
+
+    const { success, user } = response.data;
+
+    if (success) {
+      return user;
+    } else {
+      return rejectWithValue("Failed to fetch customer.");
+    }
+  } catch (error: any) {
+    console.error("❌ fetchCustomerById error:", error);
+    return rejectWithValue(error?.message || "Something went wrong");
+  }
+});
+
 // ✅ Fetch Customers
 // store/slices/customersSlice.ts
 
@@ -69,15 +117,25 @@ export const fetchCustomers = createAsyncThunk<
   const tenant = getTenantFromURL();
 
   try {
+    const params: any = {
+      search: state.customers.searchQuery || undefined,
+      page: state.customers.page,
+      limit: state.customers.limit,
+    };
+
+    // Add role filter if it exists
+    if (state.customers.filters.role) {
+      params.role = state.customers.filters.role;
+      console.log("Sending role filter to API:", state.customers.filters.role);
+    }
+
+    console.log("Final API params:", params);
+
     const response = await axiosInstance.get("/user", {
       headers: {
         "x-tenant": tenant,
       },
-      params: {
-        search: state.customers.searchQuery || undefined,
-        page: state.customers.page,
-        limit: state.customers.limit,
-      },
+      params,
     });
 
     const { success, users, total, page, limit } = response.data;
@@ -104,12 +162,71 @@ export const fetchCustomers = createAsyncThunk<
 
 
 
+// ✅ Create Customer
+export const createCustomer = createAsyncThunk<
+  Customer,
+  CreateCustomerParams,
+  { rejectValue: string }
+>("customers/create", async (customerData, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post("/user", customerData, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+        "Content-Type": "application/json",
+      },
+    });
+
+    const { success, user } = response.data;
+
+    if (success) {
+      return user;
+    } else {
+      return rejectWithValue("Failed to create customer.");
+    }
+  } catch (error: any) {
+    console.error("❌ createCustomer error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
+
+// ✅ Update Customer
+export const updateCustomer = createAsyncThunk<
+  Customer,
+  UpdateCustomerParams,
+  { rejectValue: string }
+>("customers/update", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(`/user?id=${id}`, data, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+        "Content-Type": "application/json",
+      },
+     
+    });
+
+    const { success, user } = response.data;
+
+    if (success) {
+      return user;
+    } else {
+      return rejectWithValue("Failed to update customer.");
+    }
+  } catch (error: any) {
+    console.error("❌ updateCustomer error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
+
 // ✅ Delete Customer
 export const deleteCustomer = createAsyncThunk<string, string>(
   "customers/delete",
   async (customerId, { rejectWithValue }) => {
     try {
-      await axiosInstance.delete(`/user/${customerId}`, {
+      await axiosInstance.delete(`/user?id=${customerId}`, {
         headers: {
           "x-tenant": getTenantFromURL(),
         },
@@ -163,6 +280,56 @@ const customersSlice = createSlice({
         state.limit = action.payload.limit;
       })
       .addCase(fetchCustomers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // fetchCustomerById
+      .addCase(fetchCustomerById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCustomerById.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update the customer in the list if it exists, otherwise add it
+        const existingIndex = state.customers.findIndex(c => c._id === action.payload._id);
+        if (existingIndex >= 0) {
+          state.customers[existingIndex] = action.payload;
+        } else {
+          state.customers.push(action.payload);
+        }
+      })
+      .addCase(fetchCustomerById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // createCustomer
+      .addCase(createCustomer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createCustomer.fulfilled, (state, action) => {
+        state.loading = false;
+        state.customers.unshift(action.payload); // Add new customer to the beginning
+      })
+      .addCase(createCustomer.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // updateCustomer
+      .addCase(updateCustomer.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCustomer.fulfilled, (state, action) => {
+        state.loading = false;
+       if (action.payload && action.payload._id) {
+  state.customers = state.customers.map((customer) =>
+    customer._id === action.payload._id ? action.payload : customer
+  );
+}
+
+      })
+      .addCase(updateCustomer.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

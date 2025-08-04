@@ -46,6 +46,7 @@ import BlogList from "./pages/Blog/BlogList";
 import EditBlog from "./pages/Blog/EditBlog";
 import AddCustomers from "./pages/Customers/AddCustomers";
 import CustomersList from "./pages/Customers/CustomersList";
+import EditCustomer from "./pages/Customers/EditCustomer";
 
 
 // Lazy load pages
@@ -203,7 +204,7 @@ export default function App() {
               {/* Customers Management Routes */}
               <Route path="/customers/add" element={<AddCustomers />} />
               <Route path="/customers/list" element={<CustomersList />} />
-              {/* <Route path="/customer/edit/:id" element={<EditCustomer />} /> */}
+              <Route path="/customers/edit/:id" element={<EditCustomer />} />
 
             </Route>
           </Route>
