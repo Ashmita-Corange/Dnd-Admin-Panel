@@ -44,6 +44,13 @@ import AddCoupon from "./pages/coupons/AddCoupon";
 import AddBlog from "./pages/Blog/AddBlog";
 import BlogList from "./pages/Blog/BlogList";
 import EditBlog from "./pages/Blog/EditBlog";
+import EditCoupon from "./pages/coupons/EditCoupon";
+import AddPage from "./pages/pages/AddPages";
+import PagesList from "./pages/pages/PagesList";
+import EditPage from "./pages/pages/EditPages";
+import AddShipping from "./pages/Shipping/AddShipping";
+import ShippingList from "./pages/Shipping/ShippingList";
+import EditShipping from "./pages/Shipping/EditShipping";
 
 // Lazy load pages
 
@@ -186,6 +193,8 @@ export default function App() {
               {/* Coupon & Promo Management Routes */}
               <Route path="/coupon&promo/list" element={<CouponList />} />
               <Route path="/coupon&promo/add" element={<AddCoupon />} />
+              <Route path="/coupon&promo/edit/:id" element={<EditCoupon />} />
+
               {/* Plan Management Routes */}
               <Route
                 path="/custom-temple/add"
@@ -196,6 +205,17 @@ export default function App() {
               <Route path="/blog/add" element={<AddBlog />} />
               <Route path="/blog/list" element={<BlogList />} />
               <Route path="/blog/edit/:id" element={<EditBlog />} />
+
+              {/* Page Management Routes */}
+              <Route path="/pages/add" element={<AddPage />} />
+              <Route path="/pages/list" element={<PagesList />} />
+              <Route path="/pages/edit/:id" element={<EditPage />} />
+
+              {/* Page Management Routes */}
+
+              <Route path="/shipping/add" element={<AddShipping />} />
+              <Route path="/shipping/list" element={<ShippingList />} />
+              <Route path="/shipping/edit/:id" element={<EditShipping />} />
             </Route>
           </Route>
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { useSidebar } from "../context/SidebarContext";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
@@ -8,7 +8,7 @@ import UserDropdown from "../components/header/UserDropdown";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-
+  const location = useLocation(); // Assuming you are using react-router for navigation
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
   const handleToggle = () => {
@@ -39,6 +39,13 @@ const AppHeader: React.FC = () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  if (
+    location.pathname.includes("custom-temple/add") ||
+    location.pathname.includes("custom-temple/edit")
+  ) {
+    return null; // Hide sidebar on custom temple page
+  }
 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-[1000] dark:border-gray-800 dark:bg-gray-900 lg:border-b">
@@ -161,7 +168,6 @@ const AppHeader: React.FC = () => {
             <ThemeToggleButton />
             {/* <!-- Dark Mode Toggler --> */}
             {/* <NotificationDropdown /> */}
-
 
             {/* <!-- Notification Menu Area --> */}
           </div>

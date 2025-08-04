@@ -40,6 +40,10 @@ import {
   Move,
   Maximize2,
   X,
+  ShoppingCart,
+  Gift,
+  ArrowLeft,
+  PlayCircle,
 } from "lucide-react";
 import {
   COMPONENT_TYPES,
@@ -48,8 +52,13 @@ import {
 } from "./Variant";
 import { useDispatch } from "react-redux";
 import { fetchProductById, Product } from "../../store/slices/product";
-import { createTemplate, updateTemplate } from "../../store/slices/template";
+import {
+  createTemplate,
+  fetchTemplateById,
+  updateTemplate,
+} from "../../store/slices/template";
 import { AppDispatch } from "../../store";
+import { Link, useLocation, useParams } from "react-router";
 
 // Types for the component structure
 interface ComponentType {
@@ -65,6 +74,46 @@ interface ComponentSettings {
     variant?: string;
     [key: string]: unknown;
   };
+}
+
+interface ColumnType {
+  id: string;
+  width: number;
+  components: ComponentType[];
+}
+
+interface SectionType {
+  id: string;
+  type: string;
+  order: number;
+  columns: ColumnType[];
+}
+
+interface TemplateColumn {
+  columnIndex: number;
+  columnWidth: number;
+  columnTitle: string;
+  components: TemplateComponent[];
+}
+
+interface TemplateComponent {
+  componentType: string;
+  componentVariant: string;
+  componentSpan: number;
+  sortOrder: number;
+  isVisible: boolean;
+  settings: any;
+}
+
+interface TemplateData {
+  productId: number;
+  layoutId: number;
+  layoutName: string;
+  totalColumns: number;
+  columnGap: number;
+  componentGap: number;
+  rowGap: number;
+  columns: TemplateColumn[];
 }
 
 // Sample product data
@@ -84,8 +133,6 @@ const sampleProduct = {
     "Quick charge",
     "Noise cancellation",
   ],
-  howToUse:
-    "Simply pair with your device via Bluetooth and enjoy high-quality audio. Use the touch controls for easy playbook management.",
   reviews: [
     { name: "John D.", rating: 5, comment: "Amazing sound quality!" },
     { name: "Sarah M.", rating: 4, comment: "Very comfortable for long use." },
@@ -118,6 +165,12 @@ const GAP_CLASSES: Record<number, string> = {
   4: "gap-4",
   6: "gap-6",
   8: "gap-8",
+  10: "gap-10",
+  12: "gap-12",
+  16: "gap-16",
+  20: "gap-20",
+  24: "gap-24",
+  32: "gap-32",
 };
 
 const SPACE_CLASSES: Record<number, string> = {
@@ -127,6 +180,12 @@ const SPACE_CLASSES: Record<number, string> = {
   4: "space-y-4",
   6: "space-y-6",
   8: "space-y-8",
+  10: "space-y-10",
+  12: "space-y-12",
+  16: "space-y-16",
+  20: "space-y-20",
+  24: "space-y-24",
+  32: "space-y-32",
 };
 
 // Droppable column component
@@ -795,478 +854,6 @@ function ProductDetails({
   );
 }
 
-function HowToUse({
-  component,
-  product,
-  settings,
-  onUpdateSettings,
-  onUpdateSpan,
-  isFullWidth = false,
-  isPreviewMode = false,
-}) {
-  const howToUseSettings = settings[component.id] || {
-    showIcon: true,
-    bgColor: "blue",
-    span: component.span || 1,
-    variant: "simple",
-  };
-
-  const bgColors = {
-    blue: "bg-blue-50 border-blue-200",
-    green: "bg-green-50 border-green-200",
-    purple: "bg-purple-50 border-purple-200",
-    gray: "bg-gray-50 border-gray-200",
-  };
-
-  const steps = [
-    "Pair with your device via Bluetooth",
-    "Enjoy high-quality audio",
-    "Use touch controls for playback management",
-  ];
-
-  const renderStepsVariant = () => (
-    <div className="space-y-3">
-      <h4
-        className={`font-semibold text-gray-900 mb-3 ${
-          isFullWidth ? "text-base" : "text-sm"
-        }`}
-      >
-        How to Use - Step by Step
-      </h4>
-      {steps.map((step, idx) => (
-        <div
-          key={idx}
-          className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-        >
-          <div className="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-            {idx + 1}
-          </div>
-          <p
-            className={`text-gray-700 ${
-              isFullWidth ? "text-sm" : "text-xs"
-            } leading-relaxed`}
-          >
-            {step}
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderSimpleVariant = () => (
-    <div
-      className={`${bgColors[howToUseSettings.bgColor]} border rounded-lg p-2`}
-    >
-      <div className="flex items-start gap-2">
-        {howToUseSettings.showIcon && (
-          <BookOpen
-            size={16}
-            className={`text-${howToUseSettings.bgColor}-600 flex-shrink-0 mt-1`}
-          />
-        )}
-        <div>
-          <h4
-            className={`font-semibold text-${
-              howToUseSettings.bgColor
-            }-900 mb-1 ${isFullWidth ? "text-sm" : "text-xs"}`}
-          >
-            Instructions
-          </h4>
-          <p
-            className={`text-${howToUseSettings.bgColor}-800 ${
-              isFullWidth ? "text-sm" : "text-xs"
-            } leading-relaxed`}
-          >
-            {product.howToUse}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderIllustratedVariant = () => (
-    <div className="space-y-4">
-      <h4
-        className={`font-semibold text-gray-900 text-center mb-4 ${
-          isFullWidth ? "text-base" : "text-sm"
-        }`}
-      >
-        📱 Quick Start Guide
-      </h4>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[
-          { icon: "🔗", title: "Connect", desc: "Pair via Bluetooth" },
-          { icon: "🎵", title: "Play", desc: "Enjoy audio" },
-          { icon: "🎛️", title: "Control", desc: "Touch controls" },
-        ].map((item, idx) => (
-          <div
-            key={idx}
-            className="text-center p-3 bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg"
-          >
-            <div className="text-2xl mb-2">{item.icon}</div>
-            <h5
-              className={`font-semibold text-gray-900 mb-1 ${
-                isFullWidth ? "text-sm" : "text-xs"
-              }`}
-            >
-              {item.title}
-            </h5>
-            <p
-              className={`text-gray-600 ${isFullWidth ? "text-xs" : "text-xs"}`}
-            >
-              {item.desc}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderVariant = () => {
-    switch (howToUseSettings.variant) {
-      case "steps":
-        return renderStepsVariant();
-      case "illustrated":
-        return renderIllustratedVariant();
-      default:
-        return renderSimpleVariant();
-    }
-  };
-
-  return (
-    <div
-      className={`${
-        isPreviewMode
-          ? "bg-transparent"
-          : "bg-white rounded-lg shadow-lg border border-gray-200"
-      } ${isPreviewMode ? "" : "p-3 mb-2"} ${isFullWidth ? "w-full" : ""}`}
-    >
-      {!isPreviewMode && (
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <BookOpen size={16} />
-            How to Use{" "}
-            {isFullWidth && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                Full Width
-              </span>
-            )}
-          </h3>
-          <div className="flex gap-1 items-center text-xs">
-            <select
-              value={howToUseSettings.variant}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...howToUseSettings,
-                  variant: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-              title="Component Variant"
-            >
-              {Object.entries(
-                COMPONENT_VARIANTS[COMPONENT_TYPES.HOW_TO_USE]
-              ).map(([key, variant]) => (
-                <option key={key} value={key}>
-                  {variant.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={howToUseSettings.span}
-              onChange={(e) => {
-                const newSpan = parseInt(e.target.value);
-                onUpdateSpan(component.id, newSpan);
-                onUpdateSettings(component.id, {
-                  ...howToUseSettings,
-                  span: newSpan,
-                });
-              }}
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
-                <option key={value} value={value}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={howToUseSettings.bgColor}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...howToUseSettings,
-                  bgColor: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              <option value="blue">Blue</option>
-              <option value="green">Green</option>
-              <option value="purple">Purple</option>
-              <option value="gray">Gray</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      {renderVariant()}
-    </div>
-  );
-}
-
-function Reviews({
-  component,
-  product,
-  settings,
-  onUpdateSettings,
-  onUpdateSpan,
-  isFullWidth = false,
-  isPreviewMode = false,
-}) {
-  const reviewSettings = settings[component.id] || {
-    showRating: true,
-    maxReviews: 3,
-    layout: "card",
-    span: component.span || 1,
-    variant: "cards",
-  };
-
-  const displayReviews = product.reviews.slice(0, reviewSettings.maxReviews);
-
-  const renderCardsVariant = () => (
-    <div className={`${isFullWidth ? "grid grid-cols-3 gap-4" : "space-y-2"}`}>
-      {displayReviews.map((review, idx) => (
-        <div key={idx} className="bg-gray-50 p-3 rounded-lg shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span
-              className={`font-medium text-gray-900 ${
-                isFullWidth ? "text-sm" : "text-xs"
-              }`}
-            >
-              {review.name}
-            </span>
-            {reviewSettings.showRating && (
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={12}
-                    className={
-                      i < review.rating
-                        ? "text-yellow-400 fill-current"
-                        : "text-gray-300"
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-          <p
-            className={`text-gray-700 ${
-              isFullWidth ? "text-sm" : "text-xs"
-            } leading-relaxed`}
-          >
-            &ldquo;{review.comment}&rdquo;
-          </p>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderListVariant = () => (
-    <div className="space-y-3">
-      {displayReviews.map((review, idx) => (
-        <div
-          key={idx}
-          className="flex items-start gap-3 p-2 border-l-4 border-blue-500 bg-blue-50"
-        >
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-              {review.name.charAt(0)}
-            </div>
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span
-                className={`font-medium text-gray-900 ${
-                  isFullWidth ? "text-sm" : "text-xs"
-                }`}
-              >
-                {review.name}
-              </span>
-              {reviewSettings.showRating && (
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      size={10}
-                      className={
-                        i < review.rating
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-300"
-                      }
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-            <p
-              className={`text-gray-700 ${
-                isFullWidth ? "text-sm" : "text-xs"
-              } leading-relaxed`}
-            >
-              {review.comment}
-            </p>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderTestimonialVariant = () => {
-    const featuredReview = displayReviews[0];
-    if (!featuredReview) return null;
-
-    return (
-      <div className="text-center space-y-4">
-        <div className="text-4xl text-gray-300 mb-2">&ldquo;</div>
-        <blockquote
-          className={`${
-            isFullWidth ? "text-lg" : "text-base"
-          } font-medium text-gray-900 italic leading-relaxed`}
-        >
-          {featuredReview.comment}
-        </blockquote>
-        <div className="flex items-center justify-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold">
-            {featuredReview.name.charAt(0)}
-          </div>
-          <div className="text-left">
-            <div
-              className={`font-medium text-gray-900 ${
-                isFullWidth ? "text-sm" : "text-xs"
-              }`}
-            >
-              {featuredReview.name}
-            </div>
-            {reviewSettings.showRating && (
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={12}
-                    className={
-                      i < featuredReview.rating
-                        ? "text-yellow-400 fill-current"
-                        : "text-gray-300"
-                    }
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-        {displayReviews.length > 1 && (
-          <div className="mt-4 flex justify-center gap-2">
-            {displayReviews.slice(1).map((review, idx) => (
-              <div key={idx} className="w-2 h-2 bg-gray-300 rounded-full"></div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderVariant = () => {
-    switch (reviewSettings.variant) {
-      case "list":
-        return renderListVariant();
-      case "testimonial":
-        return renderTestimonialVariant();
-      default:
-        return renderCardsVariant();
-    }
-  };
-
-  return (
-    <div
-      className={`${
-        isPreviewMode
-          ? "bg-transparent"
-          : "bg-white rounded-lg shadow-lg border border-gray-200"
-      } ${isPreviewMode ? "" : "p-3 mb-2"} ${isFullWidth ? "w-full" : ""}`}
-    >
-      {!isPreviewMode && (
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Star size={16} />
-            Reviews{" "}
-            {isFullWidth && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                Full Width
-              </span>
-            )}
-          </h3>
-          <div className="flex gap-1 items-center text-xs">
-            <select
-              value={reviewSettings.variant}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...reviewSettings,
-                  variant: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-              title="Component Variant"
-            >
-              {Object.entries(COMPONENT_VARIANTS[COMPONENT_TYPES.REVIEWS]).map(
-                ([key, variant]) => (
-                  <option key={key} value={key}>
-                    {variant.label}
-                  </option>
-                )
-              )}
-            </select>
-            <select
-              value={reviewSettings.span}
-              onChange={(e) => {
-                const newSpan = parseInt(e.target.value);
-                onUpdateSpan(component.id, newSpan);
-                onUpdateSettings(component.id, {
-                  ...reviewSettings,
-                  span: newSpan,
-                });
-              }}
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
-                <option key={value} value={value}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={reviewSettings.maxReviews}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...reviewSettings,
-                  maxReviews: parseInt(e.target.value),
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-            </select>
-          </div>
-        </div>
-      )}
-
-      {renderVariant()}
-    </div>
-  );
-}
-
 // Component renderer - delegated to componentVariants.tsx
 // (Note: ComponentRenderer is imported from componentVariants.tsx)
 
@@ -1282,12 +869,34 @@ function ComponentLibrary({
   onUpdateSettings,
   onUpdateSpan,
   COMPONENT_SPANS,
+  onChangeName,
+  name,
 }) {
   const availableComponents = [
     { type: COMPONENT_TYPES.IMAGES, title: "Product Images", icon: Image },
     { type: COMPONENT_TYPES.DETAILS, title: "Product Details", icon: FileText },
-    { type: COMPONENT_TYPES.HOW_TO_USE, title: "How to Use", icon: BookOpen },
-    { type: COMPONENT_TYPES.REVIEWS, title: "Customer Reviews", icon: Star },
+    { type: COMPONENT_TYPES.DESCRIPTION, title: "Description", icon: FileText },
+    { type: COMPONENT_TYPES.COUPONS, title: "Discount Coupons", icon: Gift },
+    {
+      type: COMPONENT_TYPES.FREQUENTLY_PURCHASED,
+      title: "Frequently Purchased",
+      icon: ShoppingCart,
+    },
+    {
+      type: COMPONENT_TYPES.INGREDIENTS,
+      title: "Ingredients",
+      icon: BookOpen,
+    },
+    {
+      type: COMPONENT_TYPES.HOW_TO_USE,
+      title: "How to Use",
+      icon: PlayCircle,
+    },
+    {
+      type: COMPONENT_TYPES.CUSTOMER_REVIEWS,
+      title: "Customer Reviews",
+      icon: Star,
+    },
   ];
 
   // Get all existing component types across all sections
@@ -1300,8 +909,29 @@ function ComponentLibrary({
   );
 
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 p-4 overflow-y-auto">
+    <div className="w-64 bg-gray-50 border-r border-gray-200 p-2 overflow-y-auto">
+      <Link to="/custom-temple/list">
+        <div className="flex items-center bg-blue-500/10 px-2 py-1 w-fit pr-4 rounded-md gap-2 mb-4 cursor-pointer">
+          <ArrowLeft className="h-5 w-5" />
+          <h2>Back</h2>
+        </div>
+      </Link>
+      <div className="mb-4">
+        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+          Template Name <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="name"
+          value={name}
+          onChange={onChangeName}
+          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+          placeholder="Enter template name"
+          required
+        />
+      </div>
       <h2 className="text-lg font-semibold mb-4 text-gray-900">Components</h2>
+
       <div className="space-y-2">
         {availableComponents.map((comp) => {
           const IconComponent = comp.icon;
@@ -1312,7 +942,7 @@ function ComponentLibrary({
               key={comp.type}
               onClick={() => onAddComponent(comp.type, comp.title)}
               disabled={isAdded}
-              className={`w-full flex items-center gap-3 p-3 border rounded-lg transition-colors ${
+              className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg transition-colors ${
                 isAdded
                   ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
                   : "bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300"
@@ -1323,7 +953,7 @@ function ComponentLibrary({
                 className={isAdded ? "text-gray-400" : "text-gray-600"}
               />
               <span
-                className={`font-medium text-sm ${
+                className={`font-medium text-xs ${
                   isAdded ? "text-gray-400" : "text-gray-900"
                 }`}
               >
@@ -1613,52 +1243,45 @@ function ComponentLibrary({
               </>
             )}
 
-            {selectedComponent.type === COMPONENT_TYPES.HOW_TO_USE && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Background Color
-                </label>
-                <select
-                  value={
-                    componentSettings[selectedComponent.id]?.bgColor || "blue"
-                  }
-                  onChange={(e) =>
-                    onUpdateSettings(selectedComponent.id, {
-                      ...componentSettings[selectedComponent.id],
-                      bgColor: e.target.value,
-                    })
-                  }
-                  className="w-full text-xs border border-gray-300 rounded px-2 py-1"
-                >
-                  <option value="blue">Blue</option>
-                  <option value="green">Green</option>
-                  <option value="purple">Purple</option>
-                  <option value="gray">Gray</option>
-                </select>
-              </div>
-            )}
-
-            {selectedComponent.type === COMPONENT_TYPES.REVIEWS && (
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Max Reviews
-                </label>
-                <select
-                  value={
-                    componentSettings[selectedComponent.id]?.maxReviews || 3
-                  }
-                  onChange={(e) =>
-                    onUpdateSettings(selectedComponent.id, {
-                      ...componentSettings[selectedComponent.id],
-                      maxReviews: parseInt(e.target.value),
-                    })
-                  }
-                  className="w-full text-xs border border-gray-300 rounded px-2 py-1"
-                >
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                </select>
-              </div>
+            {selectedComponent.type === COMPONENT_TYPES.DESCRIPTION && (
+              <>
+                <div>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={
+                        componentSettings[selectedComponent.id]?.showVideo !==
+                        false
+                      }
+                      onChange={(e) =>
+                        onUpdateSettings(selectedComponent.id, {
+                          ...componentSettings[selectedComponent.id],
+                          showVideo: e.target.checked,
+                        })
+                      }
+                    />
+                    Show Video
+                  </label>
+                </div>
+                <div>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={
+                        componentSettings[selectedComponent.id]?.showImages !==
+                        false
+                      }
+                      onChange={(e) =>
+                        onUpdateSettings(selectedComponent.id, {
+                          ...componentSettings[selectedComponent.id],
+                          showImages: e.target.checked,
+                        })
+                      }
+                    />
+                    Show Images
+                  </label>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -1669,7 +1292,15 @@ function ComponentLibrary({
 
 // Main page builder component
 export default function ProductPageBuilder() {
-  const [sections, setSections] = useState([
+  const [templateName, setTemplateName] = useState("");
+  const [templateData, setTemplateData] = useState(null);
+  let { search } = useLocation();
+
+  const query = new URLSearchParams(search);
+  const templateId = query.get("templateId");
+
+  console.log("Template ID:", templateId);
+  const [sections, setSections] = useState<SectionType[]>([
     {
       id: "section-1",
       type: "columns",
@@ -1704,15 +1335,7 @@ export default function ProductPageBuilder() {
         {
           id: "column-3",
           width: 1,
-          components: [
-            {
-              id: "3",
-              type: COMPONENT_TYPES.HOW_TO_USE,
-              title: "How to Use",
-              span: 1,
-              order: 2,
-            },
-          ],
+          components: [],
         },
       ],
     },
@@ -2342,6 +1965,12 @@ export default function ProductPageBuilder() {
   const handleSave = useCallback(async () => {
     try {
       // Transform sections data to template format
+
+      if (!templateName.trim()) {
+        alert("Please enter a template name before saving.");
+        return;
+      }
+
       const columnsData = sections
         .filter((section) => section.type === "columns")
         .flatMap((section) => {
@@ -2364,9 +1993,9 @@ export default function ProductPageBuilder() {
         });
 
       const templateData = {
-        productId: product?.id || 12345, // Use actual product ID or fallback
+        productId: 123456, // Use actual product ID or fallback
         layoutId: 1,
-        layoutName: "Custom Product Layout",
+        layoutName: templateName,
         totalColumns: 3, // Maximum columns supported
         columnGap,
         componentGap,
@@ -2377,7 +2006,9 @@ export default function ProductPageBuilder() {
       console.log("Saving template data:", templateData);
 
       // Call the Redux action to create template
-      const result = await dispatch(createTemplate(templateData));
+      const result = templateId
+        ? await dispatch(updateTemplate({ id: templateId, data: templateData }))
+        : await dispatch(createTemplate(templateData));
 
       if (result.type === "templates/create/fulfilled") {
         alert("Template saved successfully!");
@@ -2395,21 +2026,138 @@ export default function ProductPageBuilder() {
     columnGap,
     componentGap,
     rowGap,
+    templateName,
     product,
     dispatch,
   ]);
 
   const getProductData = async () => {
     try {
+      // Fetch product data first
       const response = await dispatch(
-        fetchProductById("vedicroots-ginger-green-tea")
+        fetchProductById("bloomberry-jasmine-green-tea1")
       );
-
       console.log("Fetched Product Data:", response.payload);
       setProduct(response.payload as Product);
+
+      // If templateId exists, fetch and set template data
+      if (templateId) {
+        const res = await dispatch(fetchTemplateById(templateId));
+        const data = (res.payload as any)?.data as TemplateData;
+
+        // Set layout configuration
+        setColumnGap(data.columnGap || 2);
+        setComponentGap(data.componentGap || 2);
+        setRowGap(data.rowGap || 4);
+        setTemplateName(data.layoutName || "");
+
+        console.log("Fetched Template Data:", data);
+
+        // Transform template data to sections format
+        if (data.columns && data.columns.length > 0) {
+          // Group columns by their columnIndex to create sections
+          const maxColumnIndex = Math.max(
+            ...data.columns.map((col: TemplateColumn) => col.columnIndex)
+          );
+          const totalColumns = maxColumnIndex + 1;
+
+          // Create a new section with the template data
+          const newSection: SectionType = {
+            id: "section-1",
+            type: "columns",
+            order: 0,
+            columns: [],
+          };
+
+          // Initialize columns array
+          for (let i = 0; i < totalColumns; i++) {
+            newSection.columns.push({
+              id: `column-${i + 1}`,
+              width: 1, // Will be calculated from columnWidth
+              components: [],
+            });
+          }
+
+          // Process each column from template data
+          const componentSettingsToSet: ComponentSettings = {};
+
+          data.columns.forEach((templateColumn: TemplateColumn) => {
+            const columnIndex = templateColumn.columnIndex;
+
+            // Calculate width (convert percentage back to 1-3 scale)
+            const widthRatio = templateColumn.columnWidth / (100 / 3);
+            const width = Math.round(widthRatio);
+            newSection.columns[columnIndex].width = Math.max(
+              1,
+              Math.min(3, width)
+            );
+
+            // Process components in this column
+            templateColumn.components.forEach(
+              (templateComponent: TemplateComponent) => {
+                const componentId = `${
+                  templateComponent.componentType
+                }-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+                const component: ComponentType = {
+                  id: componentId,
+                  type: templateComponent.componentType,
+                  title: getComponentTitle(templateComponent.componentType),
+                  span: templateComponent.componentSpan || 1,
+                  order: templateComponent.sortOrder || 0,
+                };
+
+                // Add component to appropriate column based on span
+                if (templateComponent.componentSpan === 3) {
+                  // Full-width components go to first column
+                  newSection.columns[0].components.push(component);
+                } else {
+                  // Regular components go to their designated column
+                  newSection.columns[columnIndex].components.push(component);
+                }
+
+                // Set component settings
+                componentSettingsToSet[componentId] = {
+                  variant: templateComponent.componentVariant || "default",
+                  ...templateComponent.settings,
+                };
+              }
+            );
+          });
+
+          // Sort components by order within each column
+          newSection.columns.forEach((column: ColumnType) => {
+            column.components.sort(
+              (a: ComponentType, b: ComponentType) =>
+                (a.order || 0) - (b.order || 0)
+            );
+          });
+
+          // Set the sections state
+          setSections([newSection]);
+
+          // Set component settings
+          setComponentSettings(componentSettingsToSet);
+        }
+      }
     } catch (error) {
-      console.error("Error fetching product data:", error);
+      console.error("Error fetching template/product data:", error);
     }
+  };
+
+  // Helper function to get component title
+  const getComponentTitle = (componentType: string): string => {
+    const titleMap: Record<string, string> = {
+      images: "Product Images",
+      details: "Product Details",
+      description: "Description",
+      coupons: "Discount Coupons",
+      frequently_purchased: "Frequently Purchased",
+      ingredients: "Ingredients",
+      how_to_use: "How to Use",
+      customer_reviews: "Customer Reviews",
+    };
+    return titleMap[componentType] || componentType;
   };
 
   useEffect(() => {
@@ -2418,7 +2166,7 @@ export default function ProductPageBuilder() {
 
   return (
     <div
-      className={`min-h-screen ${
+      className={`min-h-screen  ${
         isPreviewMode ? "bg-white" : "bg-gray-100"
       } flex`}
     >
@@ -2434,6 +2182,8 @@ export default function ProductPageBuilder() {
           onUpdateSettings={updateComponentSettings}
           onUpdateSpan={updateComponentSpan}
           COMPONENT_SPANS={COMPONENT_SPANS}
+          onChangeName={(e) => setTemplateName(e.target.value)}
+          name={templateName}
         />
       )}
 
@@ -2441,18 +2191,20 @@ export default function ProductPageBuilder() {
         {/* Header */}
         <div className="bg-white border-b border-gray-200 text-black px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Page Builder</h1>
-            <div className="flex items-center gap-4">
+            <h1 className="text-xl font-bold text-gray-900">
+              {templateId ? "Edit Template" : "New Template"}
+            </h1>
+            <div className="flex items-center gap-6">
               {!isPreviewMode && (
                 <>
-                  <div className="flex  items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="flex flex-col  gap-1">
+                    <label className="text-xs font-medium text-gray-700">
                       Column Gap:
                     </label>
                     <select
                       value={columnGap}
                       onChange={(e) => setColumnGap(parseInt(e.target.value))}
-                      className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                      className="text-sm border border-gray-300 rounded px-1 bg-white"
                     >
                       <option value={0}>None</option>
                       <option value={1}>XS</option>
@@ -2460,10 +2212,16 @@ export default function ProductPageBuilder() {
                       <option value={4}>MD</option>
                       <option value={6}>LG</option>
                       <option value={8}>XL</option>
+                      <option value={10}>2XL</option>
+                      <option value={12}>3XL</option>
+                      <option value={16}>4XL</option>
+                      <option value={20}>5XL</option>
+                      <option value={24}>6XL</option>
+                      <option value={32}>7XL</option>
                     </select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-gray-700">
                       Component Gap:
                     </label>
                     <select
@@ -2471,7 +2229,7 @@ export default function ProductPageBuilder() {
                       onChange={(e) =>
                         setComponentGap(parseInt(e.target.value))
                       }
-                      className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                      className="text-sm border border-gray-300 rounded px-1 bg-white"
                     >
                       <option value={0}>None</option>
                       <option value={1}>XS</option>
@@ -2479,16 +2237,22 @@ export default function ProductPageBuilder() {
                       <option value={4}>MD</option>
                       <option value={6}>LG</option>
                       <option value={8}>XL</option>
+                      <option value={10}>2XL</option>
+                      <option value={12}>3XL</option>
+                      <option value={16}>4XL</option>
+                      <option value={20}>5XL</option>
+                      <option value={24}>6XL</option>
+                      <option value={32}>7XL</option>
                     </select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="flex flex-col  gap-1">
+                    <label className="text-xs font-medium text-gray-700">
                       Row Gap:
                     </label>
                     <select
                       value={rowGap}
                       onChange={(e) => setRowGap(parseInt(e.target.value))}
-                      className="text-sm border border-gray-300 rounded px-2 py-1 bg-white"
+                      className="text-sm border border-gray-300 rounded px-1 bg-white"
                     >
                       <option value={0}>None</option>
                       <option value={1}>XS</option>
@@ -2496,6 +2260,12 @@ export default function ProductPageBuilder() {
                       <option value={4}>MD</option>
                       <option value={6}>LG</option>
                       <option value={8}>XL</option>
+                      <option value={10}>2XL</option>
+                      <option value={12}>3XL</option>
+                      <option value={16}>4XL</option>
+                      <option value={20}>5XL</option>
+                      <option value={24}>6XL</option>
+                      <option value={32}>7XL</option>
                     </select>
                   </div>
                   <button
@@ -2530,14 +2300,14 @@ export default function ProductPageBuilder() {
                 className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
               >
                 <Save size={20} />
-                Save
+               { templateId ? "Update Template" : "Save Template"}
               </button>
             </div>
           </div>
         </div>
 
         {/* Main content - Row-based layout */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1  overflow-auto">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

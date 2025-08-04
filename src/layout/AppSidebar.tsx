@@ -6,7 +6,6 @@ import { ChevronDownIcon, GridIcon, HorizontaLDots, ListIcon } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { BoxIcon } from "lucide-react";
 import axiosInstance from "../services/axiosConfig";
-
 type NavSubItem = {
   name: string;
   path: string;
@@ -79,7 +78,6 @@ const AppSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -397,6 +395,13 @@ const AppSidebar: React.FC = () => {
   useEffect(() => {
     getData();
   }, []);
+
+  if (
+    location.pathname.includes("custom-temple/add") ||
+    location.pathname.includes("custom-temple/edit")
+  ) {
+    return null; // Hide sidebar on custom temple page
+  }
 
   return (
     <aside
