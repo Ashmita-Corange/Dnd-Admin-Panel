@@ -57,6 +57,7 @@ import EditCustomer from "./pages/Customers/EditCustomer";
 import AddLead from "./pages/Lead/AddLead";
 import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
+import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
 
 // Lazy load pages
 
@@ -227,6 +228,9 @@ export default function App() {
               <Route path="/lead/add" element={<AddLead />} />
               <Route path="/lead/list" element={<LeadList />} />
               <Route path="/lead/edit/:id" element={<EditLead/>} />
+
+              {/* Support Tickets */}
+              <Route path="/tickets/list" element={<SupportTicketList />} />
 
               {/* Page Management Routes */}
 
