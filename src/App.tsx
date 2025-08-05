@@ -44,13 +44,19 @@ import AddCoupon from "./pages/coupons/AddCoupon";
 import AddBlog from "./pages/Blog/AddBlog";
 import BlogList from "./pages/Blog/BlogList";
 import EditBlog from "./pages/Blog/EditBlog";
+import EditCoupon from "./pages/coupons/EditCoupon";
+import AddPage from "./pages/pages/AddPages";
+import PagesList from "./pages/pages/PagesList";
+import EditPage from "./pages/pages/EditPages";
+import AddShipping from "./pages/Shipping/AddShipping";
+import ShippingList from "./pages/Shipping/ShippingList";
+import EditShipping from "./pages/Shipping/EditShipping";
 import AddCustomers from "./pages/Customers/AddCustomers";
 import CustomersList from "./pages/Customers/CustomersList";
 import EditCustomer from "./pages/Customers/EditCustomer";
 import AddLead from "./pages/Lead/AddLead";
 import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
-
 
 // Lazy load pages
 
@@ -193,6 +199,12 @@ export default function App() {
               {/* Coupon & Promo Management Routes */}
               <Route path="/coupon&promo/list" element={<CouponList />} />
               <Route path="/coupon&promo/add" element={<AddCoupon />} />
+              <Route path="/coupon&promo/edit/:id" element={<EditCoupon />} />
+              {/* Customers Management Routes */}
+              <Route path="/customers/add" element={<AddCustomers />} />
+              <Route path="/customers/list" element={<CustomersList />} />
+              <Route path="/customers/edit/:id" element={<EditCustomer />} />
+
               {/* Plan Management Routes */}
               <Route
                 path="/custom-temple/add"
@@ -204,10 +216,10 @@ export default function App() {
               <Route path="/blog/list" element={<BlogList />} />
               <Route path="/blog/edit/:id" element={<EditBlog />} />
 
-              {/* Customers Management Routes */}
-              <Route path="/customers/add" element={<AddCustomers />} />
-              <Route path="/customers/list" element={<CustomersList />} />
-              <Route path="/customers/edit/:id" element={<EditCustomer />} />
+              {/* Page Management Routes */}
+              <Route path="/pages/add" element={<AddPage />} />
+              <Route path="/pages/list" element={<PagesList />} />
+              <Route path="/pages/edit/:id" element={<EditPage />} />
 
 
               {/* Lead */}
@@ -216,6 +228,11 @@ export default function App() {
               <Route path="/lead/list" element={<LeadList />} />
               <Route path="/lead/edit/:id" element={<EditLead/>} />
 
+              {/* Page Management Routes */}
+
+              <Route path="/shipping/add" element={<AddShipping />} />
+              <Route path="/shipping/list" element={<ShippingList />} />
+              <Route path="/shipping/edit/:id" element={<EditShipping />} />
             </Route>
           </Route>
 

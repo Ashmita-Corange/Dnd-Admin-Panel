@@ -14,13 +14,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
-
-import { setSearchQuery } from "../../store/slices/categorySlice";
-import { deleteTemplate, fetchTemplates } from "../../store/slices/template";
+import { deletePage, fetchPages } from "../../store/slices/pages";
 
 interface Category {
   _id: string;
@@ -62,7 +59,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Product
+                Delete Page
               </h3>
             </div>
             <button
@@ -76,9 +73,9 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the product{" "}
+              Are you sure you want to delete the page{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.name}"
+                "{category.title}"
               </strong>
               ?
             </p>
@@ -121,18 +118,22 @@ const DeleteModal: React.FC<{
   );
 };
 
-const TemplateList: React.FC = () => {
+const PagesList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { templates, loading, error, pagination, searchQuery, filters } =
-    useAppSelector((state) => state.template);
+  const { pages, loading, error, pagination, searchQuery, filters } =
+    useAppSelector((state) => state.pages);
 
-  const [subcategoryToDelete, setSubcategoryToDelete] =
-    useState<Subcategory | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [categoryToEdit, setCategoryToEdit] = useState<Category | null>(null);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
+    null
+  );
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
   const [popup, setPopup] = useState<{
     message: string;
     type: "success" | "error";
@@ -161,33 +162,27 @@ const TemplateList: React.FC = () => {
     };
 
     dispatch(
-      fetchTemplates({
-        page: pagination?.page,
-        limit: pagination?.limit,
+      fetchPages({
+        page: pagination.page,
+        limit: pagination.limit,
         filters: activeFilters,
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
       })
     );
-  }, [
-    dispatch,
-    pagination?.page,
-    pagination?.limit,
-    searchInput,
-    localFilters,
-  ]);
+  }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
       dispatch(
-        fetchTemplates({
+        fetchPages({
           page: newPage,
           limit: pagination.limit,
           filters: {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-          search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+          search: searchInput !== "" ? searchInput : undefined,
           sort: { createdAt: "desc" },
         })
       );
@@ -196,14 +191,14 @@ const TemplateList: React.FC = () => {
 
   const handleLimitChange = (newLimit: number) => {
     dispatch(
-      fetchTemplates({
+      fetchPages({
         page: 1,
         limit: newLimit,
         filters: {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
       })
     );
@@ -221,26 +216,59 @@ const TemplateList: React.FC = () => {
     dispatch(resetFilters());
   };
 
+  const openEditModal = (category: Category) => {
+    setCategoryToEdit(category);
+    setEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setCategoryToEdit(null);
+    setEditModalOpen(false);
+  };
+
+  const handleEditSuccess = () => {
+    // Refresh the categories list after successful edit
+    const activeFilters = {
+      isDeleted: false,
+      ...(localFilters.status ? { status: localFilters.status } : {}),
+    };
+
+    setPopup({
+      message: "Category updated successfully",
+      type: "success",
+      isVisible: true,
+    });
+    dispatch(
+      fetchPages({
+        page: pagination.page,
+        limit: pagination.limit,
+        filters: activeFilters,
+        search: searchInput !== "" ? searchInput : undefined,
+        sort: { createdAt: "desc" },
+      })
+    );
+  };
+
   const openDeleteModal = (category: Category) => {
-    setSubcategoryToDelete(category);
+    setCategoryToDelete(category);
     setDeleteModalOpen(true);
   };
 
   const closeDeleteModal = () => {
-    setSubcategoryToDelete(null);
+    setCategoryToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
 
   const handleDeleteConfirm = async () => {
-    if (subcategoryToDelete) {
+    if (categoryToDelete) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteTemplate(subcategoryToDelete._id)).unwrap();
+        await dispatch(deletePage(categoryToDelete._id)).unwrap();
 
         setPopup({
-          message: `Product "${subcategoryToDelete.name}" deleted successfully`,
+          message: `Page "${categoryToDelete.title}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -255,21 +283,21 @@ const TemplateList: React.FC = () => {
         };
 
         dispatch(
-          fetchTemplates({
+          fetchPages({
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-            search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+            search: searchInput !== "" ? searchInput : undefined,
             sort: { createdAt: "desc" },
           })
         );
 
         // Optional: Show success message
-        console.log(`Product "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Page "${categoryToDelete.name}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete product:", error);
+        console.error("Failed to delete page:", error);
         setPopup({
-          message: "Failed to delete product. Please try again.",
+          message: "Failed to delete page. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -280,8 +308,8 @@ const TemplateList: React.FC = () => {
 
   const generatePageNumbers = () => {
     const pages = [];
-    const totalPages = pagination?.totalPages;
-    const current = pagination?.page;
+    const totalPages = pagination.totalPages;
+    const current = pagination.page;
     const maxPages = 5;
 
     const start = Math.max(1, current - Math.floor(maxPages / 2));
@@ -297,16 +325,16 @@ const TemplateList: React.FC = () => {
   return (
     <div>
       <PageMeta
-        title="Template List | TailAdmin"
-        description="List of all templates in TailAdmin"
+        title="Blog List | TailAdmin"
+        description="List of all blog posts in TailAdmin"
       />
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            Template List
+            Pages List
           </h1>
           <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination?.total}
+            Total: {pagination.total}
           </span>
         </div>
 
@@ -342,7 +370,7 @@ const TemplateList: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm dark:text-gray-300">Show:</span>
               <select
-                value={pagination?.limit}
+                value={pagination.limit}
                 onChange={(e) => handleLimitChange(Number(e.target.value))}
                 className="border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
@@ -386,12 +414,15 @@ const TemplateList: React.FC = () => {
                 </th>
 
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Name
+                  Title
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Show in Footer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  status
                 </th>
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  product
-                </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </th>
@@ -401,39 +432,47 @@ const TemplateList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {templates?.length > 0 &&
-                templates.map((cat, idx) => (
-                  <tr
-                    key={cat._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {(pagination.page - 1) * pagination.limit + idx + 1}
-                    </td>
+              {pages?.map((cat, idx) => (
+                <tr
+                  key={cat._id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                >
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {(pagination.page - 1) * pagination.limit + idx + 1}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {cat.layoutName}
-                    </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                    {cat.title}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {cat.showInFooter ? "Yes" : "No"}
+                  </td>
+                  <td className="px-6 py-4 text-sm">
+                    {cat.status === "published" ? (
+                      <CheckCircle className="text-green-500 h-5 w-5" />
+                    ) : (
+                      <XCircle className="text-red-500 h-5 w-5" />
+                    )}
+                  </td>
 
-                    <td className="px-6 py-4 text-sm">{cat.productId}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(cat.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <Link to={`/custom-temple/add?templateId=${cat._id}`}>
-                        <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                          <Pencil className="h-5 w-5" />
-                        </button>
-                      </Link>
-                      <button
-                        onClick={() => openDeleteModal(cat)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 className="h-5 w-5" />
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    {new Date(cat.createdAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 text-right space-x-2">
+                    <Link to={`/pages/edit/${cat._id}`}>
+                      <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                        <Pencil className="h-5 w-5" />
                       </button>
-                    </td>
-                  </tr>
-                ))}
+                    </Link>
+                    <button
+                      onClick={() => openDeleteModal(cat)}
+                      className="text-red-500 hover:text-red-700 transition-colors"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -441,8 +480,8 @@ const TemplateList: React.FC = () => {
         {/* Pagination */}
         <div className="flex justify-end gap-2 mt-4">
           <button
-            onClick={() => handlePageChange(pagination?.page - 1)}
-            disabled={pagination?.page === 1}
+            onClick={() => handlePageChange(pagination.page - 1)}
+            disabled={pagination.page === 1}
             className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -467,8 +506,8 @@ const TemplateList: React.FC = () => {
             )
           )}
           <button
-            onClick={() => handlePageChange(pagination?.page + 1)}
-            disabled={pagination?.page === pagination?.totalPages}
+            onClick={() => handlePageChange(pagination.page + 1)}
+            disabled={pagination.page === pagination.totalPages}
             className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
           >
             <ChevronRight className="w-5 h-5" />
@@ -487,11 +526,11 @@ const TemplateList: React.FC = () => {
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={subcategoryToDelete}
+        category={categoryToDelete}
         isDeleting={isDeleting}
       />
     </div>
   );
 };
 
-export default TemplateList;
+export default PagesList;

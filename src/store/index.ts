@@ -16,6 +16,8 @@ import templateSlice from "./slices/template";
 import couponSlice from "./slices/coupon";
 import blogSlice from "./slices/blog";
 import leadSlice from "./slices/lead";
+import pagesSlice from "./slices/pages";
+import shippingSlice from "./slices/shippingSlice";
 import customersReducer from "./slices/customersSlice";
 
 export const store = configureStore({
@@ -32,10 +34,12 @@ export const store = configureStore({
     variant: variantSlice,
     product: productSlice,
     plan: plan,
+    pages: pagesSlice,
     template: templateSlice,
     coupon: couponSlice,
     blog: blogSlice,
     lead: leadSlice,
+    shipping: shippingSlice,
     customers: customersReducer,
   },
   middleware: (getDefaultMiddleware) =>

@@ -17,6 +17,10 @@ import {
 } from "lucide-react";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
+import {
+  deleteShipping,
+  fetchShipping,
+} from "../../store/slices/shippingSlice";
 
 // Delete Confirmation Modal Component
 const DeleteModal: React.FC<{
@@ -46,7 +50,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Coupon
+                Delete Shipping Method
               </h3>
             </div>
             <button
@@ -60,9 +64,9 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the Coupon{" "}
+              Are you sure you want to delete the Shipping Method{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.code}"
+                "{category.name}"
               </strong>
               ?
             </p>
@@ -105,10 +109,10 @@ const DeleteModal: React.FC<{
   );
 };
 
-const CouponList: React.FC = () => {
+const ShippingList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, coupons } = useSelector(
-    (state: RootState) => state.coupon
+  const { loading, error, shippingList } = useSelector(
+    (state: RootState) => state.shipping
   );
 
   // Local state for search, filter, pagination, popup
@@ -137,19 +141,19 @@ const CouponList: React.FC = () => {
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      dispatch(fetchCoupons()); // In real app, pass search/filter params
+      dispatch(fetchShipping()); // In real app, pass search/filter params
     }, 400);
     return () => clearTimeout(timer);
   }, [dispatch, searchInput, statusFilter, page, limit]);
 
   // Pagination logic
-  const total = coupons.length;
+  const total = shippingList.length;
   const totalPages = Math.ceil(total / limit) || 1;
-  const paginatedCoupons = coupons
+  const paginatedCoupons = shippingList
     .filter(
       (c) =>
         (!searchInput ||
-          c.code.toLowerCase().includes(searchInput.toLowerCase())) &&
+          c?.code?.toLowerCase()?.includes(searchInput?.toLowerCase())) &&
         (!statusFilter ||
           (statusFilter === "active" ? c.isActive : !c.isActive))
     )
@@ -185,10 +189,10 @@ const CouponList: React.FC = () => {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteCoupon(categoryToDelete._id)).unwrap();
+        await dispatch(deleteShipping(categoryToDelete._id)).unwrap();
 
         setPopup({
-          message: `Coupon "${categoryToDelete.code}" deleted successfully`,
+          message: `Shipping method "${categoryToDelete.name}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -203,7 +207,7 @@ const CouponList: React.FC = () => {
         // };
 
         dispatch(
-          fetchCoupons({
+          fetchShipping({
             // page: pagination?.page,
             // limit: pagination.limit,
             // filters: activeFilters,
@@ -213,11 +217,13 @@ const CouponList: React.FC = () => {
         );
 
         // Optional: Show success message
-        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
+        console.log(
+          `Shipping method "${categoryToDelete.name}" deleted successfully`
+        );
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete shipping method:", error);
         setPopup({
-          message: "Failed to delete category. Please try again.",
+          message: "Failed to delete shipping method. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -310,28 +316,19 @@ const CouponList: React.FC = () => {
                 #
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Code
+                Name
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Type
+                Method
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Value
+                cost
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Expires At
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Usage Limit
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Used Count
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Min Cart Value
+                CreatedAt
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Action
@@ -339,51 +336,43 @@ const CouponList: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-            {paginatedCoupons.length === 0 ? (
+            {shippingList.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center py-6 text-gray-400">
-                  No coupons found.
+                  No shipments found.
                 </td>
               </tr>
             ) : (
-              paginatedCoupons.map((coupon, idx) => (
+              shippingList.map((coupon, idx) => (
                 <tr
-                  key={coupon.code}
+                  key={coupon._id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {(page - 1) * limit + idx + 1}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {coupon.code}
+                    {coupon?.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon.type}
+                    {coupon?.shippingMethod}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon.value}
+                    {coupon?.cost}
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {coupon.isActive ? (
+                    {coupon?.status === "active" ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(coupon.expiresAt).toLocaleDateString()}
+                    {new Date(coupon?.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon.usageLimit}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon.usedCount}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon.minCartValue}
-                  </td>
+
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/coupon&promo/edit/${coupon._id}`}>
+                    <Link to={`/shipping/edit/${coupon._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Pencil className="h-5 w-5" />
                       </button>
@@ -457,4 +446,4 @@ const CouponList: React.FC = () => {
   );
 };
 
-export default CouponList;
+export default ShippingList;

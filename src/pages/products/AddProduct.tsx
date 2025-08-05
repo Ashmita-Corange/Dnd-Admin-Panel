@@ -1,7 +1,21 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
-import { Plus, Trash2, Upload, Package, Image, FileText, Sparkles, Settings, Search, Heart, ShieldAlert, Info } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Upload,
+  Package,
+  Image,
+  FileText,
+  Sparkles,
+  Settings,
+  Search,
+  Heart,
+  ShieldAlert,
+  Info,
+  Layout,
+} from "lucide-react";
 import { createProduct } from "../../store/slices/product";
 import { fetchCategories } from "../../store/slices/categorySlice";
 import {
@@ -11,6 +25,8 @@ import {
 import CustomEditor from "../../components/common/TextEditor";
 import { fetchAttributes } from "../../store/slices/attributeSlice";
 import PopupAlert from "../../components/popUpAlert";
+import { useAppSelector } from "../../hooks/redux";
+import { fetchTemplates } from "../../store/slices/template";
 
 // Interfaces
 interface Category {
@@ -93,10 +109,14 @@ export default function AddProduct() {
     highlights: [""],
     attributeSet: [],
     status: "active",
-    ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+    ingredients: [
+      { name: "", quantity: "", description: "", image: null, alt: "" },
+    ],
     benefits: [{ title: "", description: "", image: null, alt: "" }],
     precautions: [{ title: "", description: "", image: null, alt: "" }],
     searchKeywords: [""],
+    custom_template: false,
+    templateId: "",
   });
 
   const tabs = [
@@ -110,6 +130,7 @@ export default function AddProduct() {
     { id: 7, name: "Keywords", icon: Search, color: "bg-pink-500" },
     { id: 8, name: "Benefits", icon: Heart, color: "bg-red-500" },
     { id: 9, name: "Precautions", icon: ShieldAlert, color: "bg-gray-500" },
+    { id: 10, name: "Template", icon: Layout, color: "bg-indigo-500" },
   ];
 
   // Search Keywords handlers
@@ -180,7 +201,10 @@ export default function AddProduct() {
   const addBenefit = () => {
     setProduct({
       ...product,
-      benefits: [...product.benefits, { title: "", description: "", image: null, alt: "" }],
+      benefits: [
+        ...product.benefits,
+        { title: "", description: "", image: null, alt: "" },
+      ],
     });
   };
 
@@ -220,7 +244,10 @@ export default function AddProduct() {
   const addPrecaution = () => {
     setProduct({
       ...product,
-      precautions: [...product.precautions, { title: "", description: "", image: null, alt: "" }],
+      precautions: [
+        ...product.precautions,
+        { title: "", description: "", image: null, alt: "" },
+      ],
     });
   };
 
@@ -261,6 +288,7 @@ export default function AddProduct() {
     message: "",
     type: "",
   });
+  const { templates } = useAppSelector((state) => state.template);
 
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: any) => state.product);
@@ -487,6 +515,11 @@ export default function AddProduct() {
       formData.append(`precautions[${index}].alt`, p.alt);
     });
 
+    if (product.custom_template) {
+      formData.append("custom_template", "true");
+      formData.append("templateId", product.templateId);
+    }
+
     try {
       const response = await dispatch(createProduct(formData)).unwrap();
       if (createProduct.fulfilled) {
@@ -505,10 +538,14 @@ export default function AddProduct() {
           highlights: [""],
           attributeSet: [],
           status: "active",
-          ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
+          ingredients: [
+            { name: "", quantity: "", description: "", image: null, alt: "" },
+          ],
           benefits: [{ title: "", description: "", image: null, alt: "" }],
           precautions: [{ title: "", description: "", image: null, alt: "" }],
           searchKeywords: [""],
+          custom_template: "",
+          templateId: "",
         });
 
         setPopup({
@@ -554,6 +591,12 @@ export default function AddProduct() {
       getSubcategories();
     }
   }, [dispatch, product.category]);
+
+  useEffect(() => {
+    if (templates?.length === 0) {
+      dispatch(fetchTemplates()).unwrap();
+    }
+  }, [dispatch]);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -683,7 +726,9 @@ export default function AddProduct() {
                         <input
                           type="text"
                           value={image.alt}
-                          onChange={(e) => updateImageAlt(index, "images", e.target.value)}
+                          onChange={(e) =>
+                            updateImageAlt(index, "images", e.target.value)
+                          }
                           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                           placeholder={`Alt text for image ${index + 1}`}
                         />
@@ -854,7 +899,10 @@ export default function AddProduct() {
                     className="hidden"
                     id="description-images"
                   />
-                  <label htmlFor="description-images" className="cursor-pointer">
+                  <label
+                    htmlFor="description-images"
+                    className="cursor-pointer"
+                  >
                     <Image className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Click to upload description images
@@ -873,13 +921,23 @@ export default function AddProduct() {
                         <input
                           type="text"
                           value={image.alt}
-                          onChange={(e) => updateImageAlt(index, "descriptionImages", e.target.value)}
+                          onChange={(e) =>
+                            updateImageAlt(
+                              index,
+                              "descriptionImages",
+                              e.target.value
+                            )
+                          }
                           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
-                          placeholder={`Alt text for description image ${index + 1}`}
+                          placeholder={`Alt text for description image ${
+                            index + 1
+                          }`}
                         />
                         <button
                           type="button"
-                          onClick={() => removeImage(index, "descriptionImages")}
+                          onClick={() =>
+                            removeImage(index, "descriptionImages")
+                          }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           <Trash2 size={14} />
@@ -1082,7 +1140,9 @@ export default function AddProduct() {
                     <input
                       type="text"
                       value={ingredient.alt}
-                      onChange={(e) => updateIngredientAlt(index, e.target.value)}
+                      onChange={(e) =>
+                        updateIngredientAlt(index, e.target.value)
+                      }
                       className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                       placeholder="Alt text for ingredient image"
                     />
@@ -1230,7 +1290,9 @@ export default function AddProduct() {
                       <input
                         type="text"
                         value={benefit.alt}
-                        onChange={(e) => updateBenefitAlt(index, e.target.value)}
+                        onChange={(e) =>
+                          updateBenefitAlt(index, e.target.value)
+                        }
                         className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                         placeholder="Alt text for benefit image"
                       />
@@ -1332,7 +1394,9 @@ export default function AddProduct() {
                       <input
                         type="text"
                         value={precaution.alt}
-                        onChange={(e) => updatePrecautionAlt(index, e.target.value)}
+                        onChange={(e) =>
+                          updatePrecautionAlt(index, e.target.value)
+                        }
                         className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                         placeholder="Alt text for precaution image"
                       />
@@ -1351,6 +1415,57 @@ export default function AddProduct() {
             ))}
           </div>
         );
+      case 10:
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <label className="text-2xl font-medium text-gray-700 dark:text-gray-300">
+                Custom Template
+              </label>
+            </div>
+
+            <div className=" flex items-center gap-3">
+              <input
+                type="checkbox"
+                name="custom_template"
+                id="custom-template"
+                checked={product.custom_template}
+                onChange={handleChange}
+                className="w-fit rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                placeholder="Enter plan name"
+                required
+              />
+              <label
+                htmlFor="custom-template"
+                className=" text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Custom Template
+              </label>
+            </div>
+            {product.custom_template && (
+              <div>
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Plan Name <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="templateId"
+                  value={product.templateId}
+                  onChange={(e) =>
+                    setProduct({ ...product, templateId: e.target.value })
+                  }
+                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                >
+                  <option value="">Select a template</option>
+                  {templates.map((template) => (
+                    <option key={template._id} value={template._id}>
+                      {template.layoutName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        );
 
       default:
         return null;
@@ -1363,8 +1478,12 @@ export default function AddProduct() {
         <div className="bg-white dark:bg-gray-800 shadow-2xl overflow-hidden">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Add New Product</h1>
-            <p className="text-blue-100">Create and manage your product catalog</p>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Add New Product
+            </h1>
+            <p className="text-blue-100">
+              Create and manage your product catalog
+            </p>
           </div>
 
           {/* Tab Navigation */}
@@ -1384,7 +1503,9 @@ export default function AddProduct() {
                   >
                     <div
                       className={`p-2 rounded-lg ${
-                        activeTab === tab.id ? tab.color : "bg-gray-200 dark:bg-gray-700"
+                        activeTab === tab.id
+                          ? tab.color
+                          : "bg-gray-200 dark:bg-gray-700"
                       } text-white`}
                     >
                       <IconComponent size={16} />
@@ -1420,9 +1541,21 @@ export default function AddProduct() {
                     highlights: [""],
                     attributeSet: [],
                     status: "active",
-                    ingredients: [{ name: "", quantity: "", description: "", image: null, alt: "" }],
-                    benefits: [{ title: "", description: "", image: null, alt: "" }],
-                    precautions: [{ title: "", description: "", image: null, alt: "" }],
+                    ingredients: [
+                      {
+                        name: "",
+                        quantity: "",
+                        description: "",
+                        image: null,
+                        alt: "",
+                      },
+                    ],
+                    benefits: [
+                      { title: "", description: "", image: null, alt: "" },
+                    ],
+                    precautions: [
+                      { title: "", description: "", image: null, alt: "" },
+                    ],
                     searchKeywords: [""],
                   });
                 }}

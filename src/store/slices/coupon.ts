@@ -70,6 +70,36 @@ export const deleteCoupon = createAsyncThunk<
   }
 });
 
+export const getCouponById = createAsyncThunk<
+  Coupon,
+  string,
+  { rejectValue: string }
+>("coupon/getCouponById", async (couponId, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.get(`/coupon/${couponId}`);
+    return response.data;
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to fetch coupon"
+    );
+  }
+});
+
+export const updateCoupon = createAsyncThunk<
+  Coupon,
+  { id: string; data: Partial<Coupon> },
+  { rejectValue: string }
+>("coupon/updateCoupon", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.patch(`/coupon/${id}`, data);
+    return response.data;
+  } catch (err: any) {
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to update coupon"
+    );
+  }
+});
+
 const couponSlice = createSlice({
   name: "coupon",
   initialState,
