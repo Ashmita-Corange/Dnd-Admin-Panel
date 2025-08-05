@@ -41,11 +41,27 @@ const getAvatarInitials = (ticket: SupportTicket) => {
     .slice(0, 2);
 };
 
+// Helper function to safely get assignedTo name
+const getAssignedToName = (ticket: SupportTicket): string => {
+  if (!ticket.assignedTo) return '';
+  
+  if (typeof ticket.assignedTo === 'string') {
+    return ticket.assignedTo;
+  }
+  
+  if (typeof ticket.assignedTo === 'object' && ticket.assignedTo.name) {
+    return ticket.assignedTo.name;
+  }
+  
+  return '';
+};
+
 // Helper function for status badges
 const getStatusBadge = (status: string) => {
   const statusConfig = {
     open: { bg: "bg-blue-100 dark:bg-blue-900/20", text: "text-blue-800 dark:text-blue-200" },
     "in-progress": { bg: "bg-yellow-100 dark:bg-yellow-900/20", text: "text-yellow-800 dark:text-yellow-200" },
+    "in_progress": { bg: "bg-yellow-100 dark:bg-yellow-900/20", text: "text-yellow-800 dark:text-yellow-200" },
     resolved: { bg: "bg-green-100 dark:bg-green-900/20", text: "text-green-800 dark:text-green-200" },
     closed: { bg: "bg-gray-100 dark:bg-gray-900/20", text: "text-gray-800 dark:text-gray-200" },
   };
@@ -54,7 +70,7 @@ const getStatusBadge = (status: string) => {
   
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1).replace('-', ' ')}
+      {status.charAt(0).toUpperCase() + status.slice(1).replace(/[-_]/g, ' ')}
     </span>
   );
 };
@@ -197,25 +213,28 @@ const TicketDetailsModal: React.FC<{
             </div>
 
             {/* Assigned To */}
-            {ticket.assignedTo && typeof ticket.assignedTo === 'string' && ticket.assignedTo.trim() !== '' && (
-              <div>
-                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
-                  Assigned To
-                </h4>
-                <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                      {ticket.assignedTo.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {ticket.assignedTo}
-                    </p>
+            {(() => {
+              const assignedToName = getAssignedToName(ticket);
+              return assignedToName && assignedToName.trim() !== '' && (
+                <div>
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+                    Assigned To
+                  </h4>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                        {assignedToName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                        {assignedToName}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Timestamps */}
             <div>
@@ -280,7 +299,7 @@ const SupportTicketList: React.FC = () => {
   const statusOptions = [
     { value: "", label: "All Status" },
     { value: "open", label: "Open" },
-    { value: "in-progress", label: "In Progress" },
+    { value: "in_progress", label: "In Progress" },
     { value: "resolved", label: "Resolved" },
     { value: "closed", label: "Closed" },
   ];
@@ -307,7 +326,6 @@ const SupportTicketList: React.FC = () => {
   // Fetch tickets
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
       ...(localFilters.priority ? { priority: localFilters.priority } : {}),
     };
@@ -330,7 +348,6 @@ const SupportTicketList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
             ...(localFilters.priority ? { priority: localFilters.priority } : {}),
           },
@@ -347,7 +364,6 @@ const SupportTicketList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
           ...(localFilters.priority ? { priority: localFilters.priority } : {}),
         },

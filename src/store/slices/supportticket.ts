@@ -5,20 +5,28 @@ import { getTenantFromURL } from "../../utils/getTenantFromURL";
 // Interfaces
 export interface SupportTicket {
   _id: string;
-  subject: string; // Changed from title to subject to match API
+  subject: string;
   title?: string; // Keep title as optional for backward compatibility
   description: string;
-  status: "open" | "in-progress" | "resolved" | "closed";
+  status: "open" | "in_progress" | "resolved" | "closed";
   priority: "low" | "medium" | "high" | "urgent";
   category?: string;
-  assignedTo?: string;
+  customer?: string | { _id: string; name?: string; email?: string }; // ObjectId or populated user
+  assignedTo?: string | { _id: string; name?: string; email?: string } | null; // ObjectId or populated user
   createdBy?: string;
-  customerEmail?: string;
-  customerName?: string;
+  customerEmail?: string; // For backward compatibility
+  customerName?: string; // For backward compatibility
   createdAt: string;
   updatedAt: string;
   orderId?: string | null;
   attachments?: any[];
+  replies?: Array<{
+    message: string;
+    repliedBy: string | { _id: string; name?: string };
+    repliedAt: string;
+    isStaff: boolean;
+  }>;
+  isDeleted?: boolean;
   deletedAt?: string | null;
 }
 
@@ -80,16 +88,30 @@ export const fetchTickets = createAsyncThunk<
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("search", search);
+    
+    // Add sort parameters
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
-    // Add filters to query params
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== "") {
-        queryParams.append(key, value.toString());
-      }
-    });
+    // Format filters as JSON object for the API
+    const apiFilters = {
+      isDeleted: false, // Always exclude deleted tickets
+      ...filters
+    };
+    
+    if (Object.keys(apiFilters).length > 0) {
+      queryParams.append("filters", JSON.stringify(apiFilters));
+    }
+
+    // Format search fields as JSON object for the API
+    if (search && search.trim() !== "") {
+      const searchFields = {
+        subject: search.trim(),
+        description: search.trim(),
+        // Add other searchable fields as needed
+      };
+      queryParams.append("searchFields", JSON.stringify(searchFields));
+    }
 
     const response = await axiosInstance.get(`/crm/tickets?${queryParams.toString()}`, {
       headers: {
@@ -115,6 +137,19 @@ export const fetchTickets = createAsyncThunk<
       const transformedTickets = ticketsData.map((ticket: any) => ({
         ...ticket,
         title: ticket.title || ticket.subject, // Map subject to title for backward compatibility
+        // Handle status conversion from in_progress to in-progress for UI compatibility
+        status: ticket.status === 'in_progress' ? 'in-progress' : ticket.status,
+        // Extract customer info for backward compatibility
+        customerName: ticket.customerName || 
+                     (typeof ticket.customer === 'object' && ticket.customer?.name) || 
+                     'N/A',
+        customerEmail: ticket.customerEmail || 
+                      (typeof ticket.customer === 'object' && ticket.customer?.email) || 
+                      '',
+        // Handle assignedTo field - extract name if it's an object
+        assignedTo: typeof ticket.assignedTo === 'object' && ticket.assignedTo?.name 
+                   ? ticket.assignedTo.name 
+                   : ticket.assignedTo,
       }));
       
       return {
