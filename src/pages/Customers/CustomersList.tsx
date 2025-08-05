@@ -209,10 +209,10 @@ const CustomersList: React.FC = () => {
         </div>
       </div>
 
-      {/* Error */}
+      {/* Error Message */}
       {error && (
-        <div className="bg-red-100 text-red-800 p-3 rounded mb-4">
-          {error}
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
 
@@ -228,25 +228,25 @@ const CustomersList: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-800">
                 <tr>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     #
                   </th>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Name
                   </th>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Email
                   </th>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Role
                   </th>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Created
                   </th>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Active
                   </th>
-                  <th className="px-6 py-3  text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                     Actions
                   </th>
                 </tr>
@@ -285,27 +285,24 @@ const CustomersList: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 space-x-2">
                         <button
                           onClick={() => handleViewDetails(customer)}
-                          className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-full transition-colors dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-blue-900/20"
-                          title="View Details"
+                          className="text-blue-500 hover:text-blue-700 transition-colors"
                         >
-                          <Eye className="w-5 h-5" />
+                          <Eye className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleEditCustomer(customer)}
-                          className="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-full transition-colors dark:text-green-400 dark:hover:text-green-300 dark:hover:bg-green-900/20"
-                          title="Edit"
+                          className="text-blue-500 hover:text-blue-700 transition-colors"
                         >
-                          <Pencil className="w-5 h-5" />
+                          <Pencil className="h-5 w-5" />
                         </button>
                         <button
                           onClick={() => handleDeleteCustomer(customer)}
-                          className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
-                          title="Delete"
+                          className="text-red-500 hover:text-red-700 transition-colors"
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash2 className="h-5 w-5" />
                         </button>
                       </div>
                     </td>
@@ -320,7 +317,7 @@ const CustomersList: React.FC = () => {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -346,7 +343,7 @@ const CustomersList: React.FC = () => {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page >= Math.ceil(total / limit)}
-              className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="p-2 rounded-md border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

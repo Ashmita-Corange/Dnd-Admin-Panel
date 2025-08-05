@@ -47,6 +47,9 @@ import EditBlog from "./pages/Blog/EditBlog";
 import AddCustomers from "./pages/Customers/AddCustomers";
 import CustomersList from "./pages/Customers/CustomersList";
 import EditCustomer from "./pages/Customers/EditCustomer";
+import AddLead from "./pages/Lead/AddLead";
+import LeadList from "./pages/Lead/LeadList";
+import EditLead from "./pages/Lead/EditLead";
 
 
 // Lazy load pages
@@ -205,6 +208,13 @@ export default function App() {
               <Route path="/customers/add" element={<AddCustomers />} />
               <Route path="/customers/list" element={<CustomersList />} />
               <Route path="/customers/edit/:id" element={<EditCustomer />} />
+
+
+              {/* Lead */}
+              {/* Add more routes as needed */}
+              <Route path="/lead/add" element={<AddLead />} />
+              <Route path="/lead/list" element={<LeadList />} />
+              <Route path="/lead/edit/:id" element={<EditLead/>} />
 
             </Route>
           </Route>
