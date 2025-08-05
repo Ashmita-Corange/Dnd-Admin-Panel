@@ -19,6 +19,7 @@ import leadSlice from "./slices/lead";
 import pagesSlice from "./slices/pages";
 import shippingSlice from "./slices/shippingSlice";
 import customersReducer from "./slices/customersSlice";
+import staffSlice from "./slices/staff";
 
 export const store = configureStore({
   reducer: {
@@ -41,6 +42,7 @@ export const store = configureStore({
     lead: leadSlice,
     shipping: shippingSlice,
     customers: customersReducer,
+    staff: staffSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

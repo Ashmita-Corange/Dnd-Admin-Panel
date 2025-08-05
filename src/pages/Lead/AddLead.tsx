@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { User, Mail, Phone, FileText, Users } from "lucide-react";
+import { User, Mail, Phone, FileText, Users, Search, ChevronDown, X } from "lucide-react";
 import { createLead, clearError } from "../../store/slices/lead";
+import { fetchStaff } from "../../store/slices/staff";
 import { RootState, AppDispatch } from "../../store";
 
 type LeadStatus = "new" | "contacted" | "qualified" | "converted" | "lost";
@@ -31,30 +32,33 @@ const PopupAlert: React.FC<PopupAlert & { onClose: () => void }> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className={`text-lg font-semibold ${
-            type === 'success' ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {type === 'success' ? 'Success' : 'Error'}
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ×
-          </button>
-        </div>
-        <p className="text-gray-700 dark:text-gray-300">{message}</p>
-        <button
-          onClick={onClose}
-          className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
-        >
-          Close
-        </button>
-      </div>
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-md">
+  <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+    <div className="flex items-center justify-between mb-4">
+      <h3
+        className={`text-lg font-semibold ${
+          type === 'success' ? 'text-green-600' : 'text-red-600'
+        }`}
+      >
+        {type === 'success' ? 'Success' : 'Error'}
+      </h3>
+      <button
+        onClick={onClose}
+        className="text-gray-400 hover:text-gray-600"
+      >
+        ×
+      </button>
     </div>
+    <p className="text-gray-700 dark:text-gray-300">{message}</p>
+    <button
+      onClick={onClose}
+      className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+    >
+      Close
+    </button>
+  </div>
+</div>
+
   );
 };
 
@@ -84,6 +88,7 @@ const PageBreadcrumb: React.FC<{ pageTitle: string }> = ({ pageTitle }) => (
 const AddLead: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.lead);
+  const { staff, loading: staffLoading } = useSelector((state: RootState) => state.staff);
   const [popup, setPopup] = useState<PopupAlert>({
     isVisible: false,
     message: "",
@@ -100,9 +105,16 @@ const AddLead: React.FC = () => {
     assignedTo: "",
   });
 
+  // Search functionality for staff dropdown
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [isStaffDropdownOpen, setIsStaffDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   // Clear any existing errors when component mounts
   useEffect(() => {
     dispatch(clearError());
+    // Fetch staff data for the dropdown
+    dispatch(fetchStaff({}));
   }, [dispatch]);
 
   // Show error popup if there's an error from Redux
@@ -115,6 +127,20 @@ const AddLead: React.FC = () => {
       });
     }
   }, [error]);
+
+  // Handle clicking outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsStaffDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const statusOptions: { value: LeadStatus; label: string }[] = [
     { value: "new", label: "New" },
@@ -134,6 +160,15 @@ const AddLead: React.FC = () => {
     { value: "other", label: "Other" },
   ];
 
+  // Filter staff based on search term
+  const filteredStaff = staff.filter(staffMember =>
+    staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
+    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
+  );
+
+  // Get selected staff member details
+  const selectedStaff = staff.find(s => s._id === formData.assignedTo);
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -142,6 +177,20 @@ const AddLead: React.FC = () => {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleStaffSelect = (staffId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      assignedTo: staffId,
+    }));
+    setIsStaffDropdownOpen(false);
+    setStaffSearchTerm("");
+  };
+
+  const handleStaffSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStaffSearchTerm(e.target.value);
+    setIsStaffDropdownOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -302,14 +351,67 @@ const AddLead: React.FC = () => {
                       Assigned To
                     </div>
                   </label>
-                  <input
-                    type="text"
-                    name="assignedTo"
-                    value={formData.assignedTo}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter user ID"
-                  />
+                  <div className="relative" ref={dropdownRef}>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={selectedStaff ? `${selectedStaff.name} - ${selectedStaff.email}` : staffSearchTerm}
+                        onChange={handleStaffSearchChange}
+                        onFocus={() => setIsStaffDropdownOpen(true)}
+                        placeholder={staffLoading ? "Loading staff..." : "Search and select staff member"}
+                        className="w-full rounded border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                        disabled={staffLoading}
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        {selectedStaff ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData(prev => ({ ...prev, assignedTo: "" }));
+                              setStaffSearchTerm("");
+                            }}
+                            className="pointer-events-auto text-gray-400 hover:text-gray-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <Search className="w-4 h-4 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    {isStaffDropdownOpen && !staffLoading && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-600 max-h-60 overflow-y-auto">
+                        {filteredStaff.length > 0 ? (
+                          <>
+                            <div
+                              className="px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                              onClick={() => handleStaffSelect("")}
+                            >
+                              Clear selection
+                            </div>
+                            {filteredStaff.map((staffMember) => (
+                              <div
+                                key={staffMember._id}
+                                onClick={() => handleStaffSelect(staffMember._id)}
+                                className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex flex-col"
+                              >
+                                <span className="font-medium">{staffMember.name}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">{staffMember.email}</span>
+                              </div>
+                            ))}
+                          </>
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                            No staff members found
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {staffLoading && (
+                    <p className="text-sm text-gray-500 mt-1">Loading staff...</p>
+                  )}
                 </div>
               </div>
             </div>
