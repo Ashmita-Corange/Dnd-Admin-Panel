@@ -17,7 +17,8 @@ export interface Lead {
     createdAt: string | Date;
     createdBy?: string;
   }>;
-  assignedTo?: string;
+  assignedTo?: string; // This will now store the staff ID instead of name
+  assignedToName?: string; // Optional: Add this if you want to store the name separately for display
   convertedTo?: string;
   converted?: boolean;
   createdAt: string;
@@ -140,6 +141,8 @@ export const fetchLeads = createAsyncThunk<
       
       console.log("Extracted Leads Data:", leadsData);
       console.log("Current Page:", currentPage);
+      console.log("Total Documents:", data?.data?.totalDocuments || data?.totalDocuments || leadsData.length);
+      console.log("Total Pages:", data?.data?.totalPages || data?.totalPages || Math.ceil(leadsData.length / limit));
       
       return {
         leads: leadsData,
@@ -236,6 +239,41 @@ export const deleteLead = createAsyncThunk<string, string>(
       }
     } catch (error: any) {
       console.error("❌ deleteLead error:", error);
+      return rejectWithValue(
+        error?.response?.data?.message || error?.message || "Something went wrong"
+      );
+    }
+  }
+);
+
+
+
+
+export const assignLeads = createAsyncThunk<
+  { updatedLeads: Lead[] },
+  { leadIds: string[]; assignedTo: string } // assignedTo is now the staff ID
+>(
+  "leads/assign",
+  async ({ leadIds, assignedTo }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(
+        "/crm/leads/assign",
+        { leadIds, assignedTo }, // Send staff ID to backend
+        {
+          headers: {
+            "x-tenant": getTenantFromURL(),
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const { success, data } = response.data;
+      if (success) {
+        return { updatedLeads: data };
+      } else {
+        return rejectWithValue("Failed to assign leads.");
+      }
+    } catch (error: any) {
+      console.error("❌ assignLeads error:", error);
       return rejectWithValue(
         error?.response?.data?.message || error?.message || "Something went wrong"
       );
@@ -352,7 +390,42 @@ const leadSlice = createSlice({
       .addCase(fetchLeadById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      });
+      })
+      .addCase(assignLeads.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      }
+      )
+      .addCase(assignLeads.fulfilled, (state, action) => {
+        state.loading = false;
+        if (Array.isArray(state.leads)) {
+          const updatedLeadsArray = Array.isArray(action.payload.updatedLeads)
+            ? action.payload.updatedLeads
+            : [action.payload.updatedLeads];
+          updatedLeadsArray.forEach((updatedLead) => {
+            const index = state.leads.findIndex(
+              (l) => l._id === updatedLead._id
+            );
+            if (index !== -1) {
+              state.leads[index] = updatedLead;
+            } else {
+              state.leads.push(updatedLead);
+            }
+          });
+        } else {
+          state.leads = Array.isArray(action.payload.updatedLeads)
+            ? action.payload.updatedLeads
+            : [action.payload.updatedLeads];
+        }
+      }
+      )
+      .addCase(assignLeads.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      }
+      );
+      
+
   },
 });
 
