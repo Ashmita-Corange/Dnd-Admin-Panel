@@ -70,6 +70,104 @@ const initialState: SupportTicketState = {
   filters: {},
 };
 
+// Add reply to ticket
+export const addTicketReply = createAsyncThunk<
+  SupportTicket,
+  { id: string; replyData: { message: string; repliedBy: string; isStaff: boolean } }
+>("tickets/addReply", async ({ id, replyData }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(`/crm/tickets/${id}/replies`, replyData, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+        "Content-Type": "application/json",
+      },
+    });
+    
+    const responseData = response.data;
+    console.log("Add Ticket Reply - Full Response:", responseData);
+    
+    const { success } = responseData;
+    
+    if (success) {
+      const updatedTicket = responseData?.data || responseData;
+      
+      // Transform the updated ticket for compatibility
+      const transformedTicket = {
+        ...updatedTicket,
+        title: updatedTicket.title || updatedTicket.subject,
+        status: updatedTicket.status === 'in_progress' ? 'in-progress' : updatedTicket.status,
+        customerName: updatedTicket.customerName || 
+                     (typeof updatedTicket.customer === 'object' && updatedTicket.customer?.name) || 
+                     'N/A',
+        customerEmail: updatedTicket.customerEmail || 
+                      (typeof updatedTicket.customer === 'object' && updatedTicket.customer?.email) || 
+                      '',
+        assignedTo: typeof updatedTicket.assignedTo === 'object' && updatedTicket.assignedTo?.name 
+                   ? updatedTicket.assignedTo.name 
+                   : updatedTicket.assignedTo,
+      };
+      
+      return transformedTicket;
+    } else {
+      return rejectWithValue("Failed to add reply to ticket.");
+    }
+  } catch (error: any) {
+    console.error("❌ addTicketReply error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
+
+// Update ticket
+export const updateTicket = createAsyncThunk<
+  SupportTicket,
+  { id: string; data: Partial<SupportTicket> }
+>("tickets/update", async ({ id, data }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(`/crm/tickets/${id}`, data, {
+      headers: {
+        "x-tenant": getTenantFromURL(),
+        "Content-Type": "application/json",
+      },
+    });
+    
+    const responseData = response.data;
+    console.log("Update Ticket - Full Response:", responseData);
+    
+    const { success } = responseData;
+    
+    if (success) {
+      const updatedTicket = responseData?.data || responseData;
+      
+      // Transform the updated ticket for compatibility
+      const transformedTicket = {
+        ...updatedTicket,
+        title: updatedTicket.title || updatedTicket.subject,
+        status: updatedTicket.status === 'in_progress' ? 'in-progress' : updatedTicket.status,
+        customerName: updatedTicket.customerName || 
+                     (typeof updatedTicket.customer === 'object' && updatedTicket.customer?.name) || 
+                     'N/A',
+        customerEmail: updatedTicket.customerEmail || 
+                      (typeof updatedTicket.customer === 'object' && updatedTicket.customer?.email) || 
+                      '',
+        assignedTo: typeof updatedTicket.assignedTo === 'object' && updatedTicket.assignedTo?.name 
+                   ? updatedTicket.assignedTo.name 
+                   : updatedTicket.assignedTo,
+      };
+      
+      return transformedTicket;
+    } else {
+      return rejectWithValue("Failed to update ticket.");
+    }
+  } catch (error: any) {
+    console.error("❌ updateTicket error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
+
 // Fetch tickets
 export const fetchTickets = createAsyncThunk<
   { tickets: SupportTicket[]; pagination: Pagination },
@@ -210,6 +308,42 @@ const supportTicketSlice = createSlice({
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchTickets.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Add reply cases
+      .addCase(addTicketReply.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addTicketReply.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update the ticket in the tickets array with the new reply
+        const updatedTicket = action.payload;
+        const index = state.tickets.findIndex(ticket => ticket._id === updatedTicket._id);
+        if (index !== -1) {
+          state.tickets[index] = updatedTicket;
+        }
+      })
+      .addCase(addTicketReply.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Update ticket cases
+      .addCase(updateTicket.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateTicket.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update the ticket in the tickets array
+        const updatedTicket = action.payload;
+        const index = state.tickets.findIndex(ticket => ticket._id === updatedTicket._id);
+        if (index !== -1) {
+          state.tickets[index] = updatedTicket;
+        }
+      })
+      .addCase(updateTicket.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

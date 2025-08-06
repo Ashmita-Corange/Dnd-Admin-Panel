@@ -12,7 +12,8 @@ import {
   X,
   Ticket,
   Pencil,
-  Eye
+  Eye,
+  Check
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -20,7 +21,8 @@ import {
   fetchTickets, 
   setSearchQuery, 
   setFilters, 
-  resetFilters 
+  resetFilters,
+  updateTicket 
 } from "../../store/slices/supportticket";
 import { SupportTicket } from "../../store/slices/supportticket";
 import PageMeta from "../../components/common/PageMeta";
@@ -277,6 +279,156 @@ const TicketDetailsModal: React.FC<{
   );
 };
 
+// Status Update Modal Component
+const StatusUpdateModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  ticket: SupportTicket | null;
+  onUpdate: (ticketId: string, newStatus: string) => void;
+  isUpdating: boolean;
+}> = ({ isOpen, onClose, ticket, onUpdate, isUpdating }) => {
+  const [selectedStatus, setSelectedStatus] = useState("");
+
+  // Status options with display names
+  const statusOptions = [
+    { value: "open", label: "Open", description: "Ticket is newly created and needs attention" },
+    { value: "in_progress", label: "In Progress", description: "Ticket is being worked on" },
+    { value: "resolved", label: "Resolved", description: "Issue has been resolved" },
+    { value: "closed", label: "Closed", description: "Ticket is closed and completed" },
+  ];
+
+  // Initialize with current status when modal opens
+  useEffect(() => {
+    if (isOpen && ticket) {
+      setSelectedStatus(ticket.status);
+    }
+  }, [isOpen, ticket]);
+
+  if (!isOpen || !ticket) return null;
+
+  const handleSubmit = () => {
+    if (selectedStatus && selectedStatus !== ticket.status) {
+      onUpdate(ticket._id, selectedStatus);
+    } else {
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
+    <div
+       className="fixed inset-0 backdrop-blur-sm transition-opacity"
+       onClick={onClose}
+     />
+
+
+      {/* Modal */}
+      <div className="flex min-h-full items-center justify-center p-4 mt-10">
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                <Edit className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Update Ticket Status
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {getTicketTitle(ticket)}
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              disabled={isUpdating}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Current Status: {getStatusBadge(ticket.status)}
+                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Select New Status:
+                </label>
+                <div className="space-y-3">
+                  {statusOptions.map((option) => (
+                    <label
+                      key={option.value}
+                      className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                        selectedStatus === option.value
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                          : "border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="status"
+                        value={option.value}
+                        checked={selectedStatus === option.value}
+                        onChange={(e) => setSelectedStatus(e.target.value)}
+                        className="mt-1 text-blue-600 focus:ring-blue-500"
+                        disabled={isUpdating}
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {option.label}
+                          </span>
+                          {selectedStatus === option.value && (
+                            <Check className="w-4 h-4 text-blue-600" />
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                          {option.description}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={onClose}
+              disabled={isUpdating}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isUpdating || !selectedStatus || selectedStatus === ticket.status}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isUpdating ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Updating...
+                </>
+              ) : (
+                "Update Status"
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SupportTicketList: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -287,6 +439,8 @@ const SupportTicketList: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [statusUpdateModalOpen, setStatusUpdateModalOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   
   // Popup state for alerts
   const [popup, setPopup] = useState({
@@ -407,7 +561,55 @@ const SupportTicketList: React.FC = () => {
   };
 
   const handleEditTicket = (ticket: SupportTicket) => {
-    navigate(`/support-tickets/edit/${ticket._id}`);
+    setSelectedTicket(ticket);
+    setStatusUpdateModalOpen(true);
+  };
+
+  const closeStatusUpdateModal = () => {
+    setStatusUpdateModalOpen(false);
+    setSelectedTicket(null);
+    setIsUpdatingStatus(false);
+  };
+
+  const handleStatusUpdate = async (ticketId: string, newStatus: string) => {
+    setIsUpdatingStatus(true);
+    try {
+      const result = await dispatch(updateTicket({ 
+        id: ticketId, 
+        data: { status: newStatus as "open" | "in_progress" | "resolved" | "closed" } 
+      })).unwrap();
+      
+      setPopup({
+        message: "Ticket status updated successfully!",
+        type: "success",
+        isVisible: true,
+      });
+      
+      // Close modal after successful update
+      closeStatusUpdateModal();
+      
+      // Refresh the tickets list
+      dispatch(
+        fetchTickets({
+          page: pagination.page,
+          limit: pagination.limit,
+          filters: {
+            ...(localFilters.status ? { status: localFilters.status } : {}),
+            ...(localFilters.priority ? { priority: localFilters.priority } : {}),
+          },
+          search: searchInput !== "" ? searchInput : undefined,
+          sort: { createdAt: "desc" },
+        })
+      );
+    } catch (error: any) {
+      setPopup({
+        message: error || "Failed to update ticket status",
+        type: "error",
+        isVisible: true,
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   // Generate page numbers for pagination
@@ -631,19 +833,28 @@ const SupportTicketList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
-                        onClick={() => handleViewTicket(ticket)}
-                        className="text-indigo-500 hover:text-indigo-700 transition-colors"
-                        title="View Details"
+                      onClick={() => handleViewTicket(ticket)}
+                      className="text-indigo-500 hover:text-indigo-700 transition-colors"
+                      title="View Details"
                       >
-                        <Eye className="h-5 w-5" />
+                      <Eye className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleEditTicket(ticket)}
-                        className="text-blue-500 hover:text-blue-700 transition-colors"
-                        title="Edit Ticket"
+                      onClick={() => handleEditTicket(ticket)}
+                      className="text-blue-500 hover:text-blue-700 transition-colors"
+                      title="Edit Ticket"
                       >
-                        <Pencil className="h-5 w-5" />
+                      <Pencil className="h-5 w-5" />
                       </button>
+                      {/* Chat/Reply */}
+  <button
+    onClick={() => handleChat(ticket)}
+    className="text-green-500 hover:text-green-700 transition-colors"
+    title="Chat / View Replies"
+  >
+    <MessageCircle className="h-5 w-5" />
+  </button>
+                    
                     </td>
                   </tr>
                 ))
@@ -702,6 +913,15 @@ const SupportTicketList: React.FC = () => {
         isOpen={detailsModalOpen}
         onClose={closeDetailsModal}
         ticket={selectedTicket}
+      />
+
+      {/* Status Update Modal */}
+      <StatusUpdateModal
+        isOpen={statusUpdateModalOpen}
+        onClose={closeStatusUpdateModal}
+        ticket={selectedTicket}
+        onUpdate={handleStatusUpdate}
+        isUpdating={isUpdatingStatus}
       />
     </div>
   );
