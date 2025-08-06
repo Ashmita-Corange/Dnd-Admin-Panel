@@ -25,6 +25,7 @@ const SupportTicketChat: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { tickets, loading } = useAppSelector((state) => state.tickets);
+  const currentUser = useAppSelector(selectCurrentUser);
   
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
   const [newMessage, setNewMessage] = useState("");
@@ -67,7 +68,6 @@ const SupportTicketChat: React.FC = () => {
     try {
       const replyData = {
         message: newMessage.trim(),
-        repliedBy: "admin", // You should get this from user context/auth
         isStaff: true,
       };
 

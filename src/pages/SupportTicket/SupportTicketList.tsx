@@ -852,13 +852,13 @@ const SupportTicketList: React.FC = () => {
                       <Pencil className="h-5 w-5" />
                       </button>
                       {/* Chat/Reply */}
-  <button
-    onClick={() => handleChat(ticket)}
-    className="text-green-500 hover:text-green-700 transition-colors"
-    title="Chat / View Replies"
-  >
-    <MessageCircle className="h-5 w-5" />
-  </button>
+                      <button
+                        onClick={() => handleChat(ticket)}
+                        className="text-green-500 hover:text-green-700 transition-colors"
+                        title="Chat / View Replies"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                    </button>
                     
                     </td>
                   </tr>

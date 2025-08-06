@@ -73,7 +73,7 @@ const initialState: SupportTicketState = {
 // Add reply to ticket
 export const addTicketReply = createAsyncThunk<
   SupportTicket,
-  { id: string; replyData: { message: string; repliedBy: string; isStaff: boolean } }
+  { id: string; replyData: { message: string; isStaff: boolean } }
 >("tickets/addReply", async ({ id, replyData }, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.post(`/crm/tickets/${id}/replies`, replyData, {
