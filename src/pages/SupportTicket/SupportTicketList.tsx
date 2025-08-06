@@ -13,7 +13,8 @@ import {
   Ticket,
   Pencil,
   Eye,
-  Check
+  Check,
+  MessageCircle
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -563,6 +564,10 @@ const SupportTicketList: React.FC = () => {
   const handleEditTicket = (ticket: SupportTicket) => {
     setSelectedTicket(ticket);
     setStatusUpdateModalOpen(true);
+  };
+
+  const handleChat = (ticket: SupportTicket) => {
+    navigate(`/tickets/${ticket._id}/chat`);
   };
 
   const closeStatusUpdateModal = () => {
