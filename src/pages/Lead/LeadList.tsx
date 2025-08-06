@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, 
@@ -12,7 +12,10 @@ import {
   X,
   User,
   Pencil,
-  Eye
+  Eye,
+  UserPlus,
+  Check,
+  ChevronDown
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -21,8 +24,10 @@ import {
   deleteLead, 
   setSearchQuery, 
   setFilters, 
-  resetFilters 
+  resetFilters,
+  assignLeads
 } from "../../store/slices/lead";
+import { fetchStaff } from "../../store/slices/staff";
 import { Lead } from "../../store/slices/lead";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
@@ -41,7 +46,7 @@ const getStatusBadge = (status: string) => {
   
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {status?.charAt(0)?.toUpperCase() + status?.slice(1)}
     </span>
   );
 };
@@ -324,6 +329,7 @@ const LeadList: React.FC = () => {
   const navigate = useNavigate();
   const { leads = [], loading, error, pagination, searchQuery, filters } =
     useAppSelector((state) => state.lead);
+  const { staff, loading: staffLoading } = useAppSelector((state) => state.staff);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
@@ -479,6 +485,136 @@ const LeadList: React.FC = () => {
     }
   };
 
+  // Bulk assignment state
+  const [isAssignMode, setIsAssignMode] = useState(false);
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [showStaffDropdown, setShowStaffDropdown] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Mock staff data - replace with actual staff from your store/API
+  const staffMembers = [
+    { id: "staff1", name: "John Smith", email: "john@example.com" },
+    { id: "staff2", name: "Sarah Johnson", email: "sarah@example.com" },
+    { id: "staff3", name: "Mike Brown", email: "mike@example.com" },
+    { id: "staff4", name: "Lisa Davis", email: "lisa@example.com" },
+  ];
+
+  // Fetch staff when component mounts
+  useEffect(() => {
+    dispatch(fetchStaff({}));
+  }, [dispatch]);
+
+  // Handle clicking outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowStaffDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filter staff based on search term
+  const filteredStaff = staff.filter(staffMember =>
+    staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
+    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
+  );
+
+  // Get leads that can be assigned (only "new" status)
+  const assignableLeads = leads.filter(lead => lead.status === "new");
+
+  // Bulk assignment handlers
+  const toggleAssignMode = () => {
+    setIsAssignMode(!isAssignMode);
+    setSelectedLeads([]);
+    setShowStaffDropdown(false);
+    setStaffSearchTerm("");
+  };
+
+  const handleLeadSelection = (leadId: string) => {
+    setSelectedLeads(prev => 
+      prev.includes(leadId) 
+        ? prev.filter(id => id !== leadId)
+        : [...prev, leadId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedLeads.length === assignableLeads.length) {
+      setSelectedLeads([]);
+    } else {
+      setSelectedLeads(assignableLeads.map(lead => lead._id));
+    }
+  };
+
+  const handleStaffSelect = async (staffMember: { _id: string; name: string; email: string }) => {
+    if (selectedLeads.length === 0) {
+      setPopup({
+        message: "Please select at least one lead to assign",
+        type: "error",
+        isVisible: true,
+      });
+      return;
+    }
+
+    setIsAssigning(true);
+    setShowStaffDropdown(false);
+
+    try {
+      await dispatch(assignLeads({
+        leadIds: selectedLeads,
+        assignedTo: staffMember._id
+      })).unwrap();
+
+      setPopup({
+        message: `Successfully assigned ${selectedLeads.length} lead(s) to ${staffMember.name}`,
+        type: "success",
+        isVisible: true,
+      });
+
+      // Reset assignment mode
+      setIsAssignMode(false);
+      setSelectedLeads([]);
+      setStaffSearchTerm("");
+
+      // Refresh leads
+      const activeFilters = {
+        isDeleted: false,
+        ...(localFilters.status ? { status: localFilters.status } : {}),
+      };
+
+      dispatch(
+        fetchLeads({
+          page: pagination.page,
+          limit: pagination.limit,
+          filters: activeFilters,
+          search: searchInput !== "" ? searchInput : undefined,
+          sort: { createdAt: "desc" },
+        })
+      );
+    } catch (error) {
+      console.log("Failed to assign leads:", error?.message);
+      setPopup({
+        message: "Failed to assign leads. Please try again.",
+        type: "error",
+        isVisible: true,
+      });
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const handleStaffSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStaffSearchTerm(e.target.value);
+    setShowStaffDropdown(true);
+  };
+
   const generatePageNumbers = () => {
     const pages = [];
     const totalPages = pagination.totalPages;
@@ -497,6 +633,9 @@ const LeadList: React.FC = () => {
 
   // Generate avatar initials from full name
   const getAvatarInitials = (fullName: string) => {
+    if (!fullName || typeof fullName !== 'string') {
+      return 'NA';
+    }
     return fullName
       .split(' ')
       .map(name => name.charAt(0))
@@ -516,10 +655,110 @@ const LeadList: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
             Lead List
           </h1>
-          <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination.total}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500 text-sm dark:text-gray-400">
+              Total: {pagination.total}
+            </span>
+            
+            {/* Show Assign Leads button only if there are assignable leads */}
+            {assignableLeads.length > 0 && (
+              <button
+                onClick={toggleAssignMode}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isAssignMode
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-indigo-500 text-white hover:bg-indigo-600"
+                }`}
+              >
+                {isAssignMode ? (
+                  <>
+                    <X className="w-4 h-4" />
+                    Cancel
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    Assign Leads ({assignableLeads.length})
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* Bulk Assignment Controls */}
+        {isAssignMode && (
+          <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                  {selectedLeads.length} of {assignableLeads.length} assignable lead(s) selected
+                </span>
+                <button
+                  onClick={handleSelectAll}
+                  className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200"
+                >
+                  {selectedLeads.length === assignableLeads.length ? "Deselect All" : "Select All"}
+                </button>
+              </div>
+              
+              {selectedLeads.length > 0 && (
+                <div className="relative" ref={dropdownRef}>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={staffSearchTerm}
+                      onChange={handleStaffSearchChange}
+                      onFocus={() => setShowStaffDropdown(true)}
+                      placeholder={staffLoading ? "Loading staff..." : "Search staff to assign..."}
+                      className="w-64 rounded border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      disabled={staffLoading || isAssigning}
+                    />
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                      {isAssigning ? (
+                        <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        <Search className="w-4 h-4 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {showStaffDropdown && !staffLoading && !isAssigning && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10 max-h-60 overflow-y-auto">
+                      {filteredStaff.length > 0 ? (
+                        filteredStaff.map((staffMember) => (
+                          <button
+                            key={staffMember._id}
+                            onClick={() => handleStaffSelect(staffMember)}
+                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md flex items-center gap-3"
+                          >
+                            <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                {staffMember.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                {staffMember.name}
+                              </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">
+                                {staffMember.email}
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                          {staffSearchTerm ? "No staff members found" : "Type to search staff"}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Search & Filter */}
         <div className="bg-white shadow p-4 rounded-md mb-6 dark:bg-gray-900">
@@ -594,6 +833,16 @@ const LeadList: React.FC = () => {
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
+                {isAssignMode && (
+                  <th className="px-6 py-3 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedLeads.length === assignableLeads.length && assignableLeads.length > 0}
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                    />
+                  </th>
+                )}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   #
                 </th>
@@ -623,7 +872,7 @@ const LeadList: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {(!leads || leads.length === 0) ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={isAssignMode ? 9 : 8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                     <div className="flex flex-col items-center gap-2">
                       <User className="w-12 h-12 text-gray-300 dark:text-gray-600" />
                       <p>No leads found</p>
@@ -633,18 +882,34 @@ const LeadList: React.FC = () => {
               ) : (
                 (leads || []).map((lead, idx) => (
                   <tr key={lead._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    {isAssignMode && (
+                      <td className="px-6 py-4">
+                        {lead.status === "new" ? (
+                          <input
+                            type="checkbox"
+                            checked={selectedLeads.includes(lead._id)}
+                            onChange={() => handleLeadSelection(lead._id)}
+                            className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                          />
+                        ) : (
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            <span className="text-xs text-gray-400">N/A</span>
+                          </div>
+                        )}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {(pagination.page - 1) * pagination.limit + idx + 1}
                     </td>
                     <td className="px-6 py-4">
                       <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                          {getAvatarInitials(lead.fullName)}
+                          {getAvatarInitials(lead.fullName || '')}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {lead.fullName}
+                      {lead.fullName || 'No Name'}
                       {lead.company && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {lead.company}
@@ -664,18 +929,22 @@ const LeadList: React.FC = () => {
                       {lead.source || "Not specified"}
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <button
-                        onClick={() => handleEditLead(lead)}
-                        className="text-blue-500 hover:text-blue-700 transition-colors"
-                      >
-                        <Pencil className="h-5 w-5" />
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(lead)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
+                      {!isAssignMode && (
+                        <>
+                          <button
+                            onClick={() => handleEditLead(lead)}
+                            className="text-blue-500 hover:text-blue-700 transition-colors"
+                          >
+                            <Pencil className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(lead)}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))
