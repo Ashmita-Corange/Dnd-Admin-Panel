@@ -58,7 +58,7 @@ import AddLead from "./pages/Lead/AddLead";
 import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
 import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
-
+import ContentList from "./pages/Content/ContentList";
 // Lazy load pages
 
 const SignIn = lazy(() => import("./pages/AuthPages/SignIn"));
@@ -237,6 +237,9 @@ export default function App() {
               <Route path="/shipping/add" element={<AddShipping />} />
               <Route path="/shipping/list" element={<ShippingList />} />
               <Route path="/shipping/edit/:id" element={<EditShipping />} />
+
+
+              <Route path="/contents/list" element={<ContentList />} />
             </Route>
           </Route>
 
