@@ -22,6 +22,7 @@ export interface SupportTicket {
   attachments?: any[];
   replies?: Array<{
     message: string;
+    attachments?: any[];
     repliedBy: string | { _id: string; name?: string };
     repliedAt: string;
     isStaff: boolean;
@@ -73,51 +74,61 @@ const initialState: SupportTicketState = {
 // Add reply to ticket
 export const addTicketReply = createAsyncThunk<
   SupportTicket,
-  { id: string; replyData: { message: string; isStaff: boolean } }
+  {
+    id: string;
+    replyData: {
+      message: string;
+      isStaff: boolean;
+      attachments?: File[];
+    };
+  }
 >("tickets/addReply", async ({ id, replyData }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.post(`/crm/tickets/${id}/replies`, replyData, {
-      headers: {
-        "x-tenant": getTenantFromURL(),
-        "Content-Type": "application/json",
-      },
-    });
-    
-    const responseData = response.data;
-    console.log("Add Ticket Reply - Full Response:", responseData);
-    
-    const { success } = responseData;
-    
-    if (success) {
-      const updatedTicket = responseData?.data || responseData;
-      
-      // Transform the updated ticket for compatibility
-      const transformedTicket = {
-        ...updatedTicket,
-        title: updatedTicket.title || updatedTicket.subject,
-        status: updatedTicket.status === 'in_progress' ? 'in-progress' : updatedTicket.status,
-        customerName: updatedTicket.customerName || 
-                     (typeof updatedTicket.customer === 'object' && updatedTicket.customer?.name) || 
-                     'N/A',
-        customerEmail: updatedTicket.customerEmail || 
-                      (typeof updatedTicket.customer === 'object' && updatedTicket.customer?.email) || 
-                      '',
-        assignedTo: typeof updatedTicket.assignedTo === 'object' && updatedTicket.assignedTo?.name 
-                   ? updatedTicket.assignedTo.name 
-                   : updatedTicket.assignedTo,
-      };
-      
-      return transformedTicket;
-    } else {
-      return rejectWithValue("Failed to add reply to ticket.");
+    const formData = new FormData();
+    formData.append("message", replyData.message);
+    formData.append("isStaff", replyData.isStaff.toString());
+
+    if (replyData.attachments) {
+      replyData.attachments.forEach((file) => {
+        formData.append("attachments", file);
+      });
     }
-  } catch (error: any) {
-    console.error("❌ addTicketReply error:", error);
-    return rejectWithValue(
-      error?.response?.data?.message || error?.message || "Something went wrong"
+
+    const response = await axiosInstance.post(
+      `/crm/tickets/${id}/replies`,
+      formData,
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+          "Content-Type": "multipart/form-data",
+        },
+      }
     );
+
+    const updatedTicket = response.data?.data || response.data;
+    if (!updatedTicket || !updatedTicket._id) {
+      return rejectWithValue("Invalid ticket data");
+    }
+
+    return {
+      ...updatedTicket,
+      title: updatedTicket.title || updatedTicket.subject,
+      customerName:
+        updatedTicket.customerName ||
+        (typeof updatedTicket.customer === "object"
+          ? updatedTicket.customer?.name
+          : "N/A"),
+      replies: updatedTicket.replies || [],
+    };
+  } catch (error: any) {
+    const errorMessage =
+      error?.response?.data?.message ||
+      error?.message ||
+      "Failed to send reply";
+    return rejectWithValue(errorMessage);
   }
 });
+
 
 // Update ticket
 export const updateTicket = createAsyncThunk<

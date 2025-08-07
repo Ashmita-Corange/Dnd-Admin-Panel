@@ -10,7 +10,13 @@ import {
   Loader2,
   AlertCircle,
   Check,
-  CheckCheck
+  CheckCheck,
+  Paperclip,
+  X,
+  FileText,
+  Download,
+  Image as ImageIcon,
+  Eye
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import { 
@@ -32,7 +38,9 @@ const SupportTicketChat: React.FC = () => {
   const [ticket, setTicket] = useState<SupportTicket | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [isReplying, setIsReplying] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Popup state for alerts
   const [popup, setPopup] = useState({
@@ -64,13 +72,14 @@ const SupportTicketChat: React.FC = () => {
   };
 
   const handleSendReply = async () => {
-    if (!newMessage.trim() || !ticket || isReplying) return;
+    if ((!newMessage.trim() && selectedFiles.length === 0) || !ticket || isReplying) return;
 
     setIsReplying(true);
     try {
       const replyData = {
-        message: newMessage.trim(),
+        message: newMessage.trim() || "File attachment", // Default message if only files
         isStaff: true,
+        attachments: selectedFiles.length > 0 ? selectedFiles : undefined,
       };
 
       const result = await dispatch(addTicketReply({ 
@@ -80,6 +89,7 @@ const SupportTicketChat: React.FC = () => {
 
       setTicket(result); // Update local ticket with new reply
       setNewMessage("");
+      setSelectedFiles([]);
       
       setPopup({
         message: "Reply sent successfully!",
@@ -101,6 +111,217 @@ const SupportTicketChat: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendReply();
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    
+    const validFiles = files.filter(file => {
+      if (file.size > maxSize) {
+        setPopup({
+          message: `File "${file.name}" is too large. Maximum size is 10MB.`,
+          type: "error",
+          isVisible: true,
+        });
+        return false;
+      }
+      
+      if (!allowedTypes.includes(file.type)) {
+        setPopup({
+          message: `File "${file.name}" has an unsupported format.`,
+          type: "error",
+          isVisible: true,
+        });
+        return false;
+      }
+      
+      return true;
+    });
+
+    setSelectedFiles(prev => [...prev, ...validFiles]);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (filename: string) => {
+    const extension = filename.toLowerCase().split('.').pop();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    
+    if (imageExtensions.includes(extension || '')) {
+      return <ImageIcon className="w-4 h-4" />;
+    }
+    return <FileText className="w-4 h-4" />;
+  };
+
+  const isImageFile = (filename: string) => {
+    const extension = filename.toLowerCase().split('.').pop();
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+    return imageExtensions.includes(extension || '');
+  };
+
+  const getAttachmentUrl = (attachment: any) => {
+    console.log("🔍 Attachment object:", attachment);
+
+    const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://yourdomain.com";
+    
+    // Handle different attachment structures
+    let filename;
+    
+    // Case 1: Attachment is a string (direct path)
+    if (typeof attachment === 'string') {
+      filename = attachment;
+      console.log("� Attachment is string path:", filename);
+    } else {
+      // Case 2: Attachment is an object with properties
+      filename = attachment.filename || attachment.name || attachment.path;
+      console.log("📁 Extracted filename from object:", filename);
+    }
+    
+    if (!filename) {
+      console.log("❌ No filename found in attachment");
+      return null;
+    }
+    
+    // If it's already a full URL, return as is
+    if (filename.startsWith('http')) {
+      console.log("🌐 Already full URL:", filename);
+      return filename;
+    }
+    
+    // If it starts with /ticket-attachments/, construct the full URL
+    if (filename.startsWith('/ticket-attachments/')) {
+      const constructedUrl = `http://localhost:3000${filename}`;
+      console.log("🔗 Constructed URL from path:", constructedUrl);
+      return constructedUrl;
+    }
+    
+    // Otherwise, construct the URL with the base path
+    const constructedUrl = `http://localhost:3000/ticket-attachments/${filename}`;
+    console.log("🔗 Constructed URL with base path:", constructedUrl);
+    return constructedUrl;
+  };
+
+  const handleDownload = async (attachment: any) => {
+    const url = getAttachmentUrl(attachment);
+    
+    // Extract filename for download
+    let filename;
+    if (typeof attachment === 'string') {
+      filename = attachment.split('/').pop() || 'download';
+    } else {
+      filename = attachment.filename || attachment.name || 'download';
+    }
+    
+    console.log("📥 Starting download:", { url, filename });
+    
+    if (!url) {
+      setPopup({
+        message: "No download URL available",
+        type: "error",
+        isVisible: true,
+      });
+      return;
+    }
+
+    try {
+      // Method 1: Try direct download link (fastest)
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log("✅ Direct download initiated");
+      
+      // Show success message after a short delay
+      setTimeout(() => {
+        setPopup({
+          message: "Download started successfully!",
+          type: "success",
+          isVisible: true,
+        });
+      }, 500);
+
+    } catch (error) {
+      console.error("❌ Direct download failed, trying fetch method:", error);
+      
+      // Method 2: Fallback to fetch + blob (for CORS issues)
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Accept': '*/*',
+          },
+          mode: 'cors', // Try CORS first
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const blob = await response.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the blob URL
+        setTimeout(() => {
+          window.URL.revokeObjectURL(downloadUrl);
+        }, 100);
+
+        console.log("✅ Fetch download completed");
+        setPopup({
+          message: "Download completed successfully!",
+          type: "success",
+          isVisible: true,
+        });
+
+      } catch (fetchError) {
+        console.error("❌ Fetch download also failed:", fetchError);
+        
+        // Method 3: Last resort - open in new tab
+        try {
+          window.open(url, '_blank', 'noopener,noreferrer');
+          setPopup({
+            message: "File opened in new tab. Please right-click and save to download.",
+            type: "success",
+            isVisible: true,
+          });
+        } catch (finalError) {
+          console.error("❌ All download methods failed:", finalError);
+          setPopup({
+            message: `Download failed: ${fetchError instanceof Error ? fetchError.message : 'Unknown error'}`,
+            type: "error",
+            isVisible: true,
+          });
+        }
+      }
     }
   };
 
@@ -162,12 +383,13 @@ const SupportTicketChat: React.FC = () => {
   };
 
   // WhatsApp-style Message Component
-  const MessageBubble = ({ message, isStaff, author, timestamp, isInitial = false }: {
+  const MessageBubble = ({ message, isStaff, author, timestamp, isInitial = false, attachments = [] }: {
     message: string;
     isStaff: boolean;
     author: string;
     timestamp: string;
     isInitial?: boolean;
+    attachments?: any[];
   }) => {
     return (
       <div className={`flex mb-4 ${isStaff ? 'justify-end' : 'justify-start'}`}>
@@ -190,6 +412,135 @@ const SupportTicketChat: React.FC = () => {
             <p className="text-sm whitespace-pre-wrap leading-relaxed">
               {message}
             </p>
+
+            {/* Attachments */}
+            {attachments && attachments.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {attachments.map((attachment, index) => {
+                  console.log(`📎 Processing attachment ${index + 1}:`, attachment);
+                  const attachmentUrl = getAttachmentUrl(attachment);
+                  
+                  // Handle filename extraction for both string and object attachments
+                  let filename;
+                  if (typeof attachment === 'string') {
+                    // Extract filename from path
+                    filename = attachment.split('/').pop() || 'Attachment';
+                  } else {
+                    filename = attachment.filename || attachment.name || 'Attachment';
+                  }
+                  
+                  const isImage = isImageFile(filename);
+                  
+                  console.log(`🖼️ Is image file (${filename}):`, isImage);
+                  console.log(`🔗 Final attachment URL:`, attachmentUrl);
+                  
+                  return (
+                    <div key={index}>
+                      {isImage && attachmentUrl ? (
+                        // Image attachment with preview
+                        <div className={`rounded-lg overflow-hidden ${
+                          isStaff 
+                            ? 'bg-blue-400/20' 
+                            : 'bg-gray-100 dark:bg-gray-600'
+                        }`}>
+                          <img
+                            src={attachmentUrl}
+                            alt={filename}
+                            className="max-w-full h-auto max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(attachmentUrl, '_blank')}
+                            onLoad={() => console.log("✅ Image loaded successfully:", attachmentUrl)}
+                            onError={(e) => {
+                              console.error("❌ Image failed to load:", attachmentUrl);
+                              // Fallback to file icon if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.nextElementSibling as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                          {/* Fallback for broken images */}
+                          <div 
+                            className={`hidden items-center gap-2 p-3 ${
+                              isStaff 
+                                ? 'text-blue-100' 
+                                : 'text-gray-700 dark:text-gray-300'
+                            }`}
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <span className="text-xs flex-1 truncate">{filename}</span>
+                          </div>
+                          
+                          {/* Image overlay with actions */}
+                          <div className={`flex items-center justify-between p-2 ${
+                            isStaff 
+                              ? 'bg-blue-400/30 text-blue-100' 
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                          }`}>
+                            <span className="text-xs truncate flex-1">{filename}</span>
+                            <div className="flex gap-1 ml-2">
+                              <button
+                                onClick={() => window.open(attachmentUrl, '_blank')}
+                                className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors ${
+                                  isStaff ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'
+                                }`}
+                                title="View full size"
+                              >
+                                <Eye className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDownload(attachment)}
+                                className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors ${
+                                  isStaff ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'
+                                }`}
+                                title="Download"
+                              >
+                                <Download className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        // Non-image attachment
+                        <div 
+                          className={`flex items-center gap-2 p-3 rounded-lg ${
+                            isStaff 
+                              ? 'bg-blue-400/30 text-blue-100' 
+                              : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300'
+                          }`}
+                        >
+                          {getFileIcon(filename)}
+                          <span className="text-xs flex-1 truncate">{filename}</span>
+                          <div className="flex gap-1 ml-2">
+                            {attachmentUrl && (
+                              <>
+                                <button
+                                  onClick={() => window.open(attachmentUrl, '_blank')}
+                                  className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors ${
+                                    isStaff ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'
+                                  }`}
+                                  title="View"
+                                >
+                                  <Eye className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => handleDownload(attachment)}
+                                  className={`p-1 rounded hover:bg-opacity-20 hover:bg-gray-500 transition-colors ${
+                                    isStaff ? 'text-blue-100' : 'text-gray-600 dark:text-gray-400'
+                                  }`}
+                                  title="Download"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             
             {/* Time and status */}
             <div className={`flex items-center justify-end gap-1 mt-2 ${
@@ -265,7 +616,8 @@ const SupportTicketChat: React.FC = () => {
       isStaff: false,
       author: ticket.customerName || 'Customer',
       timestamp: ticket.createdAt,
-      isInitial: true
+      isInitial: true,
+      attachments: ticket.attachments || []
     },
     ...(ticket.replies || []).map(reply => ({
       message: reply.message,
@@ -274,9 +626,17 @@ const SupportTicketChat: React.FC = () => {
         ? reply.repliedBy 
         : reply.repliedBy?.name || 'Unknown',
       timestamp: reply.repliedAt,
-      isInitial: false
+      isInitial: false,
+      attachments: reply.attachments || []
     }))
   ];
+
+  console.log("💬 All messages with attachments:", allMessages.map(msg => ({
+    author: msg.author,
+    isStaff: msg.isStaff,
+    attachments: msg.attachments,
+    attachmentCount: msg.attachments.length
+  })));
 
   const groupedMessages = allMessages.reduce((groups: any[], message) => {
     const date = formatDate(message.timestamp);
@@ -349,6 +709,7 @@ const SupportTicketChat: React.FC = () => {
                   author={message.author}
                   timestamp={message.timestamp}
                   isInitial={message.isInitial}
+                  attachments={message.attachments}
                 />
               ))}
             </div>
@@ -360,7 +721,62 @@ const SupportTicketChat: React.FC = () => {
       {/* Input Area - WhatsApp style */}
       <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-3">
         <div className="max-w-4xl mx-auto">
+          {/* File attachments preview */}
+          {selectedFiles.length > 0 && (
+            <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Attachments ({selectedFiles.length})
+                </span>
+                <button
+                  onClick={() => setSelectedFiles([])}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between bg-white dark:bg-gray-600 p-2 rounded">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FileText className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                        {file.name}
+                      </span>
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        ({formatFileSize(file.size)})
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="text-red-400 hover:text-red-600 p-1"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-end gap-3">
+            {/* File attachment button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+              accept="image/*,.pdf,.txt,.doc,.docx"
+            />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isReplying}
+              className="w-12 h-12 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded-full flex items-center justify-center transition-colors disabled:cursor-not-allowed flex-shrink-0"
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
+
             <div className="flex-1 relative">
               <textarea
                 value={newMessage}
@@ -384,7 +800,7 @@ const SupportTicketChat: React.FC = () => {
             
             <button
               onClick={handleSendReply}
-              disabled={!newMessage.trim() || isReplying}
+              disabled={(!newMessage.trim() && selectedFiles.length === 0) || isReplying}
               className="w-12 h-12 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-full flex items-center justify-center transition-colors disabled:cursor-not-allowed flex-shrink-0"
             >
               {isReplying ? (
