@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Search, 
@@ -26,6 +26,7 @@ import {
   updateTicket 
 } from "../../store/slices/supportticket";
 import { SupportTicket } from "../../store/slices/supportticket";
+import { fetchStaff } from "../../store/slices/staff";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 
@@ -285,10 +286,17 @@ const StatusUpdateModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   ticket: SupportTicket | null;
-  onUpdate: (ticketId: string, newStatus: string) => void;
+  onUpdate: (ticketId: string, newStatus: string, assignedTo?: string) => void;
   isUpdating: boolean;
 }> = ({ isOpen, onClose, ticket, onUpdate, isUpdating }) => {
+  const { staff, loading: staffLoading } = useAppSelector((state) => state.staff);
   const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
+  
+  // Search functionality for staff dropdown
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [isStaffDropdownOpen, setIsStaffDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Status options with display names
   const statusOptions = [
@@ -302,14 +310,56 @@ const StatusUpdateModal: React.FC<{
   useEffect(() => {
     if (isOpen && ticket) {
       setSelectedStatus(ticket.status);
+      // Handle assignedTo initialization
+      if (typeof ticket.assignedTo === 'string') {
+        setSelectedAssignedTo(ticket.assignedTo);
+      } else if (typeof ticket.assignedTo === 'object' && ticket.assignedTo?._id) {
+        setSelectedAssignedTo(ticket.assignedTo._id);
+      } else {
+        setSelectedAssignedTo("");
+      }
     }
   }, [isOpen, ticket]);
 
+  // Handle clicking outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsStaffDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Filter staff based on search term
+  const filteredStaff = staff.filter(staffMember =>
+    staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
+    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
+  );
+
+  // Get selected staff member details
+  const selectedStaff = staff.find(s => s._id === selectedAssignedTo);
+
   if (!isOpen || !ticket) return null;
 
+  const handleStaffSelect = (staffId: string) => {
+    setSelectedAssignedTo(staffId);
+    setIsStaffDropdownOpen(false);
+    setStaffSearchTerm("");
+  };
+
+  const handleStaffSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStaffSearchTerm(e.target.value);
+    setIsStaffDropdownOpen(true);
+  };
+
   const handleSubmit = () => {
-    if (selectedStatus && selectedStatus !== ticket.status) {
-      onUpdate(ticket._id, selectedStatus);
+    if (selectedStatus && (selectedStatus !== ticket.status || selectedAssignedTo !== (typeof ticket.assignedTo === 'object' ? ticket.assignedTo?._id : ticket.assignedTo))) {
+      onUpdate(ticket._id, selectedStatus, selectedAssignedTo);
     } else {
       onClose();
     }
@@ -326,7 +376,7 @@ const StatusUpdateModal: React.FC<{
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4 mt-10">
-        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3">
@@ -353,7 +403,8 @@ const StatusUpdateModal: React.FC<{
 
           {/* Content */}
           <div className="p-6">
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Status Selection */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Current Status: {getStatusBadge(ticket.status)}
@@ -397,6 +448,70 @@ const StatusUpdateModal: React.FC<{
                   ))}
                 </div>
               </div>
+
+              {/* Staff Assignment Section */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Current Assigned To: {getAssignedToName(ticket) || "Unassigned"}
+                </label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                  Assign To Staff:
+                </label>
+                
+                <div className="relative" ref={dropdownRef}>
+                  <input
+                    type="text"
+                    value={selectedStaff ? `${selectedStaff.name} (${selectedStaff.email})` : staffSearchTerm}
+                    onChange={handleStaffSearchChange}
+                    onFocus={() => setIsStaffDropdownOpen(true)}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    placeholder="Search and select staff member..."
+                    disabled={isUpdating}
+                  />
+
+                  {isStaffDropdownOpen && (
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {staffLoading ? (
+                        <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+                          Loading staff...
+                        </div>
+                      ) : filteredStaff.length > 0 ? (
+                        <>
+                          <button
+                            onClick={() => handleStaffSelect("")}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600"
+                          >
+                            <div className="font-medium text-gray-900 dark:text-white">
+                              Unassigned
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              Remove assignment
+                            </div>
+                          </button>
+                          {filteredStaff.map((staffMember) => (
+                            <button
+                              key={staffMember._id}
+                              onClick={() => handleStaffSelect(staffMember._id)}
+                              className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                {staffMember.name}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                {staffMember.email}
+                              </div>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+                          No staff members found
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
 
@@ -411,7 +526,7 @@ const StatusUpdateModal: React.FC<{
             </button>
             <button
               onClick={handleSubmit}
-              disabled={isUpdating || !selectedStatus || selectedStatus === ticket.status}
+              disabled={isUpdating || (!selectedStatus || (selectedStatus === ticket.status && selectedAssignedTo === (typeof ticket.assignedTo === 'object' ? ticket.assignedTo?._id : ticket.assignedTo)))}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isUpdating ? (
@@ -420,7 +535,7 @@ const StatusUpdateModal: React.FC<{
                   Updating...
                 </>
               ) : (
-                "Update Status"
+                "Update Ticket"
               )}
             </button>
           </div>
@@ -435,6 +550,7 @@ const SupportTicketList: React.FC = () => {
   const navigate = useNavigate();
   const { tickets = [], loading, error, pagination, searchQuery, filters } =
     useAppSelector((state) => state.tickets);
+  const { staff } = useAppSelector((state) => state.staff);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
@@ -477,6 +593,11 @@ const SupportTicketList: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchInput, searchQuery, dispatch]);
+
+  // Fetch staff data for assignment dropdown
+  useEffect(() => {
+    dispatch(fetchStaff({}));
+  }, [dispatch]);
 
   // Fetch tickets
   useEffect(() => {
@@ -576,16 +697,25 @@ const SupportTicketList: React.FC = () => {
     setIsUpdatingStatus(false);
   };
 
-  const handleStatusUpdate = async (ticketId: string, newStatus: string) => {
+  const handleStatusUpdate = async (ticketId: string, newStatus: string, assignedTo?: string) => {
     setIsUpdatingStatus(true);
     try {
+      const updateData: any = { 
+        status: newStatus as "open" | "in_progress" | "resolved" | "closed"
+      };
+      
+      // Add assignedTo to update data if provided
+      if (assignedTo !== undefined) {
+        updateData.assignedTo = assignedTo || null;
+      }
+
       const result = await dispatch(updateTicket({ 
         id: ticketId, 
-        data: { status: newStatus as "open" | "in_progress" | "resolved" | "closed" } 
+        data: updateData
       })).unwrap();
       
       setPopup({
-        message: "Ticket status updated successfully!",
+        message: "Ticket updated successfully!",
         type: "success",
         isVisible: true,
       });
@@ -608,7 +738,7 @@ const SupportTicketList: React.FC = () => {
       );
     } catch (error: any) {
       setPopup({
-        message: error || "Failed to update ticket status",
+        message: error || "Failed to update ticket",
         type: "error",
         isVisible: true,
       });
