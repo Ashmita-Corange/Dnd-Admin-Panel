@@ -58,7 +58,7 @@ import AddLead from "./pages/Lead/AddLead";
 import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
 import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
-import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
+import ContentList from "./pages/Content/ContentList";import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
 
 // Lazy load pages
 
@@ -239,6 +239,9 @@ export default function App() {
               <Route path="/shipping/add" element={<AddShipping />} />
               <Route path="/shipping/list" element={<ShippingList />} />
               <Route path="/shipping/edit/:id" element={<EditShipping />} />
+
+
+              <Route path="/contents/list" element={<ContentList />} />
             </Route>
           </Route>
 

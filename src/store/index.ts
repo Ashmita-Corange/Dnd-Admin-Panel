@@ -21,7 +21,7 @@ import pagesSlice from "./slices/pages";
 import shippingSlice from "./slices/shippingSlice";
 import customersReducer from "./slices/customersSlice";
 import staffSlice from "./slices/staff";
-
+import Content from "./slices/contentSlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -45,6 +45,7 @@ export const store = configureStore({
     shipping: shippingSlice,
     customers: customersReducer,
     staff: staffSlice,
+    content: Content,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
