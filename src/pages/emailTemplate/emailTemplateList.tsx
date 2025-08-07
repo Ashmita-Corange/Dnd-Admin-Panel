@@ -16,7 +16,7 @@ import {
   Plus,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import { fetchEmailTemplates } from "../../store/slices/emailTemplate";
+import { fetchEmailTemplates,deleteEmailTemplate } from "../../store/slices/emailTemplate";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
@@ -296,8 +296,7 @@ const EmailTemplateList: React.FC = () => {
     if (templateToDelete) {
       setIsDeleting(true);
       try {
-        // Here you would dispatch a delete action when it's implemented
-        // await dispatch(deleteEmailTemplate(templateToDelete._id)).unwrap();
+        await dispatch(deleteEmailTemplate(templateToDelete._id)).unwrap();
 
         setPopup({
           message: `Email template "${templateToDelete.name}" deleted successfully`,
@@ -347,7 +346,7 @@ const EmailTemplateList: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
             Email Templates
           </h1>
-          <div className="flex items-center gap-4">
+          {/* <div className="flex items-center gap-4">
             <span className="text-gray-500 text-sm dark:text-gray-400">
               Total: {filteredTemplates.length}
             </span>
@@ -358,7 +357,7 @@ const EmailTemplateList: React.FC = () => {
               <Plus className="w-4 h-4" />
               Create Template
             </Link>
-          </div>
+          </div> */}
         </div>
 
         {/* Search & Filter */}
@@ -376,7 +375,7 @@ const EmailTemplateList: React.FC = () => {
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <select
                 value={statusFilter}
@@ -387,10 +386,10 @@ const EmailTemplateList: React.FC = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </div>
+            </div> */}
 
             {/* Type Filter */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
@@ -403,7 +402,7 @@ const EmailTemplateList: React.FC = () => {
                   </option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             {/* Items Per Page */}
             <div className="flex items-center gap-2">
@@ -489,13 +488,7 @@ const EmailTemplateList: React.FC = () => {
                     {new Date(template.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <button
-                      onClick={() => openPreviewModal(template)}
-                      className="text-green-500 hover:text-green-700 transition-colors"
-                      title="Preview"
-                    >
-                      <Eye className="h-5 w-5" />
-                    </button>
+                   
                     <Link to={`/email-template/edit/${template._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors" title="Edit">
                         <Pencil className="h-5 w-5" />
