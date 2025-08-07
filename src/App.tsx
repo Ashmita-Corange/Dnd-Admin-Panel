@@ -58,7 +58,8 @@ import AddLead from "./pages/Lead/AddLead";
 import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
 import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
-import ContentList from "./pages/Content/ContentList";
+import ContentList from "./pages/Content/ContentList";import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
+
 // Lazy load pages
 
 const SignIn = lazy(() => import("./pages/AuthPages/SignIn"));
@@ -231,6 +232,7 @@ export default function App() {
 
               {/* Support Tickets */}
               <Route path="/tickets/list" element={<SupportTicketList />} />
+              <Route path="/tickets/:ticketId/chat" element={<SupportTicketChat />} />
 
               {/* Page Management Routes */}
 
