@@ -60,6 +60,8 @@ import EditLead from "./pages/Lead/EditLead";
 import LeadNotes from "./pages/Lead/LeadNotes";
 import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
 import ContentList from "./pages/Content/ContentList";import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
+import EmailTemplateList from "./pages/emailTemplate/emailTemplateList";
+import EditEmailTemplate from "./pages/emailTemplate/EditEmailTemplate";
 
 // Lazy load pages
 
@@ -244,6 +246,10 @@ export default function App() {
 
 
               <Route path="/contents/list" element={<ContentList />} />
+
+              
+              <Route path="/emailtemplate/list" element={<EmailTemplateList />} />
+              <Route path="/email-template/edit/:id" element={<EditEmailTemplate />} />
             </Route>
           </Route>
 
