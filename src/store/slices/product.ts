@@ -74,21 +74,26 @@ export const fetchProducts = createAsyncThunk<
     const response = await axiosInstance.get(
       `/product?${queryParams.toString()}`
     );
-    const data = response.data?.products.data;
-    console.log("Fetched products:", response);
+
+    // FIX: Extract data properly
+    const apiData = response.data?.products?.data;
+    const productsArray = apiData?.products || [];
+    const pag = apiData?.pagination || {};
+
     return {
-      products: data || [],
+      products: productsArray,
       pagination: {
-        total: data?.totalDocuments || 0,
-        page: data?.currentPage || 1,
-        limit,
-        totalPages: data?.totalPages || 0,
+        total: pag.totalItems || 0,
+        page: pag.currentPage || 1,
+        limit: pag.itemsPerPage || limit,
+        totalPages: pag.totalPages || 0,
       },
     };
   } catch (err: any) {
     return rejectWithValue(err.response?.data?.message || err.message);
   }
 });
+
 
 // Create product
 export const createProduct = createAsyncThunk<Product, any>(
