@@ -63,7 +63,9 @@ import ContentList from "./pages/Content/ContentList";
 import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
 import EmailTemplateList from "./pages/emailTemplate/emailTemplateList";
 import EditEmailTemplate from "./pages/emailTemplate/EditEmailTemplate";
-import ReviewList from "./pages/pages/review/ReviewList";
+import FaqList from "./pages/FAQ/FaqList";
+import AddFaq from "./pages/FAQ/AddFaq";
+import EditFaq from "./pages/FAQ/EditFaq";
 
 // Lazy load pages
 
@@ -250,15 +252,15 @@ export default function App() {
 
               <Route path="/contents/list" element={<ContentList />} />
 
-              <Route
-                path="/emailtemplate/list"
-                element={<EmailTemplateList />}
-              />
-              <Route
-                path="/email-template/edit/:id"
-                element={<EditEmailTemplate />}
-              />
-              <Route path="/review/list" element={<ReviewList />} />
+              
+              <Route path="/emailtemplate/list" element={<EmailTemplateList />} />
+              <Route path="/email-template/edit/:id" element={<EditEmailTemplate />} />
+
+
+              {/* faq */}
+              <Route path="/faq/list" element={<FaqList />} />
+              <Route path="/faq/add" element={<AddFaq />} />
+              <Route path="/faq/edit/:id" element={<EditFaq />} />
             </Route>
           </Route>
 

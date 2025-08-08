@@ -161,9 +161,13 @@ export const fetchProducts = createAsyncThunk<
     });
     console.log("Fetched products response:", response.data);
 
-    return Array.isArray(response.data?.products?.data?.result || response.data?.products?.data)
-      ? response.data.products.data?.result || response.data.products.data || []
-      : [];
+    // Correct extraction of products array
+    const productsArray =
+      response.data?.products?.data?.products ||
+      response.data?.products?.data?.result ||
+      response.data?.products?.data ||
+      [];
+    return productsArray;
   } catch (err: any) {
     console.log("Error fetching products:", err);
     return rejectWithValue(err.response?.data?.message || err.message);
