@@ -10,7 +10,129 @@ import {
   resetFilters,
 } from "../../store/slices/faq";
 import { FAQ } from "../../store/slices/faq";
-import { X, Trash2, RotateCcw, Search, Filter, ChevronLeft, ChevronRight, Pencil } from "lucide-react";
+import { X, Trash2, RotateCcw, Search, Filter, ChevronLeft, ChevronRight, Pencil, Eye } from "lucide-react";
+const ViewModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  faq: FAQ | null;
+}> = ({ isOpen, onClose, faq }) => {
+  if (!isOpen || !faq) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto mt-10">
+      <div
+        className="fixed inset-0 bg-black/30 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      ></div>
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <Eye className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                FAQ Details
+              </h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6">
+            <ul className="space-y-4">
+              <li className="flex flex-col">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Question:
+                </span>
+                <span className="text-gray-700 dark:text-gray-200">
+                  {faq.question}
+                </span>
+              </li>
+
+              <li className="flex flex-col">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Answer:
+                </span>
+                <span className="text-gray-700 dark:text-gray-200">
+                  {faq.answer}
+                </span>
+              </li>
+
+              <li className="flex flex-col">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Type:
+                </span>
+                <span className="text-gray-700 dark:text-gray-200">
+                  {faq.type}
+                </span>
+              </li>
+
+              <li className="flex flex-col">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Product:
+                </span>
+                {faq.product && typeof faq.product === "object" ? (
+                  faq.product.slug ? (
+                    <a
+                      href={`/product/${faq.product.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      {faq.product.name}
+                    </a>
+                  ) : (
+                    <span className="text-gray-700 dark:text-gray-200">
+                      {faq.product.name}
+                    </span>
+                  )
+                ) : (
+                  <span className="text-gray-700 dark:text-gray-200">-</span>
+                )}
+              </li>
+
+              <li className="flex flex-col">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Status:
+                </span>
+                <span className="text-gray-700 dark:text-gray-200">
+                  {faq.status}
+                </span>
+              </li>
+
+              <li className="flex flex-col">
+                <span className="font-semibold text-gray-900 dark:text-white mb-1">
+                  Created At:
+                </span>
+                <span className="text-gray-700 dark:text-gray-200">
+                  {faq.createdAt
+                    ? new Date(faq.createdAt).toLocaleString()
+                    : "-"}
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          {/* Footer */}
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 import PopupAlert from "../../components/popUpAlert";
 
 const statusOptions = [
@@ -89,6 +211,17 @@ const FaqList: React.FC = () => {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [faqToDelete, setFaqToDelete] = useState<FAQ | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [faqToView, setFaqToView] = useState<FAQ | null>(null);
+  const openViewModal = (faq: FAQ) => {
+    setFaqToView(faq);
+    setViewModalOpen(true);
+  };
+
+  const closeViewModal = () => {
+    setFaqToView(null);
+    setViewModalOpen(false);
+  };
   const [popup, setPopup] = useState({ message: "", type: "success" as "success" | "error", isVisible: false });
 
   useEffect(() => {
@@ -228,7 +361,7 @@ const FaqList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Question</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Answer</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Product</th>
+                
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Status</th>
 
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">Actions</th>
@@ -246,10 +379,17 @@ const FaqList: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-900 dark:text-white max-w-xs truncate" title={faq.question}>{faq.question}</td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200 max-w-xs truncate" title={faq.answer}>{faq.answer}</td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{faq.type || "-"}</td>
-                    {/* <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">{faq.type === "product" ? (faq.product ? faq.product : "-") : "-"}</td> */}
+
                     <td className="px-6 py-4">{getStatusBadge(faq.status)}</td>
 
                     <td className="px-6 py-4 text-right flex gap-2 justify-end">
+                      <button
+                        onClick={() => openViewModal(faq)}
+                        className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 px-2 py-1 rounded-md"
+                        title="View FAQ"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => navigate(`/faq/edit/${faq._id}`)}
                         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1 rounded-md"
@@ -283,8 +423,9 @@ const FaqList: React.FC = () => {
           </button>
         </div>
       </div>
-      <PopupAlert message={popup.message} type={popup.type} isVisible={popup.isVisible} onClose={() => setPopup({ ...popup, isVisible: false })} />
-      <DeleteModal isOpen={deleteModalOpen} onClose={closeDeleteModal} onConfirm={handleDeleteConfirm} faq={faqToDelete} isDeleting={isDeleting} />
+  <PopupAlert message={popup.message} type={popup.type} isVisible={popup.isVisible} onClose={() => setPopup({ ...popup, isVisible: false })} />
+  <DeleteModal isOpen={deleteModalOpen} onClose={closeDeleteModal} onConfirm={handleDeleteConfirm} faq={faqToDelete} isDeleting={isDeleting} />
+  <ViewModal isOpen={viewModalOpen} onClose={closeViewModal} faq={faqToView} />
     </div>
   );
 };
