@@ -59,9 +59,11 @@ import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
 import LeadNotes from "./pages/Lead/LeadNotes";
 import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
-import ContentList from "./pages/Content/ContentList";import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
+import ContentList from "./pages/Content/ContentList";
+import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
 import EmailTemplateList from "./pages/emailTemplate/emailTemplateList";
 import EditEmailTemplate from "./pages/emailTemplate/EditEmailTemplate";
+import ReviewList from "./pages/pages/review/ReviewList";
 
 // Lazy load pages
 
@@ -226,17 +228,19 @@ export default function App() {
               <Route path="/pages/list" element={<PagesList />} />
               <Route path="/pages/edit/:id" element={<EditPage />} />
 
-
               {/* Lead */}
               {/* Add more routes as needed */}
               <Route path="/lead/add" element={<AddLead />} />
               <Route path="/lead/list" element={<LeadList />} />
-              <Route path="/lead/edit/:id" element={<EditLead/>} />
+              <Route path="/lead/edit/:id" element={<EditLead />} />
               <Route path="/lead/notes/:leadId" element={<LeadNotes />} />
 
               {/* Support Tickets */}
               <Route path="/tickets/list" element={<SupportTicketList />} />
-              <Route path="/tickets/:ticketId/chat" element={<SupportTicketChat />} />
+              <Route
+                path="/tickets/:ticketId/chat"
+                element={<SupportTicketChat />}
+              />
 
               {/* Page Management Routes */}
 
@@ -244,12 +248,17 @@ export default function App() {
               <Route path="/shipping/list" element={<ShippingList />} />
               <Route path="/shipping/edit/:id" element={<EditShipping />} />
 
-
               <Route path="/contents/list" element={<ContentList />} />
 
-              
-              <Route path="/emailtemplate/list" element={<EmailTemplateList />} />
-              <Route path="/email-template/edit/:id" element={<EditEmailTemplate />} />
+              <Route
+                path="/emailtemplate/list"
+                element={<EmailTemplateList />}
+              />
+              <Route
+                path="/email-template/edit/:id"
+                element={<EditEmailTemplate />}
+              />
+              <Route path="/review/list" element={<ReviewList />} />
             </Route>
           </Route>
 

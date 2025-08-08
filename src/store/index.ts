@@ -23,6 +23,7 @@ import customersReducer from "./slices/customersSlice";
 import staffSlice from "./slices/staff";
 import Content from "./slices/contentSlice";
 import Email from "./slices/emailTemplate";
+import reviewSlice from "./slices/reviewSlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -48,6 +49,7 @@ export const store = configureStore({
     staff: staffSlice,
     content: Content,
     emailTemplates: Email,
+    review: reviewSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
