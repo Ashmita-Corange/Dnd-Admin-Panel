@@ -15,7 +15,8 @@ import {
   Eye,
   UserPlus,
   Check,
-  ChevronDown
+  ChevronDown,
+  FileText
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
@@ -431,6 +432,10 @@ const LeadList: React.FC = () => {
     navigate(`/lead/edit/${lead._id}`);
   };
 
+  const handleViewNotes = (lead: Lead) => {
+    navigate(`/lead/notes/${lead._id}`);
+  };
+
   const openDeleteModal = (lead: Lead) => {
     setLeadToDelete(lead);
     setDeleteModalOpen(true);
@@ -598,8 +603,8 @@ const LeadList: React.FC = () => {
           sort: { createdAt: "desc" },
         })
       );
-    } catch (error) {
-      console.log("Failed to assign leads:", error?.message);
+    } catch (error: any) {
+      console.log("Failed to assign leads:", error?.message || error);
       setPopup({
         message: "Failed to assign leads. Please try again.",
         type: "error",
@@ -934,12 +939,21 @@ const LeadList: React.FC = () => {
                           <button
                             onClick={() => handleEditLead(lead)}
                             className="text-blue-500 hover:text-blue-700 transition-colors"
+                            title="Edit Lead"
                           >
                             <Pencil className="h-5 w-5" />
                           </button>
                           <button
+                            onClick={() => handleViewNotes(lead)}
+                            className="text-purple-500 hover:text-purple-700 transition-colors"
+                            title="View Notes"
+                          >
+                            <FileText className="h-5 w-5" />
+                          </button>
+                          <button
                             onClick={() => openDeleteModal(lead)}
                             className="text-red-500 hover:text-red-700 transition-colors"
+                            title="Delete Lead"
                           >
                             <Trash2 className="h-5 w-5" />
                           </button>

@@ -246,48 +246,10 @@ const EditLead: React.FC = () => {
       return;
     }
 
-    // Validation
-    if (!formData.fullName) {
-      setPopup({
-        isVisible: true,
-        message: "Full name is required.",
-        type: "error",
-      });
-      return;
-    }
-
-    if (!formData.email) {
-      setPopup({
-        isVisible: true,
-        message: "Email is required.",
-        type: "error",
-      });
-      return;
-    }
-
-    if (!formData.phone) {
-      setPopup({
-        isVisible: true,
-        message: "Phone number is required.",
-        type: "error",
-      });
-      return;
-    }
-
     try {
-      // Format data to match your schema
+      // Only update status and assignedTo fields
       const leadData = {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        source: formData.source as "website" | "newsletter" | "popup" | "referral" | "manual" | "other",
         status: formData.status,
-        ...(formData.notes && { 
-          notes: [{ 
-            note: formData.notes,
-            createdAt: new Date().toISOString()
-          }] 
-        }),
         ...(formData.assignedTo && { assignedTo: formData.assignedTo }),
       };
       
@@ -346,17 +308,16 @@ const EditLead: React.FC = () => {
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4" />
-                      Full Name <span className="text-red-500">*</span>
+                      Full Name
                     </div>
                   </label>
                   <input
                     type="text"
                     name="fullName"
                     value={formData.fullName}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    readOnly
+                    className="w-full rounded border border-gray-300 px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white cursor-not-allowed"
                     placeholder="Enter full name"
-                    required
                   />
                 </div>
 
@@ -365,17 +326,16 @@ const EditLead: React.FC = () => {
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <Mail className="w-4 h-4" />
-                      Email <span className="text-red-500">*</span>
+                      Email
                     </div>
                   </label>
                   <input
                     type="email"
                     name="email"
                     value={formData.email}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    readOnly
+                    className="w-full rounded border border-gray-300 px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white cursor-not-allowed"
                     placeholder="Enter email address"
-                    required
                   />
                 </div>
 
@@ -384,21 +344,70 @@ const EditLead: React.FC = () => {
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4" />
-                      Phone <span className="text-red-500">*</span>
+                      Phone
                     </div>
                   </label>
                   <input
                     type="tel"
                     name="phone"
                     value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    readOnly
+                    className="w-full rounded border border-gray-300 px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white cursor-not-allowed"
                     placeholder="Enter phone number"
-                    required
                   />
                 </div>
 
-                {/* Assigned To */}
+                {/* Source */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Source
+                  </label>
+                  <select
+                    name="source"
+                    value={formData.source}
+                    disabled
+                    className="w-full rounded border border-gray-300 px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white cursor-not-allowed"
+                  >
+                    {sourceOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+               
+              </div>
+            </div>
+
+            {/* Lead Details Section */}
+            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                Lead Details
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Status */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Status
+                  </label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  >
+                    {statusOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+
+                 {/* Assigned To */}
                 <div>
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
@@ -468,53 +477,8 @@ const EditLead: React.FC = () => {
                     <p className="text-sm text-gray-500 mt-1">Loading staff...</p>
                   )}
                 </div>
-              </div>
-            </div>
 
-            {/* Lead Details Section */}
-            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Lead Details
-              </h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Status */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Status
-                  </label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  >
-                    {statusOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Source */}
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Source
-                  </label>
-                  <select
-                    name="source"
-                    value={formData.source}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  >
-                    {sourceOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                
               </div>
 
               {/* Notes */}
@@ -528,9 +492,9 @@ const EditLead: React.FC = () => {
                 <textarea
                   name="notes"
                   value={formData.notes}
-                  onChange={handleChange}
+                  readOnly
                   rows={4}
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  className="w-full rounded border border-gray-300 px-3 py-2 bg-gray-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white cursor-not-allowed"
                   placeholder="Enter any additional notes..."
                 />
               </div>

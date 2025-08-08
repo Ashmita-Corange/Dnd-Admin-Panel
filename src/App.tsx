@@ -57,6 +57,7 @@ import EditCustomer from "./pages/Customers/EditCustomer";
 import AddLead from "./pages/Lead/AddLead";
 import LeadList from "./pages/Lead/LeadList";
 import EditLead from "./pages/Lead/EditLead";
+import LeadNotes from "./pages/Lead/LeadNotes";
 import SupportTicketList from "./pages/SupportTicket/SupportTicketList";
 import ContentList from "./pages/Content/ContentList";import SupportTicketChat from "./pages/SupportTicket/SupportTicketChat";
 
@@ -229,6 +230,7 @@ export default function App() {
               <Route path="/lead/add" element={<AddLead />} />
               <Route path="/lead/list" element={<LeadList />} />
               <Route path="/lead/edit/:id" element={<EditLead/>} />
+              <Route path="/lead/notes/:leadId" element={<LeadNotes />} />
 
               {/* Support Tickets */}
               <Route path="/tickets/list" element={<SupportTicketList />} />

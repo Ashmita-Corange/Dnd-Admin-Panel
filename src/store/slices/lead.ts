@@ -21,6 +21,7 @@ export interface Lead {
   assignedToName?: string; // Optional: Add this if you want to store the name separately for display
   convertedTo?: string;
   converted?: boolean;
+  nextFollowUpAt?: string; // Add this field for follow-up scheduling
   createdAt: string;
   updatedAt: string;
 }
@@ -249,6 +250,82 @@ export const deleteLead = createAsyncThunk<string, string>(
 
 
 
+// Add note to lead
+export const addLeadNote = createAsyncThunk<
+  Lead,
+  {
+    id: string;
+    noteData: {
+      note: string;
+      nextFollowUpAt?: string;
+    };
+  }
+>("leads/addNote", async ({ id, noteData }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(
+      `/crm/leads/${id}/notes`,
+      noteData,
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const { success, data: leadData } = response.data;
+    
+    if (success) {
+      return leadData;
+    } else {
+      return rejectWithValue("Failed to add note to lead.");
+    }
+  } catch (error: any) {
+    console.error("❌ addLeadNote error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
+
+// Add notes to multiple leads
+export const addMultipleLeadNotes = createAsyncThunk<
+  { updatedLeads: Lead[] },
+  {
+    leadIds: string[];
+    noteData: {
+      note: string;
+      nextFollowUpAt?: string;
+    };
+  }
+>("leads/addMultipleNotes", async ({ leadIds, noteData }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.post(
+      `/crm/leads/bulk-notes`,
+      { leadIds, noteData },
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const { success, data } = response.data;
+    
+    if (success) {
+      return { updatedLeads: data };
+    } else {
+      return rejectWithValue("Failed to add notes to leads.");
+    }
+  } catch (error: any) {
+    console.error("❌ addMultipleLeadNotes error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
+
 export const assignLeads = createAsyncThunk<
   { updatedLeads: Lead[] },
   { leadIds: string[]; assignedTo: string } // assignedTo is now the staff ID
@@ -388,6 +465,53 @@ const leadSlice = createSlice({
         }
       })
       .addCase(fetchLeadById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Add lead note cases
+      .addCase(addLeadNote.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addLeadNote.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update the lead in the leads array with the new note
+        if (Array.isArray(state.leads)) {
+          const index = state.leads.findIndex(
+            (l) => l._id === action.payload._id
+          );
+          if (index !== -1) {
+            state.leads[index] = action.payload;
+          }
+        }
+      })
+      .addCase(addLeadNote.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // Add multiple lead notes cases
+      .addCase(addMultipleLeadNotes.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addMultipleLeadNotes.fulfilled, (state, action) => {
+        state.loading = false;
+        // Update multiple leads in the leads array with new notes
+        if (Array.isArray(state.leads)) {
+          const updatedLeadsArray = Array.isArray(action.payload.updatedLeads)
+            ? action.payload.updatedLeads
+            : [action.payload.updatedLeads];
+          updatedLeadsArray.forEach((updatedLead) => {
+            const index = state.leads.findIndex(
+              (l) => l._id === updatedLead._id
+            );
+            if (index !== -1) {
+              state.leads[index] = updatedLead;
+            }
+          });
+        }
+      })
+      .addCase(addMultipleLeadNotes.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

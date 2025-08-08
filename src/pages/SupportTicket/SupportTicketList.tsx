@@ -288,7 +288,8 @@ const StatusUpdateModal: React.FC<{
   ticket: SupportTicket | null;
   onUpdate: (ticketId: string, newStatus: string, assignedTo?: string) => void;
   isUpdating: boolean;
-}> = ({ isOpen, onClose, ticket, onUpdate, isUpdating }) => {
+  onRefreshStaff: () => void;
+}> = ({ isOpen, onClose, ticket, onUpdate, isUpdating, onRefreshStaff }) => {
   const { staff, loading: staffLoading } = useAppSelector((state) => state.staff);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAssignedTo, setSelectedAssignedTo] = useState("");
@@ -336,13 +337,16 @@ const StatusUpdateModal: React.FC<{
   }, []);
 
   // Filter staff based on search term
-  const filteredStaff = staff.filter(staffMember =>
-    staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
-    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
+  const filteredStaff = (staff || []).filter(staffMember =>
+    staffMember && 
+    staffMember.name && 
+    staffMember.email &&
+    (staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
+    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase()))
   );
 
   // Get selected staff member details
-  const selectedStaff = staff.find(s => s._id === selectedAssignedTo);
+  const selectedStaff = (staff || []).find(s => s._id === selectedAssignedTo);
 
   if (!isOpen || !ticket) return null;
 
@@ -451,9 +455,19 @@ const StatusUpdateModal: React.FC<{
 
               {/* Staff Assignment Section */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Current Assigned To: {getAssignedToName(ticket) || "Unassigned"}
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Current Assigned To: {getAssignedToName(ticket) || "Unassigned"}
+                  </label>
+                  <button
+                    onClick={onRefreshStaff}
+                    className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
+                    disabled={staffLoading}
+                    title="Refresh Staff List"
+                  >
+                    {staffLoading ? "Loading..." : "Refresh Staff"}
+                  </button>
+                </div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                   Assign To Staff:
                 </label>
@@ -475,7 +489,7 @@ const StatusUpdateModal: React.FC<{
                         <div className="p-3 text-center text-gray-500 dark:text-gray-400">
                           Loading staff...
                         </div>
-                      ) : filteredStaff.length > 0 ? (
+                      ) : staff && staff.length > 0 ? (
                         <>
                           <button
                             onClick={() => handleStaffSelect("")}
@@ -488,24 +502,54 @@ const StatusUpdateModal: React.FC<{
                               Remove assignment
                             </div>
                           </button>
-                          {filteredStaff.map((staffMember) => (
-                            <button
-                              key={staffMember._id}
-                              onClick={() => handleStaffSelect(staffMember._id)}
-                              className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
-                            >
-                              <div className="font-medium text-gray-900 dark:text-white">
-                                {staffMember.name}
-                              </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {staffMember.email}
-                              </div>
-                            </button>
-                          ))}
+                          {filteredStaff.length > 0 ? (
+                            filteredStaff.map((staffMember) => (
+                              <button
+                                key={staffMember._id}
+                                onClick={() => handleStaffSelect(staffMember._id)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {staffMember.name}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {staffMember.email}
+                                </div>
+                              </button>
+                            ))
+                          ) : staffSearchTerm ? (
+                            <div className="p-3 text-center text-gray-500 dark:text-gray-400">
+                              No staff members found matching "{staffSearchTerm}"
+                            </div>
+                          ) : (
+                            staff.map((staffMember) => (
+                              <button
+                                key={staffMember._id}
+                                onClick={() => handleStaffSelect(staffMember._id)}
+                                className="w-full text-left px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              >
+                                <div className="font-medium text-gray-900 dark:text-white">
+                                  {staffMember.name}
+                                </div>
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
+                                  {staffMember.email}
+                                </div>
+                              </button>
+                            ))
+                          )}
                         </>
                       ) : (
                         <div className="p-3 text-center text-gray-500 dark:text-gray-400">
-                          No staff members found
+                          <div className="text-sm">No staff members available</div>
+                          <div className="text-xs mt-1">
+                            {staff ? `Found ${staff.length} staff members` : "Staff data not loaded"}
+                          </div>
+                          <button
+                            onClick={onRefreshStaff}
+                            className="text-xs text-blue-600 hover:text-blue-800 mt-2 underline"
+                          >
+                            Click to Refresh Staff List
+                          </button>
                         </div>
                       )}
                     </div>
@@ -598,6 +642,12 @@ const SupportTicketList: React.FC = () => {
   useEffect(() => {
     dispatch(fetchStaff({}));
   }, [dispatch]);
+
+  // Debug staff data
+  useEffect(() => {
+    console.log('Staff data:', staff);
+    console.log('Staff length:', staff?.length);
+  }, [staff]);
 
   // Fetch tickets
   useEffect(() => {
@@ -695,6 +745,10 @@ const SupportTicketList: React.FC = () => {
     setStatusUpdateModalOpen(false);
     setSelectedTicket(null);
     setIsUpdatingStatus(false);
+  };
+
+  const handleRefreshStaff = () => {
+    dispatch(fetchStaff({}));
   };
 
   const handleStatusUpdate = async (ticketId: string, newStatus: string, assignedTo?: string) => {
@@ -1057,6 +1111,7 @@ const SupportTicketList: React.FC = () => {
         ticket={selectedTicket}
         onUpdate={handleStatusUpdate}
         isUpdating={isUpdatingStatus}
+        onRefreshStaff={handleRefreshStaff}
       />
     </div>
   );
