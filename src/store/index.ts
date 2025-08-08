@@ -1,4 +1,3 @@
-
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "./slices/authslice";
 
@@ -25,6 +24,8 @@ import staffSlice from "./slices/staff";
 import Content from "./slices/contentSlice";
 import Email from "./slices/emailTemplate";
 import faqReducer from "./slices/faq";
+import reviewSlice from "./slices/reviewSlice";
+
 export const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -50,7 +51,8 @@ export const store = configureStore({
     staff: staffSlice,
     content: Content,
     emailTemplates: Email,
-     faq: faqReducer,
+    faq: faqReducer,
+    review: reviewSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
