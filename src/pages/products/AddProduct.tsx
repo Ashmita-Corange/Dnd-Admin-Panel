@@ -27,6 +27,7 @@ import { fetchAttributes } from "../../store/slices/attributeSlice";
 import PopupAlert from "../../components/popUpAlert";
 import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
+import { fetchBrands } from "../../store/slices/brandSlice";
 
 // Interfaces
 interface Category {
@@ -76,6 +77,7 @@ interface ProductState {
   description: string;
   category: string;
   subcategory: string;
+  brand: string;
   images: Image[];
   thumbnail: Image | null;
   howToUseTitle: string;
@@ -99,6 +101,7 @@ export default function AddProduct() {
     description: "",
     category: "",
     subcategory: "",
+    brand: "",
     images: [],
     thumbnail: null,
     howToUseTitle: "",
@@ -294,7 +297,7 @@ export default function AddProduct() {
   const { loading, error } = useSelector((state: any) => state.product);
   const { categories } = useSelector((state: any) => state.category);
   const { attributes } = useSelector((state: any) => state.attributes);
-
+  const { brands } = useSelector((state: any) => state.brand);
   const [subcategories, setSubcategories] = useState<Category[]>([]);
 
   const handleChange = (
@@ -440,6 +443,7 @@ export default function AddProduct() {
     formData.append("description", product.description);
     formData.append("category", product.category);
     formData.append("subcategory", product.subcategory);
+    formData.append("brand", product.brand);
     formData.append("howToUseTitle", product.howToUseTitle);
     formData.append("howToUseVideo", product.howToUseVideo);
     formData.append("descriptionVideo", product.descriptionVideo);
@@ -590,6 +594,10 @@ export default function AddProduct() {
     if (product.category && product.category !== "") {
       getSubcategories();
     }
+
+    if (brands?.length === 0) {
+      dispatch(fetchBrands()).unwrap();
+    }
   }, [dispatch, product.category]);
 
   useEffect(() => {
@@ -657,6 +665,25 @@ export default function AddProduct() {
                   ))}
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                Brand
+              </label>
+              <select
+                name="brand"
+                value={product.brand}
+                onChange={handleChange}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
+              >
+                <option value="">Select brand</option>
+                {brands?.map((brand) => (
+                  <option key={brand._id} value={brand._id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

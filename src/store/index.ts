@@ -25,6 +25,7 @@ import Content from "./slices/contentSlice";
 import Email from "./slices/emailTemplate";
 import faqReducer from "./slices/faq";
 import reviewSlice from "./slices/reviewSlice";
+import brandSlice from "./slices/brandSlice";
 
 export const store = configureStore({
   reducer: {
@@ -53,6 +54,7 @@ export const store = configureStore({
     emailTemplates: Email,
     faq: faqReducer,
     review: reviewSlice,
+    brand: brandSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

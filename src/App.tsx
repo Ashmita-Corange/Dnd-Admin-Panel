@@ -66,6 +66,9 @@ import EditEmailTemplate from "./pages/emailTemplate/EditEmailTemplate";
 import FaqList from "./pages/FAQ/FaqList";
 import AddFaq from "./pages/FAQ/AddFaq";
 import EditFaq from "./pages/FAQ/EditFaq";
+import AddBrand from "./pages/brand/AddBrand";
+import BrandList from "./pages/brand/BrandList";
+import EditBrand from "./pages/brand/EditBrand";
 
 // Lazy load pages
 
@@ -252,10 +255,19 @@ export default function App() {
 
               <Route path="/contents/list" element={<ContentList />} />
 
-              
-              <Route path="/emailtemplate/list" element={<EmailTemplateList />} />
-              <Route path="/email-template/edit/:id" element={<EditEmailTemplate />} />
+              <Route
+                path="/emailtemplate/list"
+                element={<EmailTemplateList />}
+              />
+              <Route
+                path="/email-template/edit/:id"
+                element={<EditEmailTemplate />}
+              />
 
+              {/* Brand Management Routes */}
+              <Route path="/brand/add" element={<AddBrand />} />
+              <Route path="/brand/list" element={<BrandList />} />
+              <Route path="/brand/edit/:id" element={<EditBrand />} />
 
               {/* faq */}
               <Route path="/faq/list" element={<FaqList />} />
