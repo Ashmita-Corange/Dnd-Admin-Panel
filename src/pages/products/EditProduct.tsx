@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   Info,
   Layout,
+  HelpCircle,
 } from "lucide-react";
 import { fetchProductById, updateProduct } from "../../store/slices/product";
 import { fetchCategories } from "../../store/slices/categorySlice";
@@ -25,6 +26,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { useParams } from "react-router";
 import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
+import { updateFaq } from "../../store/slices/faq"; // <-- import updateFaq thunk
 
 // Interfaces
 interface Category {
@@ -90,6 +92,18 @@ interface ProductState {
   searchKeywords: string[];
 }
 
+// Add QAItem interface for FAQ tab
+interface QAItem {
+  _id?: string;
+  question: string;
+  answer: string;
+  status: string;
+  type?: string;
+  product?: string;
+  referenceType?: string;
+  referenceId?: string;
+}
+
 const Image_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
 
 export default function EditProduct() {
@@ -131,6 +145,7 @@ export default function EditProduct() {
     { id: 8, name: "Benefits", icon: Heart, color: "bg-red-500" },
     { id: 9, name: "Precautions", icon: ShieldAlert, color: "bg-gray-500" },
     { id: 10, name: "Template", icon: Layout, color: "bg-indigo-500" },
+    { id: 11, name: "FAQ", icon: HelpCircle, color: "bg-gray-500" },
   ];
 
   const [popup, setPopup] = useState({
@@ -148,6 +163,8 @@ export default function EditProduct() {
   const params = useParams();
   const productId = params.id;
   const [subcategories, setSubcategories] = useState<Category[]>([]);
+  // Add FAQ state to product
+  const [faqList, setFaqList] = useState<QAItem[]>([]);
 
   // Handlers
   const handleChange = (
@@ -647,6 +664,79 @@ export default function EditProduct() {
     }
   };
 
+  // Update FAQ handler
+  const handleUpdateFaq = async (faq: QAItem) => {
+    if (!faq._id) return;
+    try {
+      await dispatch(
+        updateFaq({
+          id: faq._id,
+          faqData: {
+            question: faq.question,
+            answer: faq.answer,
+            status: faq.status,
+            type: "product", // always product
+            product: productId, // always current product id
+            referenceType: faq.referenceType || "product",
+            referenceId: faq.referenceId || productId,
+          },
+        })
+      ).unwrap();
+      toast.success("FAQ updated!");
+    } catch (err) {
+      toast.error("FAQ update failed!");
+    }
+  };
+
+  // Reference types and options for FAQ tab
+  const referenceTypes = [
+    { value: "product", label: "Product" },
+
+    // ...add more types if needed
+  ];
+  const referenceOptions = {
+    product: [{ value: productId || "", label: product.name || "Current Product" }],
+    category: categories.map((cat: Category) => ({ value: cat._id, label: cat.name })),
+    // ...add more if needed
+  };
+
+  // AddQA handler for FAQ tab
+  const addQA = () => {
+    setFaqList([
+      ...faqList,
+      {
+        question: "",
+        answer: "",
+        status: "active",
+        type: "product", // always product
+        product: productId || "",
+        referenceType: "product",
+        referenceId: productId || "",
+      },
+    ]);
+  };
+
+  // Update QA handler for FAQ tab
+  const updateQA = (index: number, field: keyof QAItem, value: any) => {
+    setFaqList((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? {
+              ...item,
+              [field]: value,
+              type: "product", // always product
+              product: productId || "",
+            }
+          : item
+      )
+    );
+  };
+
+  // Remove QA handler for FAQ tab
+  const removeQA = (index: number) => {
+    setFaqList((prev) => prev.filter((_, i) => i !== index));
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -678,6 +768,21 @@ export default function EditProduct() {
       dispatch(fetchTemplates()).unwrap();
     }
   }, [dispatch]);
+
+  // On product fetch, set FAQ list
+  useEffect(() => {
+    // If product has faqs, setFaqList
+    if ((product as any).faqs) {
+      setFaqList(
+        (product as any).faqs.map((faq: QAItem) => ({
+          ...faq,
+          type: "product", // always product
+          product: productId || "",
+        }))
+      );
+    }
+  }, [product]);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 0:
@@ -1521,6 +1626,131 @@ export default function EditProduct() {
             )}
           </div>
         );
+
+                case 11:
+          return (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Product Q&A
+                </label>
+                <button
+                  type="button"
+                  onClick={addQA}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Plus size={16} />
+                  Add Question
+                </button>
+              </div>
+
+              {faqList.map((item, index) => (
+                <div
+                  key={item._id || index}
+                  className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700"
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                      <span className="bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                        {index + 1}
+                      </span>
+                      Question {index + 1}
+                    </h4>
+                    {faqList.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeQA(index)}
+                        className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors duration-200"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Reference slider and dropdown */}
+                  <div className="flex gap-4 mb-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Reference Type
+                      </label>
+                      <select
+                        value={item.referenceType || "product"}
+                        onChange={(e) =>
+                          updateQA(index, "referenceType", e.target.value)
+                        }
+                        className="rounded border px-2 py-1"
+                      >
+                        {referenceTypes.map((rt) => (
+                          <option key={rt.value} value={rt.value}>
+                            {rt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Reference
+                      </label>
+                      <select
+                        value={item.referenceId || ""}
+                        onChange={(e) => updateQA(index, "referenceId", e.target.value)}
+                        className="rounded border px-2 py-1"
+                      >
+                        <option value="">Select Reference</option>
+                        {(referenceOptions[item.referenceType || "product"] || []).map(
+                          (opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <input
+                      type="text"
+                      value={item.question}
+                      onChange={(e) => updateQA(index, "question", e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                      placeholder="Enter the question"
+                    />
+
+                    <div className="border border-gray-300 rounded-lg dark:border-gray-700">
+                      <CustomEditor
+                        value={item.answer}
+                        onChange={(value: string) =>
+                          updateQA(index, "answer", value)
+                        }
+                      />
+                    </div>
+
+                    <select
+                      value={item.status}
+                      onChange={(e) => updateQA(index, "status", e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                  {/* Update FAQ button */}
+                  {item._id && (
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateFaq(item)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      >
+                        Update FAQ
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
 
       default:
         return null;
