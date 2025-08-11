@@ -15,6 +15,7 @@ export interface Review {
     email: string;
     // Add more if needed
   };
+  isActive?: boolean; // <-- add this
 }
 
 // Pagination Interface
@@ -75,12 +76,12 @@ export const fetchReviews = createAsyncThunk<
       params.append("limit", limit.toString());
       if (productId) params.append("productId", productId);
 
-      const response = await axiosInstance.get(`/review?${params.toString()}`);
+      const response = await axiosInstance.get(`/review/all?${params.toString()}`);
       console.log("Fetch Reviews Response:", response.data);
-      const data = response.data?.data?.body?.data;
+      const data = response.data;
 
       return {
-        reviews: data?.result || [],
+        reviews: data?.data || [],
         pagination: {
           total: data?.total || 0,
           page: data?.page || 1,
@@ -97,10 +98,15 @@ export const fetchReviews = createAsyncThunk<
 // Update Review
 export const updateReview = createAsyncThunk<
   Review,
-  { id: string; data: Partial<Review> }
+  { id: string; data: Partial<Review> | FormData }
 >("reviews/update", async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.put(`/review/${id}`, data);
+    let config = {};
+    let payload = data;
+    if (data instanceof FormData) {
+      config = { headers: { "Content-Type": "multipart/form-data" } };
+    }
+    const response = await axiosInstance.put(`/review/${id}`, payload, config);
     return response.data?.data;
   } catch (err: any) {
     return rejectWithValue(err.response?.data?.message || err.message);

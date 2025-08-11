@@ -66,6 +66,7 @@ import EditEmailTemplate from "./pages/emailTemplate/EditEmailTemplate";
 import FaqList from "./pages/FAQ/FaqList";
 import AddFaq from "./pages/FAQ/AddFaq";
 import EditFaq from "./pages/FAQ/EditFaq";
+import ReviewList from "./pages/pages/review/ReviewList";
 
 // Lazy load pages
 
@@ -261,6 +262,8 @@ export default function App() {
               <Route path="/faq/list" element={<FaqList />} />
               <Route path="/faq/add" element={<AddFaq />} />
               <Route path="/faq/edit/:id" element={<EditFaq />} />
+
+              <Route path="/reviews/list" element={<ReviewList />} />
             </Route>
           </Route>
 
