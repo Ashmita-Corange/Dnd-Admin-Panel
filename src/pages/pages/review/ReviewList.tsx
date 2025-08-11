@@ -19,7 +19,7 @@ import PageMeta from "../../../components/common/PageMeta";
 import PopupAlert from "../../../components/popUpAlert";
 import { Link } from "react-router";
 
-import { setSearchQuery } from "../../../store/slices/categorySlice";
+import { setSearchQuery } from "../../../store/slices/reviewSlice";
 import { fetchReviews, updateReview, deleteReview } from "../../../store/slices/reviewSlice";
 
 interface Category {

@@ -65,30 +65,58 @@ export const createReview = createAsyncThunk<Review, Partial<Review>>(
   }
 );
 
-// Fetch All Reviews (Paginated)
+// Fetch All Reviews (Paginated, with filters/search/sort)
 export const fetchReviews = createAsyncThunk<
   { reviews: Review[]; pagination: Pagination },
-  { page?: number; limit?: number; productId?: string }
+  {
+    page?: number;
+    limit?: number;
+    productId?: string;
+    filters?: Record<string, any>;
+    search?: Record<string, any>;
+    sort?: Record<string, any>;
+  }
 >(
   "reviews/fetchAll",
-  async ({ page = 1, limit = 10, productId }, { rejectWithValue }) => {
+  async (
+    { page = 1, limit = 10, productId, filters = {}, search = {}, sort = {} },
+    { rejectWithValue }
+  ) => {
     try {
       const params = new URLSearchParams();
       params.append("page", page.toString());
       params.append("limit", limit.toString());
       if (productId) params.append("productId", productId);
 
+      // Add filters
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== "") params.append(key, value);
+      });
+
+      // Add search (only one field supported in backend, e.g. comment)
+      if (search && typeof search === "object") {
+        Object.entries(search).forEach(([key, value]) => {
+          if (value !== undefined && value !== "") params.append("search", value);
+        });
+      }
+
+      // Add sort (e.g. createdAt: "desc")
+      if (sort && typeof sort === "object") {
+        Object.entries(sort).forEach(([key, value]) => {
+          params.append(`sort[${key}]`, value);
+        });
+      }
+
       const response = await axiosInstance.get(`/review/all?${params.toString()}`);
-      console.log("Fetch Reviews Response:", response.data);
       const data = response.data;
 
       return {
         reviews: data?.data || [],
         pagination: {
-          total: data?.total || 0,
-          page: data?.page || 1,
-          limit: limit,
-          totalPages: data?.totalPages || 0,
+          total: data?.pagination?.total || 0,
+          page: data?.pagination?.page || 1,
+          limit: data?.pagination?.limit || limit,
+          totalPages: data?.pagination?.totalPages || 0,
         },
       };
     } catch (err: any) {
