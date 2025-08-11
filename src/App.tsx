@@ -273,6 +273,8 @@ export default function App() {
               <Route path="/faq/list" element={<FaqList />} />
               <Route path="/faq/add" element={<AddFaq />} />
               <Route path="/faq/edit/:id" element={<EditFaq />} />
+
+              <Route path="/reviews/list" element={<ReviewList />} />
             </Route>
           </Route>
 

@@ -15,6 +15,7 @@ import {
   ShieldAlert,
   Info,
   Layout,
+  HelpCircle,
 } from "lucide-react";
 import { createProduct } from "../../store/slices/product";
 import { fetchCategories } from "../../store/slices/categorySlice";
@@ -72,6 +73,14 @@ interface Precaution {
   alt?: string;
 }
 
+interface QAItem {
+  question: string;
+  answer: string;
+  status: string;
+  type?: string;
+  product?: string;
+}
+
 interface ProductState {
   name: string;
   description: string;
@@ -92,6 +101,8 @@ interface ProductState {
   benefits: Benefit[];
   precautions: Precaution[];
   searchKeywords: string[];
+  qa: QAItem[];
+  _id?: string; // Add this if you want to store product id after creation
 }
 
 export default function AddProduct() {
@@ -118,8 +129,10 @@ export default function AddProduct() {
     benefits: [{ title: "", description: "", image: null, alt: "" }],
     precautions: [{ title: "", description: "", image: null, alt: "" }],
     searchKeywords: [""],
+    qa: [{ question: "", answer: "", status: "active", type: "product" }],
     custom_template: false,
     templateId: "",
+    // _id: undefined, // If you want to store product id after creation
   });
 
   const tabs = [
@@ -134,6 +147,8 @@ export default function AddProduct() {
     { id: 8, name: "Benefits", icon: Heart, color: "bg-red-500" },
     { id: 9, name: "Precautions", icon: ShieldAlert, color: "bg-gray-500" },
     { id: 10, name: "Template", icon: Layout, color: "bg-indigo-500" },
+    // faq
+    { id: 11, name: "FAQ", icon: HelpCircle, color: "bg-gray-500" },
   ];
 
   // Search Keywords handlers
@@ -284,6 +299,37 @@ export default function AddProduct() {
       i === index ? { ...p, alt: value } : p
     );
     setProduct({ ...product, precautions: updated });
+  };
+
+  // FAQ handlers
+  const addQA = () => {
+    setProduct({
+      ...product,
+      qa: [
+        ...product.qa,
+        { question: "", answer: "", status: "active", type: "product", product: product._id || "" },
+      ],
+    });
+  };
+
+  const removeQA = (index: number) => {
+    if (product.qa.length > 1) {
+      setProduct({
+        ...product,
+        qa: product.qa.filter((_, i) => i !== index),
+      });
+    }
+  };
+
+  const updateQA = (
+    index: number,
+    field: "question" | "answer" | "status",
+    value: string
+  ) => {
+    const updatedQA = product.qa.map((item, i) =>
+      i === index ? { ...item, [field]: value } : item
+    );
+    setProduct({ ...product, qa: updatedQA });
   };
 
   const [popup, setPopup] = useState({
@@ -519,6 +565,16 @@ export default function AddProduct() {
       formData.append(`precautions[${index}].alt`, p.alt);
     });
 
+    // Add FAQ (Q&A)
+    product.qa.forEach((item, index) => {
+      formData.append(`qa[${index}].question`, item.question);
+      formData.append(`qa[${index}].answer`, item.answer);
+      formData.append(`qa[${index}].status`, item.status);
+      formData.append(`qa[${index}].type`, "product");
+      // If you have product._id after creation, you can use it here
+      // formData.append(`qa[${index}].product`, product._id || "");
+    });
+
     if (product.custom_template) {
       formData.append("custom_template", "true");
       formData.append("templateId", product.templateId);
@@ -526,7 +582,27 @@ export default function AddProduct() {
 
     try {
       const response = await dispatch(createProduct(formData)).unwrap();
+      const createdProductId = response?.product?.data?._id;
       if (createProduct.fulfilled) {
+        // FAQ integration: create FAQ for each item in product.qa
+        if (product.qa && product.qa.length > 0 && createdProductId) {
+          for (const item of product.qa) {
+            // Prepare FAQ payload
+            const faqPayload = {
+              ...item,
+              product: createdProductId,
+              type: "product", // always set type to "product"
+            };
+            try {
+              await dispatch(createFaq(faqPayload)).unwrap();
+              // Optionally show success toast for each FAQ
+              // toast.success("FAQ created!");
+            } catch (faqErr) {
+              // Optionally show error toast for each FAQ
+              // toast.error("FAQ creation failed!");
+            }
+          }
+        }
         setProduct({
           name: "",
           description: "",
@@ -548,8 +624,10 @@ export default function AddProduct() {
           benefits: [{ title: "", description: "", image: null, alt: "" }],
           precautions: [{ title: "", description: "", image: null, alt: "" }],
           searchKeywords: [""],
-          custom_template: "",
+          qa: [{ question: "", answer: "", status: "active", type: "product", product: createdProductId || "" }],
+          custom_template: false,
           templateId: "",
+          _id: createdProductId || undefined,
         });
 
         setPopup({
@@ -1494,6 +1572,78 @@ export default function AddProduct() {
           </div>
         );
 
+        case 11:
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Product Q&A
+        </label>
+        <button
+          type="button"
+          onClick={addQA}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg"
+        >
+          <Plus size={16} />
+          Add Question
+        </button>
+      </div>
+
+      {product.qa.map((item, index) => (
+        <div
+          key={index}
+          className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700"
+        >
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+              <span className="bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                {index + 1}
+              </span>
+              Question {index + 1}
+            </h4>
+            {product.qa.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeQA(index)}
+                className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors duration-200"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={item.question}
+              onChange={(e) => updateQA(index, "question", e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+              placeholder="Enter the question"
+            />
+
+            <div className="border border-gray-300 rounded-lg dark:border-gray-700">
+              <CustomEditor
+                value={item.answer}
+                onChange={(value: string) =>
+                  updateQA(index, "answer", value)
+                }
+              />
+            </div>
+
+            <select
+              value={item.status}
+              onChange={(e) => updateQA(index, "status", e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+            >
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
       default:
         return null;
     }
@@ -1584,6 +1734,9 @@ export default function AddProduct() {
                       { title: "", description: "", image: null, alt: "" },
                     ],
                     searchKeywords: [""],
+                    qa: [{ question: "", answer: "", status: "active", type: "product" }],
+                    custom_template: false,
+                    templateId: "",
                   });
                 }}
                 className="px-6 py-3 border border-gray-300 text-gray-700 dark:text-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"

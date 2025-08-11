@@ -10,6 +10,7 @@ export interface FAQ {
   answer: string;
   type?: string;
   status?: string;
+  product?: string; // <-- add product field
   createdAt?: string;
   updatedAt?: string;
 }
@@ -93,7 +94,7 @@ export const createFaq = createAsyncThunk(
           "x-tenant": getTenantFromURL(),
         },
       });
-      return response.data;
+      return response.data.faq || response.data;
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message || err.message);
     }
@@ -183,7 +184,7 @@ const faqSlice = createSlice({
     });
     builder.addCase(createFaq.fulfilled, (state, action) => {
       state.loading = false;
-      state.faqs.unshift(action.payload);
+      state.faqs.unshift(action.payload); // action.payload is now the created FAQ object
     });
     builder.addCase(createFaq.rejected, (state, action) => {
       state.loading = false;

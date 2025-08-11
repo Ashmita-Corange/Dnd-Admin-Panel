@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 
 import {
-  Pencil,
   Trash2,
   CheckCircle,
   XCircle,
@@ -12,6 +11,7 @@ import {
   RotateCcw,
   X,
   AlertTriangle,
+  Eye,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../../hooks/redux";
 
@@ -20,7 +20,7 @@ import PopupAlert from "../../../components/popUpAlert";
 import { Link } from "react-router";
 
 import { setSearchQuery } from "../../../store/slices/categorySlice";
-import { fetchReviews } from "../../../store/slices/reviewSlice";
+import { fetchReviews, updateReview, deleteReview } from "../../../store/slices/reviewSlice";
 
 interface Category {
   _id: string;
@@ -32,6 +32,26 @@ interface Category {
   updatedAt: string;
   __v: number;
   subCategoryCount: number;
+}
+
+// Add Review interface
+interface Review {
+  _id: string;
+  productId: {
+    _id: string;
+    name: string;
+    thumbnail?: { url: string; alt?: string };
+  };
+  userId: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  rating: number;
+  comment?: string;
+  images?: string[];
+  createdAt: string;
+  // ...other keys...
 }
 
 // Delete Confirmation Modal Component
@@ -126,13 +146,14 @@ const ReviewList: React.FC = () => {
   const { reviews, loading, error, pagination, searchQuery } = useAppSelector(
     (state) => state.review
   );
+  console.log("Reviews:", reviews);
 
   const [reviewToDelete, setReviewToDelete] = useState<Review | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [popup, setPopup] = useState<{
     message: string;
     type: "success" | "error";
@@ -142,6 +163,9 @@ const ReviewList: React.FC = () => {
     type: "success",
     isVisible: false,
   });
+
+
+  const ImageUrl = import.meta.env.VITE_IMAGE_URL; 
 
   // Debounce search input
   useEffect(() => {
@@ -221,62 +245,57 @@ const ReviewList: React.FC = () => {
     dispatch(resetFilters());
   };
 
+  // Status toggle handler (radio group)
+  const handleStatusToggle = async (review: Review, isActive: boolean) => {
+    try {
+      const formData = new FormData();
+      formData.append("isActive", isActive ? "true" : "false");
+      await dispatch(updateReview({ id: review._id, data: formData })).unwrap();
+      setPopup({
+        message: `Status updated`,
+        type: "success",
+        isVisible: true,
+      });
+    } catch (error) {
+      setPopup({
+        message: "Failed to update status.",
+        type: "error",
+        isVisible: true,
+      });
+    }
+  };
+
+  // Delete modal handlers
   const openDeleteModal = (review: Review) => {
     setReviewToDelete(review);
     setDeleteModalOpen(true);
   };
-
   const closeDeleteModal = () => {
     setReviewToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
-
-  //   const handleDeleteConfirm = async () => {
-  //     if (subcategoryToDelete) {
-  //       setIsDeleting(true);
-  //       try {
-  //         // Dispatch the delete action
-  //         await dispatch(deleteProduct(subcategoryToDelete._id)).unwrap();
-
-  //         setPopup({
-  //           message: `Product "${subcategoryToDelete.name}" deleted successfully`,
-  //           type: "success",
-  //           isVisible: true,
-  //         });
-
-  //         // Close modal and reset state
-  //         closeDeleteModal();
-
-  //         // Refresh the categories list
-  //         const activeFilters = {
-  //           isDeleted: false,
-  //           ...(localFilters.status ? { status: localFilters.status } : {}),
-  //         };
-
-  //         dispatch(
-  //           fetchReviews({
-  //             page: pagination.page,
-  //             limit: pagination.limit,
-  //             filters: activeFilters,
-  //             search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
-  //             sort: { createdAt: "desc" },
-  //           })
-  //         );
-
-  //         // Optional: Show success message
-  //         console.log(`Product "${categoryToDelete.name}" deleted successfully`);
-  //       } catch (error) {
-  //         console.error("Failed to delete product:", error);
-  //         setPopup({
-  //           message: "Failed to delete product. Please try again.",
-  //           type: "error",
-  //           isVisible: true,
-  //         });
-  //         setIsDeleting(false);
-  //       }
-  //     }
-  //   };
+  const handleDeleteConfirm = async () => {
+    if (reviewToDelete) {
+      setIsDeleting(true);
+      try {
+        await dispatch(deleteReview(reviewToDelete._id)).unwrap();
+        setPopup({
+          message: `Review deleted successfully`,
+          type: "success",
+          isVisible: true,
+        });
+        closeDeleteModal();
+      } catch (error) {
+        setPopup({
+          message: "Failed to delete review. Please try again.",
+          type: "error",
+          isVisible: true,
+        });
+        setIsDeleting(false);
+      }
+    }
+  };
 
   const generatePageNumbers = () => {
     const pages = [];
@@ -385,17 +404,28 @@ const ReviewList: React.FC = () => {
                   #
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Image
+                  Product
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Name
+                  Product Image
                 </th>
-
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Status
+                  Reviewer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Comment
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Rating
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Review Images
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Actions
@@ -404,37 +434,87 @@ const ReviewList: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {reviews?.length > 0 &&
-                reviews.map((cat, idx) => (
-                  <tr
-                    key={cat._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
+                reviews.map((review: Review, idx: number) => (
+                  <tr key={review._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {(pagination.page - 1) * pagination.limit + idx + 1}
                     </td>
-
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {cat.comment}
+                      {review.productId?.name}
                     </td>
-
-                    <td className="px-6 py-4 text-sm">
-                      {cat.status === "active" ? (
-                        <CheckCircle className="text-green-500 h-5 w-5" />
+                    <td className="px-6 py-4">
+                      {review.productId?.thumbnail?.url ? (
+                        <img
+                          src={`${ImageUrl}/${review.productId.thumbnail.url}`}  
+                          alt={review.productId.thumbnail.alt || "Product"}
+                          className="w-12 h-12 object-cover rounded"
+                        />
                       ) : (
-                        <XCircle className="text-red-500 h-5 w-5" />
+                        <span className="text-gray-400">No Image</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {review.userId?.name}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {review.comment || <span className="text-gray-400">No comment</span>}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-yellow-500 dark:text-yellow-400">
+                      {review.rating}
+                    </td>
+                    <td className="px-6 py-4">
+                      {review.images && review.images.length > 0 ? (
+                        <div className="flex gap-2">
+                          {review.images.slice(0, 3).map((img, i) => (
+                            <img key={i} src={`${ImageUrl}/${img}`} alt={`Review ${i + 1}`} className="w-10 h-10 object-cover rounded" />
+                          ))}
+                          {review.images.length > 3 && (
+                            <span className="text-xs text-gray-500">+{review.images.length - 3} more</span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">No Images</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(cat.createdAt).toLocaleDateString()}
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex gap-2">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`status-${review._id}`}
+                            checked={review.isActive === true}
+                            onChange={() => handleStatusToggle(review, true)}
+                            disabled={loading}
+                            className="form-radio text-green-600"
+                          />
+                          <span className="ml-1 text-green-600">Active</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name={`status-${review._id}`}
+                            checked={review.isActive === false}
+                            onChange={() => handleStatusToggle(review, false)}
+                            disabled={loading}
+                            className="form-radio text-red-600"
+                          />
+                          <span className="ml-1 text-red-600">Inactive</span>
+                        </label>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <Link to={`/product/edit/${cat._id}`}>
+                      {/* Eye icon for view */}
+                      <Link to={`/product/view/${review.productId?._id}`}>
                         <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                          <Pencil className="h-5 w-5" />
+                          <Eye className="h-5 w-5" />
                         </button>
                       </Link>
+                      {/* Delete icon */}
                       <button
-                        onClick={() => openDeleteModal(cat)}
+                        onClick={() => openDeleteModal(review)}
                         className="text-red-500 hover:text-red-700 transition-colors"
                       >
                         <Trash2 className="h-5 w-5" />
@@ -491,13 +571,13 @@ const ReviewList: React.FC = () => {
         onClose={() => setPopup({ ...popup, isVisible: false })}
       />
       {/* Delete Modal */}
-      {/* <DeleteModal
+      <DeleteModal
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={subcategoryToDelete}
+        category={reviewToDelete}
         isDeleting={isDeleting}
-      /> */}
+      />
     </div>
   );
 };
