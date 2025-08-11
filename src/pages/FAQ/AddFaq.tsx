@@ -175,7 +175,6 @@ const AddFaq: React.FC = () => {
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   >
                     <option value="website">Website</option>
-                    <option value="app">App</option>
                     <option value="product">Product</option>
                   </select>
                 </div>

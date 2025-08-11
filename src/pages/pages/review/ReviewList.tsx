@@ -418,9 +418,9 @@ const ReviewList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Rating
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Review Images
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </th>
@@ -462,7 +462,7 @@ const ReviewList: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-yellow-500 dark:text-yellow-400">
                       {review.rating}
                     </td>
-                    <td className="px-6 py-4">
+                    {/* <td className="px-6 py-4">
                       {review.images && review.images.length > 0 ? (
                         <div className="flex gap-2">
                           {review.images.slice(0, 3).map((img, i) => (
@@ -475,7 +475,7 @@ const ReviewList: React.FC = () => {
                       ) : (
                         <span className="text-gray-400">No Images</span>
                       )}
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(review.createdAt).toLocaleDateString()}
                     </td>
@@ -507,7 +507,7 @@ const ReviewList: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       {/* Eye icon for view */}
-                      <Link to={`/product/view/${review.productId?._id}`}>
+                      <Link to={`/reviews/${review._id}`}>
                         <button className="text-blue-500 hover:text-blue-700 transition-colors">
                           <Eye className="h-5 w-5" />
                         </button>

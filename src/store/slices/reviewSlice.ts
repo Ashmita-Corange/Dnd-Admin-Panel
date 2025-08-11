@@ -33,6 +33,7 @@ export interface ReviewState {
   error: string | null;
   pagination: Pagination;
   searchQuery: string;
+  selectedReview?: Review | null;  // <-- new field
 }
 
 const initialState: ReviewState = {
@@ -46,6 +47,7 @@ const initialState: ReviewState = {
     totalPages: 0,
   },
   searchQuery: "",
+  selectedReview: null,
 };
 
 // ================== Thunks ================== //
@@ -94,6 +96,20 @@ export const fetchReviews = createAsyncThunk<
     }
   }
 );
+
+// Fetch single Review by ID
+export const fetchReviewById = createAsyncThunk<Review, string>(
+  "reviews/fetchById",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/review/${id}`);
+      return response.data?.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
 
 // Update Review
 export const updateReview = createAsyncThunk<
@@ -159,6 +175,22 @@ const reviewSlice = createSlice({
       .addCase(fetchReviews.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // Fetch single review by ID
+      .addCase(fetchReviewById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.selectedReview = null;
+      })
+      .addCase(fetchReviewById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedReview = action.payload;
+      })
+      .addCase(fetchReviewById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+        state.selectedReview = null;
       })
 
       // Create
