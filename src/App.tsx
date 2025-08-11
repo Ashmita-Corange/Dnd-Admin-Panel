@@ -69,6 +69,7 @@ import EditFaq from "./pages/FAQ/EditFaq";
 import AddBrand from "./pages/brand/AddBrand";
 import BrandList from "./pages/brand/BrandList";
 import EditBrand from "./pages/brand/EditBrand";
+import ReviewList from "./pages/pages/review/ReviewList";
 
 // Lazy load pages
 

@@ -29,6 +29,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
 import { fetchBrands } from "../../store/slices/brandSlice";
+import { createFaq } from "../../store/slices/faq"; // Import the FAQ thunk
 
 // Interfaces
 interface Category {
@@ -307,7 +308,13 @@ export default function AddProduct() {
       ...product,
       qa: [
         ...product.qa,
-        { question: "", answer: "", status: "active", type: "product", product: product._id || "" },
+        {
+          question: "",
+          answer: "",
+          status: "active",
+          type: "product",
+          product: product._id || "",
+        },
       ],
     });
   };
@@ -624,7 +631,15 @@ export default function AddProduct() {
           benefits: [{ title: "", description: "", image: null, alt: "" }],
           precautions: [{ title: "", description: "", image: null, alt: "" }],
           searchKeywords: [""],
-          qa: [{ question: "", answer: "", status: "active", type: "product", product: createdProductId || "" }],
+          qa: [
+            {
+              question: "",
+              answer: "",
+              status: "active",
+              type: "product",
+              product: createdProductId || "",
+            },
+          ],
           custom_template: false,
           templateId: "",
           _id: createdProductId || undefined,
@@ -1572,77 +1587,79 @@ export default function AddProduct() {
           </div>
         );
 
-        case 11:
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Product Q&A
-        </label>
-        <button
-          type="button"
-          onClick={addQA}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg"
-        >
-          <Plus size={16} />
-          Add Question
-        </button>
-      </div>
-
-      {product.qa.map((item, index) => (
-        <div
-          key={index}
-          className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700"
-        >
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
-                {index + 1}
-              </span>
-              Question {index + 1}
-            </h4>
-            {product.qa.length > 1 && (
+      case 11:
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Product Q&A
+              </label>
               <button
                 type="button"
-                onClick={() => removeQA(index)}
-                className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors duration-200"
+                onClick={addQA}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 shadow-md hover:shadow-lg"
               >
-                <Trash2 size={18} />
+                <Plus size={16} />
+                Add Question
               </button>
-            )}
-          </div>
-
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={item.question}
-              onChange={(e) => updateQA(index, "question", e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
-              placeholder="Enter the question"
-            />
-
-            <div className="border border-gray-300 rounded-lg dark:border-gray-700">
-              <CustomEditor
-                value={item.answer}
-                onChange={(value: string) =>
-                  updateQA(index, "answer", value)
-                }
-              />
             </div>
 
-            <select
-              value={item.status}
-              onChange={(e) => updateQA(index, "status", e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            {product.qa.map((item, index) => (
+              <div
+                key={index}
+                className="border border-gray-200 rounded-lg p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 dark:border-gray-700"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-semibold text-gray-800 dark:text-white flex items-center gap-2">
+                    <span className="bg-gray-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">
+                      {index + 1}
+                    </span>
+                    Question {index + 1}
+                  </h4>
+                  {product.qa.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeQA(index)}
+                      className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors duration-200"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={item.question}
+                    onChange={(e) =>
+                      updateQA(index, "question", e.target.value)
+                    }
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                    placeholder="Enter the question"
+                  />
+
+                  <div className="border border-gray-300 rounded-lg dark:border-gray-700">
+                    <CustomEditor
+                      value={item.answer}
+                      onChange={(value: string) =>
+                        updateQA(index, "answer", value)
+                      }
+                    />
+                  </div>
+
+                  <select
+                    value={item.status}
+                    onChange={(e) => updateQA(index, "status", e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-      ))}
-    </div>
-  );
+        );
 
       default:
         return null;
@@ -1734,7 +1751,14 @@ export default function AddProduct() {
                       { title: "", description: "", image: null, alt: "" },
                     ],
                     searchKeywords: [""],
-                    qa: [{ question: "", answer: "", status: "active", type: "product" }],
+                    qa: [
+                      {
+                        question: "",
+                        answer: "",
+                        status: "active",
+                        type: "product",
+                      },
+                    ],
                     custom_template: false,
                     templateId: "",
                   });
