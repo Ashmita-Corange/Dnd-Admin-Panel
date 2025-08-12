@@ -70,6 +70,7 @@ import AddBrand from "./pages/brand/AddBrand";
 import BrandList from "./pages/brand/BrandList";
 import EditBrand from "./pages/brand/EditBrand";
 import ReviewList from "./pages/pages/review/ReviewList";
+import ReviewDetails from "./pages/pages/review/ReviewDetails";
 
 // Lazy load pages
 
@@ -276,6 +277,8 @@ export default function App() {
               <Route path="/faq/edit/:id" element={<EditFaq />} />
 
               <Route path="/reviews/list" element={<ReviewList />} />
+              <Route path="/reviews/:id" element={<ReviewDetails />} />
+
             </Route>
           </Route>
 
