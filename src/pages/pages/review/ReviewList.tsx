@@ -182,6 +182,7 @@ const ReviewList: React.FC = () => {
     const activeFilters = {
       isDeleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
+      ...(localFilters.rating ? { rating: localFilters.rating } : {}),
     };
 
     dispatch(
@@ -189,7 +190,7 @@ const ReviewList: React.FC = () => {
         page: pagination?.page,
         limit: pagination?.limit,
         filters: activeFilters,
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        search: searchInput, // <-- pass string directly
         sort: { createdAt: "desc" },
       })
     );
@@ -210,8 +211,9 @@ const ReviewList: React.FC = () => {
           filters: {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
+            ...(localFilters.rating ? { rating: localFilters.rating } : {}),
           },
-          search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+          search: searchInput, // <-- pass string directly
           sort: { createdAt: "desc" },
         })
       );
@@ -226,8 +228,9 @@ const ReviewList: React.FC = () => {
         filters: {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
+          ...(localFilters.rating ? { rating: localFilters.rating } : {}),
         },
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        search: searchInput, // <-- pass string directly
         sort: { createdAt: "desc" },
       })
     );
@@ -236,13 +239,11 @@ const ReviewList: React.FC = () => {
   const handleFilterChange = (key: string, value: string) => {
     const updated = { ...localFilters, [key]: value };
     setLocalFilters(updated);
-    dispatch(setFilters(updated));
   };
 
   const handleResetFilters = () => {
     setSearchInput("");
     setLocalFilters({});
-    dispatch(resetFilters());
   };
 
   // Status toggle handler (radio group)
@@ -354,6 +355,23 @@ const ReviewList: React.FC = () => {
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
+              </select>
+            </div>
+
+            {/* Rating Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm dark:text-gray-300">Rating:</span>
+              <select
+                value={localFilters.rating || ""}
+                onChange={(e) => handleFilterChange("rating", e.target.value)}
+                className="border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              >
+                <option value="">All Ratings</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
               </select>
             </div>
 
