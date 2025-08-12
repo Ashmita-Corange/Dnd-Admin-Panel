@@ -134,6 +134,7 @@ export default function AddProduct() {
     custom_template: false,
     templateId: "",
     // _id: undefined, // If you want to store product id after creation
+    showInAddons: false,
   });
 
   const tabs = [
@@ -587,6 +588,8 @@ export default function AddProduct() {
       formData.append("templateId", product.templateId);
     }
 
+    formData.append("isAddon", product.showInAddons);
+
     try {
       const response = await dispatch(createProduct(formData)).unwrap();
       const createdProductId = response?.product?.data?._id;
@@ -806,6 +809,25 @@ export default function AddProduct() {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <input
+                type="checkbox"
+                name="showInAddons"
+                id="showInAddons"
+                checked={product.showInAddons}
+                onChange={(e) =>
+                  setProduct({ ...product, showInAddons: e.target.checked })
+                }
+                className="w-4 h-4 rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
+              ></input>
+              <label
+                htmlFor="showInAddons"
+                className="block  text-sm font-medium text-gray-700 dark:text-gray-300"
+              >
+                Show in Addons
+              </label>
             </div>
           </div>
         );

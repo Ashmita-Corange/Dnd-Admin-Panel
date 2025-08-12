@@ -94,7 +94,6 @@ export const fetchProducts = createAsyncThunk<
   }
 });
 
-
 // Create product
 export const createProduct = createAsyncThunk<Product, any>(
   "products/create",
@@ -205,19 +204,6 @@ const productSlice = createSlice({
 
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.products = state.products.filter((p) => p._id !== action.payload);
-      })
-      .addCase(updateProduct.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-
-      .addCase(updateProduct.fulfilled, (state, action) => {
-        state.loading = false;
-      })
-
-      .addCase(updateProduct.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
       });
   },
 });
