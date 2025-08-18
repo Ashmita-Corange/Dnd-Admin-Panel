@@ -71,6 +71,9 @@ import BrandList from "./pages/brand/BrandList";
 import EditBrand from "./pages/brand/EditBrand";
 import ReviewList from "./pages/pages/review/ReviewList";
 import ReviewDetails from "./pages/pages/review/ReviewDetails";
+import AddStaff from "./pages/staff/AddStaff";
+import StaffList from "./pages/staff/StaffList";
+import EditStaff from "./pages/staff/EditStaff";
 
 // Lazy load pages
 
@@ -279,6 +282,12 @@ export default function App() {
               <Route path="/reviews/list" element={<ReviewList />} />
               <Route path="/reviews/:id" element={<ReviewDetails />} />
 
+
+
+               {/* staff */}
+               <Route path="/staff/add" element={<AddStaff />} />
+               <Route path="/staff/list" element={<StaffList />} />
+               <Route path="/staff/edit/:id" element={<EditStaff />} />
             </Route>
           </Route>
 

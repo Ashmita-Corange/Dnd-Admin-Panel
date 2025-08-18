@@ -14,7 +14,8 @@ import { getTenantFromURL } from "../../utils/getTenantFromURL";
 
 // API base URL
 
-const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000/api";
+const API_BASE_URL =
+  import.meta.env.VITE_BASE_URL || "http://localhost:3000/api";
 
 // Helper function to handle API errors
 
@@ -45,7 +46,7 @@ export const login = createAsyncThunk<
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-           "x-tenant": getTenantFromURL(),
+          "x-tenant": getTenantFromURL(),
         },
       }
     );
@@ -83,10 +84,6 @@ export const login = createAsyncThunk<
   }
 });
 
-
-
-
-
 // signup api call
 
 export const signup = createAsyncThunk<
@@ -104,13 +101,12 @@ export const signup = createAsyncThunk<
         password: userData.password,
 
         fullName: userData.fullName,
-        role: "admin",
+        role: userData.role || "admin",
       },
       {
         headers: {
           "Content-Type": "application/json",
-                     "x-tenant": getTenantFromURL(),
-
+          "x-tenant": getTenantFromURL(),
         },
       }
     );
@@ -156,8 +152,7 @@ export const logout = createAsyncThunk<void, void, { rejectValue: string }>(
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
-                       "x-tenant": getTenantFromURL(),
-
+            "x-tenant": getTenantFromURL(),
           },
           credentials: "include",
         });
