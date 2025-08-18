@@ -26,6 +26,7 @@ import Email from "./slices/emailTemplate";
 import faqReducer from "./slices/faq";
 import reviewSlice from "./slices/reviewSlice";
 import brandSlice from "./slices/brandSlice";
+import shippingZoneReducer from "./slices/shippingZone";
 
 export const store = configureStore({
   reducer: {
@@ -55,6 +56,7 @@ export const store = configureStore({
     faq: faqReducer,
     review: reviewSlice,
     brand: brandSlice,
+    shippingZone: shippingZoneReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

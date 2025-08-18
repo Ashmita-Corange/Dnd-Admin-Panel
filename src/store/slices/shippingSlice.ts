@@ -153,13 +153,18 @@ export const fetchShipping = createAsyncThunk<
     const response = await axiosInstance.get(
       `/shipping?${queryParams.toString()}`
     );
-    console.log("Fetched shipping data:", response.data);
+    // Ensure shippingList is always an array for dropdown
     const data = response.data;
+    const shippingList = Array.isArray(data?.shippingMethods)
+      ? data.shippingMethods
+      : Array.isArray(data?.shipping)
+      ? data.shipping
+      : [];
 
     return {
-      shippingList: data?.shippingMethods || [],
+      shippingList,
       pagination: {
-        total: data?.shippingMethods.length || 0,
+        total: data?.total || shippingList.length || 0,
         page: data?.page || 1,
         limit,
         totalPages: data?.totalPages || 0,

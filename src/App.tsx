@@ -74,6 +74,9 @@ import ReviewDetails from "./pages/pages/review/ReviewDetails";
 import AddStaff from "./pages/staff/AddStaff";
 import StaffList from "./pages/staff/StaffList";
 import EditStaff from "./pages/staff/EditStaff";
+import ZoneList from "./pages/Shipping/ZoneList";
+import CreateShippingZone from "./pages/Shipping/CreateShippingZone";
+import EditZone from "./pages/Shipping/Editzone";
 
 // Lazy load pages
 
@@ -257,6 +260,11 @@ export default function App() {
               <Route path="/shipping/add" element={<AddShipping />} />
               <Route path="/shipping/list" element={<ShippingList />} />
               <Route path="/shipping/edit/:id" element={<EditShipping />} />
+              <Route path="/shipping/zone/list" element={<ZoneList />} />
+              <Route path="/shipping/zone/create" element={<CreateShippingZone />} />
+              <Route path="/shipping/zone/edit/:id" element={<EditZone />} />
+
+              {/* Content Management Routes */}
 
               <Route path="/contents/list" element={<ContentList />} />
 

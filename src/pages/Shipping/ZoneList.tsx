@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteCoupon, fetchCoupons } from "../../store/slices/coupon";
 import { RootState, AppDispatch } from "../../store";
+import { fetchShippingZones, deleteShippingZone } from "../../store/slices/shippingZone";
 import {
   CheckCircle,
   XCircle,
@@ -15,24 +15,47 @@ import {
   X,
   AlertTriangle,
   Plus,
-  MapPin,
 } from "lucide-react";
 import PopupAlert from "../../components/popUpAlert";
-import { Link } from "react-router";
-import {
-  deleteShipping,
-  fetchShipping,
-} from "../../store/slices/shippingSlice";
+import { Link } from "react-router-dom";
+
+interface Zone {
+  _id: string;
+  shippingId: {
+    _id: string;
+    name: string;
+    carrier: string;
+    shippingMethod: string;
+    cost: number;
+    status: string;
+    description?: string;
+    estimatedDeliveryDays: {
+      min: number;
+      max: number;
+    };
+    supportedRegions: Array<{
+      country: string;
+      states?: string[];
+      postalCodes?: string[];
+    }>;
+  };
+  postalCodes: Array<{
+    _id: string;
+    code: string;
+    price: number;
+  }>;
+  createdAt: string;
+}
 
 // Delete Confirmation Modal Component
 const DeleteModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  category: Category | null;
+  zone: Zone | null;
   isDeleting: boolean;
-}> = ({ isOpen, onClose, onConfirm, category, isDeleting }) => {
-  if (!isOpen || !category) return null;
+}> = ({ isOpen, onClose, onConfirm, zone, isDeleting }) => {
+  if (!isOpen || !zone) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -52,7 +75,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Shipping Method
+                Delete Shipping Zone
               </h3>
             </div>
             <button
@@ -66,15 +89,15 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the Shipping Method{" "}
+              Are you sure you want to delete the shipping zone for{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.name}"
+                "{zone.shippingId?.name}"
               </strong>
               ?
             </p>
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              This action cannot be undone.
+              This action cannot be undone and will remove all postal codes and pricing for this zone.
             </p>
           </div>
 
@@ -111,19 +134,17 @@ const DeleteModal: React.FC<{
   );
 };
 
-const ShippingList: React.FC = () => {
+const ZoneList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, shippingList } = useSelector(
-    (state: RootState) => state.shipping
+  const { zoneList, loading, error, pagination } = useSelector(
+    (state: RootState) => state.shippingZone
   );
 
   // Local state for search, filter, pagination, popup
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
-    null
-  );
+  const [zoneToDelete, setZoneToDelete] = useState<Zone | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -135,7 +156,7 @@ const ShippingList: React.FC = () => {
   });
 
   const closeDeleteModal = () => {
-    setCategoryToDelete(null);
+    setZoneToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
@@ -143,31 +164,35 @@ const ShippingList: React.FC = () => {
   // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
-      dispatch(fetchShipping()); // In real app, pass search/filter params
+      dispatch(fetchShippingZones({}));
     }, 400);
     return () => clearTimeout(timer);
   }, [dispatch, searchInput, statusFilter, page, limit]);
 
-  // Pagination logic
-  const total = shippingList.length;
+  // Filter and pagination logic
+  const filteredZones = zoneList.filter(
+    (zone) =>
+      (!searchInput ||
+        zone.shippingId?.name?.toLowerCase()?.includes(searchInput?.toLowerCase()) ||
+        zone.shippingId?.carrier?.toLowerCase()?.includes(searchInput?.toLowerCase()) ||
+        zone.postalCodes?.some(pc => pc.code.includes(searchInput))) &&
+      (!statusFilter ||
+        (statusFilter === "active" ? zone.shippingId?.status === "active" : zone.shippingId?.status !== "active"))
+  );
+
+  const total = filteredZones.length;
   const totalPages = Math.ceil(total / limit) || 1;
-  const paginatedCoupons = shippingList
-    .filter(
-      (c) =>
-        (!searchInput ||
-          c?.code?.toLowerCase()?.includes(searchInput?.toLowerCase())) &&
-        (!statusFilter ||
-          (statusFilter === "active" ? c.isActive : !c.isActive))
-    )
-    .slice((page - 1) * limit, page * limit);
+  const paginatedZones = filteredZones.slice((page - 1) * limit, page * limit);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) setPage(newPage);
   };
+
   const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit);
     setPage(1);
   };
+
   const handleResetFilters = () => {
     setSearchInput("");
     setStatusFilter("");
@@ -187,14 +212,14 @@ const ShippingList: React.FC = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (categoryToDelete) {
+    if (zoneToDelete) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteShipping(categoryToDelete._id)).unwrap();
+        await dispatch(deleteShippingZone(zoneToDelete._id)).unwrap();
 
         setPopup({
-          message: `Shipping method "${categoryToDelete.name}" deleted successfully`,
+          message: `Shipping zone for "${zoneToDelete.shippingId?.name}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -202,30 +227,16 @@ const ShippingList: React.FC = () => {
         // Close modal and reset state
         closeDeleteModal();
 
-        // // Refresh the categories list
-        // const activeFilters = {
-        //   isDeleted: false,
-        //   ...(localFilters.status ? { status: localFilters.status } : {}),
-        // };
+        // Refresh the zones list
+        dispatch(fetchShippingZones({}));
 
-        dispatch(
-          fetchShipping({
-            // page: pagination?.page,
-            // limit: pagination.limit,
-            // filters: activeFilters,
-            // search: searchQuery || "", // Changed from searchFields to search
-            // sort: { createdAt: "desc" },
-          })
-        );
-
-        // Optional: Show success message
         console.log(
-          `Shipping method "${categoryToDelete.name}" deleted successfully`
+          `Shipping zone for "${zoneToDelete.shippingId?.name}" deleted successfully`
         );
       } catch (error) {
-        console.error("Failed to delete shipping method:", error);
+        console.error("Failed to delete shipping zone:", error);
         setPopup({
-          message: "Failed to delete shipping method. Please try again.",
+          message: "Failed to delete shipping zone. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -233,20 +244,35 @@ const ShippingList: React.FC = () => {
       }
     }
   };
-  const openDeleteModal = (category: Category) => {
-    setCategoryToDelete(category);
+
+  const openDeleteModal = (zone: Zone) => {
+    setZoneToDelete(zone);
     setDeleteModalOpen(true);
   };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-          Shipping List 
-        </h1>
-        <span className="text-gray-500 text-sm dark:text-gray-400">
-          Total: {total}
-        </span>
-      </div>
+  {/* Left side - Title */}
+  <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
+    Shipping Zones
+  </h1>
+
+  {/* Right side - Button + Total */}
+  <div className="flex items-center gap-4">
+    <Link to="/shipping/zone/create">
+      <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+        <Plus className="h-5 w-5" />
+        Zone
+      </button>
+    </Link>
+
+    <span className="text-gray-500 text-sm dark:text-gray-400">
+      Total: {total}
+    </span>
+  </div>
+</div>
+
 
       {/* Search & Filter */}
       <div className="bg-white shadow p-4 rounded-md mb-6 dark:bg-gray-900">
@@ -257,22 +283,10 @@ const ShippingList: React.FC = () => {
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by code..."
+              placeholder="Search by name, carrier, or postal code..."
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             />
           </div>
-           {/* Add Zone Button */}
-    <div>
-      <Link to={`/shipping/zone/list`}>
-        <button
-          className="flex items-center gap-2 px-3 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
-          title="Add Zone"
-        >
-          <MapPin className="w-5 h-5" />
-           Zone List
-        </button>
-      </Link>
-    </div>
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-gray-400" />
             <select
@@ -330,19 +344,25 @@ const ShippingList: React.FC = () => {
                 #
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Name
+                Shipping Method
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                Method
+                Carrier
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                cost
+                Base Cost
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                Postal Codes
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                Delivery Time
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                CreatedAt
+                Created At
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Action
@@ -350,57 +370,83 @@ const ShippingList: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-            {shippingList.length === 0 ? (
+            {paginatedZones.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center py-6 text-gray-400">
-                  No shipments found.
+                  No shipping zones found.
                 </td>
               </tr>
             ) : (
-              shippingList.map((coupon, idx) => (
+              paginatedZones.map((zone, idx) => (
                 <tr
-                  key={coupon._id}
+                  key={zone._id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {(page - 1) * limit + idx + 1}
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {coupon?.name}
+                    <div>
+                      <div className="font-semibold">{zone.shippingId?.name || "No Name"}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {zone.shippingId?.shippingMethod}
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon?.shippingMethod}
+                    {zone.shippingId?.carrier}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {coupon?.cost}
+                    ₹{zone.shippingId?.cost}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+  <div className="max-w-xs">
+    {zone.postalCodes?.length > 0 ? (
+      <div className="text-xs">
+        <span className="font-medium">{zone.postalCodes.length} codes</span>
+        <div className="flex items-center gap-1 text-gray-500 dark:text-gray-400 truncate">
+          {zone.postalCodes
+            .slice(0, 2)
+            .map((pc, idx) => (
+              <span key={idx}>{pc.code}</span>
+            ))
+            .reduce((prev, curr) => [prev, ", ", curr])}
+
+          {zone.postalCodes.length > 2 && (
+            <span className="ml-1 flex items-center justify-center w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-[11px] font-medium">
+              +{zone.postalCodes.length - 2}
+            </span>
+          )}
+        </div>
+      </div>
+    ) : (
+      <span className="italic text-gray-400">No postal codes</span>
+    )}
+  </div>
+</td>
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {zone.shippingId?.estimatedDeliveryDays?.min} - {zone.shippingId?.estimatedDeliveryDays?.max} days
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {coupon?.status === "active" ? (
+                    {zone.shippingId?.status === "active" ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(coupon?.createdAt).toLocaleDateString()}
+                    {new Date(zone.createdAt).toLocaleDateString()}
                   </td>
-
                   <td className="px-6 py-4 text-right space-x-2">
-             
-                    
-                    {/* <Link to={`/shipping/zone/list`}>
-                      <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                        <Plus className="h-5 w-5" />
-                      </button>
-                    </Link> */}
-                    <Link to={`/shipping/edit/${coupon._id}`}>
-                      <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                    <Link to={`/shipping/zone/edit/${zone._id}`}>
+                      <button className="text-blue-500 hover:text-blue-700 transition-colors" title="Edit Zone">
                         <Pencil className="h-5 w-5" />
                       </button>
                     </Link>
                     <button
-                      onClick={() => openDeleteModal(coupon)}
+                      onClick={() => openDeleteModal(zone)}
                       className="text-red-500 hover:text-red-700 transition-colors"
+                      title="Delete Zone"
                     >
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -460,11 +506,11 @@ const ShippingList: React.FC = () => {
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={categoryToDelete}
+        zone={zoneToDelete}
         isDeleting={isDeleting}
       />
     </div>
   );
 };
 
-export default ShippingList;
+export default ZoneList;
