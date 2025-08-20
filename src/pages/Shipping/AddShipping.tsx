@@ -677,7 +677,7 @@ export default function AddShipping() {
             </div>
 
             {/* Supported Regions Section */}
-            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+            {/* <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                   Supported Regions
@@ -829,7 +829,7 @@ export default function AddShipping() {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
 
             {/* Cash on Delivery Section */}
             <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">

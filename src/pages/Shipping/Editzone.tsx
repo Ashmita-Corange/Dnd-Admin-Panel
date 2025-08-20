@@ -6,31 +6,35 @@ import {
   fetchShippingZones,
   updateShippingZone,
 } from "../../store/slices/shippingZone";
-import { fetchShipping } from "../../store/slices/shippingSlice";
+import {
+  fetchShipping,
+  fetchShippingById,
+} from "../../store/slices/shippingSlice";
 import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { Plus, Minus, ArrowLeft } from "lucide-react";
+import axiosInstance from "../../services/axiosConfig";
 
 const EditZone: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
-  const { zoneList, loading, error } = useSelector(
-    (state: RootState) => state.shippingZone
-  );
   const shippingList = useSelector(
     (state: RootState) => state.shipping.shippingList
   );
-
+  const { loading, error } = useSelector(
+    (state: RootState) => state.shippingZone
+  );
   const [shippingZone, setShippingZone] = useState({
     shippingId: "",
     postalCodes: [{ code: "", price: 0 }],
     isActive: true,
   });
-
+  const [shipping, setShipping] = useState({});
+  const [zoneId, setZoneId] = useState<string | null>(null);
   const [originalZone, setOriginalZone] = useState<any>(null);
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -44,27 +48,36 @@ const EditZone: React.FC = () => {
     dispatch(fetchShipping({}));
   }, [dispatch]);
 
+  const getData = async () => {
+    try {
+      const response = await dispatch(fetchShippingById(id));
+      console.log("response is  ===> ", response);
+      if (response.error) {
+        return console.log("error in fetching data", error);
+      }
+      setShipping(response.payload);
+
+      const response2 = await axiosInstance.get(
+        `/shipping-zones/by-shipping/${id}`
+      );
+      if (response2.data.shippingZones.length > 0) {
+        setOriginalZone(response2.data.shippingZones[0].postalCodes);
+      } else {
+        setOriginalZone([{ code: "", price: 0 }]);
+      }
+      setZoneId(response2.data.shippingZones[0]._id);
+      console.log(
+        "zones data is ---> : ",
+        response2.data.shippingZones[0].postalCodes
+      );
+    } catch (error) {
+      console.log("error in fetching data", error);
+    }
+  };
   // Populate form when zoneList is loaded
   useEffect(() => {
-    if (zoneList.length && id) {
-      const zone = zoneList.find((z) => z._id === id);
-      if (zone) {
-        const zoneData = {
-          shippingId:
-            typeof zone.shippingId === "string"
-              ? zone.shippingId
-              : zone.shippingId?._id || "",
-          postalCodes: zone.postalCodes.map((pc) => ({
-            code: pc.code,
-            price: pc.price,
-          })),
-          isActive: zone.isActive !== undefined ? zone.isActive : true,
-        };
-        setShippingZone(zoneData);
-        setOriginalZone(zone);
-      }
-    }
-  }, [zoneList, id]);
+    getData();
+  }, [id]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -79,23 +92,29 @@ const EditZone: React.FC = () => {
     }
   };
 
-  const handlePostalCodeChange = (index: number, field: string, value: string | number) => {
-    const updatedPostalCodes = [...shippingZone.postalCodes];
-    (updatedPostalCodes[index] as any)[field] = field === "price" ? Number(value) : value;
-    setShippingZone({ ...shippingZone, postalCodes: updatedPostalCodes });
+  const handlePostalCodeChange = (
+    index: number,
+    field: string,
+    value: string | number
+  ) => {
+    console.log(value);
+    const data = [...originalZone];
+    if (field === "code") {
+      data[index] = { ...data[index], code: value };
+    } else {
+      data[index] = { ...data[index], price: value };
+    }
+    setOriginalZone(data);
   };
 
   const addPostalCode = () => {
-    setShippingZone({
-      ...shippingZone,
-      postalCodes: [...shippingZone.postalCodes, { code: "", price: 0 }],
-    });
+    setOriginalZone([...originalZone, { code: "", price: 0 }]);
   };
 
   const removePostalCode = (index: number) => {
-    if (shippingZone.postalCodes.length > 1) {
-      const updatedPostalCodes = shippingZone.postalCodes.filter((_, i) => i !== index);
-      setShippingZone({ ...shippingZone, postalCodes: updatedPostalCodes });
+    if (originalZone.length > 1) {
+      const updatedPostalCodes = originalZone.filter((_, i) => i !== index);
+      setOriginalZone(updatedPostalCodes);
     }
   };
 
@@ -103,19 +122,12 @@ const EditZone: React.FC = () => {
     e.preventDefault();
 
     // Validation
-    if (!shippingZone.shippingId.trim()) {
-      toast.error("Please select a shipping method.", {
-        duration: 8000,
-        position: "top-right",
-      });
-      return;
-    }
 
     const validPostalCodes = shippingZone.postalCodes.filter(
       (pc) => pc.code.trim() !== "" && pc.price >= 0
     );
 
-    if (validPostalCodes.length === 0) {
+    if (originalZone.length === 0) {
       toast.error("Please add at least one valid postal code with price.", {
         duration: 8000,
         position: "top-right",
@@ -124,7 +136,7 @@ const EditZone: React.FC = () => {
     }
 
     // Check for duplicate postal codes
-    const codes = validPostalCodes.map(pc => pc.code.trim().toLowerCase());
+    const codes = validPostalCodes.map((pc) => pc.code.trim().toLowerCase());
     const uniqueCodes = new Set(codes);
     if (codes.length !== uniqueCodes.size) {
       toast.error("Duplicate postal codes are not allowed.", {
@@ -133,15 +145,19 @@ const EditZone: React.FC = () => {
       });
       return;
     }
-
+    console.log("orignal data--===--> ", originalZone);
     // Clean up data before submission
     const zoneData = {
-      id: id!,
-      shippingId: shippingZone.shippingId,
-      postalCodes: validPostalCodes.map(pc => ({
-        code: pc.code.trim().toUpperCase(),
-        price: pc.price,
-      })),
+      id: zoneId,
+      shippingId: shipping?._id,
+      postalCodes: originalZone.map((pc) => {
+        const data = {
+          code: pc.code.trim().toUpperCase(),
+          price: parseInt(pc.price),
+        };
+
+        return data;
+      }),
       isActive: shippingZone.isActive,
     };
 
@@ -155,28 +171,33 @@ const EditZone: React.FC = () => {
       });
 
       setTimeout(() => {
-        navigate("/shipping/zone/list");
+        navigate("/shipping/list");
       }, 1500);
     } catch (err: any) {
       console.error("Error updating shipping zone:", err);
       setPopup({
         isVisible: true,
-        message: err?.message || "Failed to update shipping zone. Please try again.",
+        message:
+          err?.message || "Failed to update shipping zone. Please try again.",
         type: "error",
       });
     }
   };
 
   // Get selected shipping method details
-  const selectedShipping = shippingList.find(ship => ship._id === shippingZone.shippingId);
+  const selectedShipping = shippingList.find(
+    (ship) => ship._id === shippingZone.shippingId
+  );
 
-  if (!originalZone && zoneList.length > 0 && id) {
-    const zone = zoneList.find((z) => z._id === id);
+  if (!originalZone && originalZone?.length > 0 && id) {
+    const zone = originalZone?.find((z) => z._id === id);
     if (!zone) {
       return (
         <div className="h-fit rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
           <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400">Shipping zone not found.</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              Shipping zone not found.
+            </p>
             <button
               onClick={() => navigate("/shipping/zone/list")}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
@@ -207,9 +228,9 @@ const EditZone: React.FC = () => {
               Back to Zones
             </button>
           </div>
-          
+
           <PageBreadcrumb pageTitle="Edit Shipping Zone" />
-          
+
           {originalZone && (
             <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
@@ -217,10 +238,12 @@ const EditZone: React.FC = () => {
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700 dark:text-blue-300">
                 <div>
-                  <span className="font-medium">Original Method:</span> {originalZone.shippingId?.name || "N/A"}
+                  <span className="font-medium">Original Method:</span>{" "}
+                  {shipping?.name || "N/A"}
                 </div>
                 <div>
-                  <span className="font-medium">Postal Codes:</span> {originalZone.postalCodes?.length || 0}
+                  <span className="font-medium">Postal Codes:</span>{" "}
+                  {originalZone?.length || 0}
                 </div>
               </div>
             </div>
@@ -239,14 +262,15 @@ const EditZone: React.FC = () => {
                 </label>
                 <select
                   name="shippingId"
-                  value={shippingZone.shippingId}
+                  value={shipping._id}
                   onChange={handleChange}
                   className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                   required
+                  disabled
                 >
                   <option value="">Select a shipping method</option>
                   {shippingList
-                    .filter(ship => ship.status === "active")
+                    .filter((ship) => ship.status === "active")
                     .map((ship) => (
                       <option key={ship._id} value={ship._id}>
                         {ship.name} - {ship.carrier} ({ship.shippingMethod})
@@ -266,36 +290,47 @@ const EditZone: React.FC = () => {
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700 dark:text-blue-300">
                     <div>
-                      <span className="font-medium">Name:</span> {selectedShipping.name}
+                      <span className="font-medium">Name:</span>{" "}
+                      {selectedShipping.name}
                     </div>
                     <div>
-                      <span className="font-medium">Carrier:</span> {selectedShipping.carrier}
+                      <span className="font-medium">Carrier:</span>{" "}
+                      {selectedShipping.carrier}
                     </div>
                     <div>
-                      <span className="font-medium">Method:</span> {selectedShipping.shippingMethod}
+                      <span className="font-medium">Method:</span>{" "}
+                      {selectedShipping.shippingMethod}
                     </div>
                     <div>
-                      <span className="font-medium">Base Cost:</span> ₹{selectedShipping.cost}
+                      <span className="font-medium">Base Cost:</span> ₹
+                      {selectedShipping.cost}
                     </div>
                     <div>
-                      <span className="font-medium">Delivery:</span> {selectedShipping.estimatedDeliveryDays?.min} - {selectedShipping.estimatedDeliveryDays?.max} days
+                      <span className="font-medium">Delivery:</span>{" "}
+                      {selectedShipping.estimatedDeliveryDays?.min} -{" "}
+                      {selectedShipping.estimatedDeliveryDays?.max} days
                     </div>
                     <div>
-                      <span className="font-medium">Status:</span> 
-                      <span className={`ml-1 ${selectedShipping.status === 'active' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                      <span className="font-medium">Status:</span>
+                      <span
+                        className={`ml-1 ${
+                          selectedShipping.status === "active"
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
                         {selectedShipping.status}
                       </span>
                     </div>
                   </div>
                   {selectedShipping.description && (
                     <div className="mt-2">
-                      <span className="font-medium">Description:</span> {selectedShipping.description}
+                      <span className="font-medium">Description:</span>{" "}
+                      {selectedShipping.description}
                     </div>
                   )}
                 </div>
               )}
-
-             
             </div>
 
             {/* Postal Codes Section */}
@@ -315,81 +350,91 @@ const EditZone: React.FC = () => {
               </div>
 
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Update specific postal codes and their corresponding shipping prices for this zone. 
-                These prices will override the base shipping cost for orders to these postal codes.
+                Update specific postal codes and their corresponding shipping
+                prices for this zone. These prices will override the base
+                shipping cost for orders to these postal codes.
               </p>
 
               <div className="space-y-4">
-                {shippingZone.postalCodes.map((postalCode, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50"
-                  >
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-medium text-gray-700 dark:text-gray-300">
-                        Postal Code {index + 1}
-                      </h4>
-                      {shippingZone.postalCodes.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removePostalCode(index)}
-                          className="flex items-center gap-1 px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition duration-200"
-                        >
-                          <Minus className="w-3 h-3" />
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Postal Code <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={postalCode.code}
-                          onChange={(e) =>
-                            handlePostalCodeChange(index, "code", e.target.value)
-                          }
-                          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                          placeholder="e.g., 395006, 400001"
-                          required
-                        />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          Enter the postal/PIN code for this area
-                        </p>
+                {originalZone &&
+                  originalZone?.map((postalCode, index) => (
+                    <div
+                      key={index}
+                      className="border border-gray-300 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-800/50"
+                    >
+                      <div className="flex justify-between items-center mb-4">
+                        <h4 className="font-medium text-gray-700 dark:text-gray-300">
+                          Postal Code {index + 1}
+                        </h4>
+                        {originalZone.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removePostalCode(index)}
+                            className="flex items-center gap-1 px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition duration-200"
+                          >
+                            <Minus className="w-3 h-3" />
+                            Remove
+                          </button>
+                        )}
                       </div>
 
-                      <div>
-                        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                          Shipping Price (₹) <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="number"
-                          value={postalCode.price}
-                          onChange={(e) =>
-                            handlePostalCodeChange(index, "price", e.target.value)
-                          }
-                          min="0"
-                          step="0.01"
-                          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                          placeholder="0.00"
-                          required
-                        />
-                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          Shipping cost specific to this postal code
-                        </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Postal Code <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={postalCode.code}
+                            onChange={(e) =>
+                              handlePostalCodeChange(
+                                index,
+                                "code",
+                                e.target.value
+                              )
+                            }
+                            className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            placeholder="e.g., 395006, 400001"
+                            required
+                          />
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Enter the postal/PIN code for this area
+                          </p>
+                        </div>
+
+                        <div>
+                          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Shipping Price (₹){" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="number"
+                            value={postalCode.price}
+                            onChange={(e) =>
+                              handlePostalCodeChange(
+                                index,
+                                "price",
+                                e.target.value
+                              )
+                            }
+                            min="0"
+                            step="0.01"
+                            className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            placeholder="0.00"
+                            required
+                          />
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            Shipping cost specific to this postal code
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
-
             </div>
 
             {/* Zone Summary Section */}
-            {shippingZone.shippingId && shippingZone.postalCodes.some(pc => pc.code.trim()) && (
+            {shipping?._id && originalZone?.some((pc) => pc.code.trim()) && (
               <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
                   Updated Zone Summary
@@ -402,7 +447,7 @@ const EditZone: React.FC = () => {
                         Shipping Method:
                       </span>
                       <p className="text-gray-800 dark:text-white">
-                        {selectedShipping?.name || "Not selected"}
+                        {shipping?.name || "Not selected"}
                       </p>
                     </div>
                     <div>
@@ -410,7 +455,7 @@ const EditZone: React.FC = () => {
                         Carrier:
                       </span>
                       <p className="text-gray-800 dark:text-white">
-                        {selectedShipping?.carrier || "N/A"}
+                        {shipping?.carrier || "N/A"}
                       </p>
                     </div>
                     <div>
@@ -418,7 +463,7 @@ const EditZone: React.FC = () => {
                         Base Cost:
                       </span>
                       <p className="text-gray-800 dark:text-white">
-                        ₹{selectedShipping?.cost || 0}
+                        ₹{shipping?.cost || 0}
                       </p>
                     </div>
                     <div>
@@ -426,15 +471,21 @@ const EditZone: React.FC = () => {
                         Total Postal Codes:
                       </span>
                       <p className="text-gray-800 dark:text-white">
-                        {shippingZone.postalCodes.filter(pc => pc.code.trim()).length}
+                        {originalZone.filter((pc) => pc.code.trim()).length}
                       </p>
                     </div>
                     <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
                         Zone Status:
                       </span>
-                      <p className={`${shippingZone.isActive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {shippingZone.isActive ? 'Active' : 'Inactive'}
+                      <p
+                        className={`${
+                          shippingZone.isActive
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {shippingZone.isActive ? "Active" : "Inactive"}
                       </p>
                     </div>
                   </div>
@@ -444,8 +495,8 @@ const EditZone: React.FC = () => {
                       Updated Postal Code Pricing:
                     </span>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {shippingZone.postalCodes
-                        .filter(pc => pc.code.trim())
+                      {originalZone
+                        .filter((pc) => pc.code.trim())
                         .map((pc, idx) => (
                           <span
                             key={idx}
@@ -483,7 +534,8 @@ const EditZone: React.FC = () => {
                 </label>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Inactive zones will not be used for shipping calculations and postal code matching
+                Inactive zones will not be used for shipping calculations and
+                postal code matching
               </p>
             </div>
 
@@ -493,7 +545,7 @@ const EditZone: React.FC = () => {
                 <button
                   type="submit"
                   className="flex-1 sm:flex-none rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
+                  // disabled={loading}
                 >
                   {loading ? (
                     <div className="flex items-center justify-center gap-2">
@@ -522,11 +574,16 @@ const EditZone: React.FC = () => {
                           typeof originalZone.shippingId === "string"
                             ? originalZone.shippingId
                             : originalZone.shippingId?._id || "",
-                        postalCodes: originalZone.postalCodes.map((pc: any) => ({
-                          code: pc.code,
-                          price: pc.price,
-                        })),
-                        isActive: originalZone.isActive !== undefined ? originalZone.isActive : true,
+                        postalCodes: originalZone.postalCodes.map(
+                          (pc: any) => ({
+                            code: pc.code,
+                            price: pc.price,
+                          })
+                        ),
+                        isActive:
+                          originalZone.isActive !== undefined
+                            ? originalZone.isActive
+                            : true,
                       });
                       toast.success("Form reset to original values", {
                         duration: 3000,

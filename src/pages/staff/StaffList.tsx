@@ -12,12 +12,15 @@ import {
   RotateCcw,
   X,
   AlertTriangle,
+  RefreshCcw,
+  RefreshCw,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 import { deleteStaff, fetchStaff } from "../../store/slices/staff";
+import axiosInstance from "../../services/axiosConfig";
 
 interface Category {
   _id: string;
@@ -138,7 +141,7 @@ const StaffList: React.FC = () => {
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [ivrLoading, setIvrLoading] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
 
@@ -314,6 +317,27 @@ const StaffList: React.FC = () => {
     }
   };
 
+  const handleFetchIVRUser = async () => {
+    try {
+      setIvrLoading(true);
+      const response = await axiosInstance.get("/ivr/fetch-users");
+      console.log("Fetched IVR User successfully", response);
+      dispatch(
+        fetchStaff({
+          page: pagination.page,
+          limit: pagination.limit,
+          filters: activeFilters,
+          search: searchInput !== "" ? searchInput : undefined,
+          sort: { createdAt: "desc" },
+        })
+      );
+      setIvrLoading(false);
+    } catch (error) {
+      console.log("Failed to fetch IVR User:", error);
+      setIvrLoading(false);
+    }
+  };
+
   const generatePageNumbers = () => {
     const pages = [];
     const totalPages = pagination.totalPages;
@@ -341,9 +365,23 @@ const StaffList: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
             Staff List
           </h1>
-          <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination.total}
-          </span>
+
+          <div className="flex gap-4 items-center">
+            {" "}
+            <button
+              onClick={handleFetchIVRUser}
+              disabled={ivrLoading}
+              className="flex gap-2 items-center px-4 h-8 rounded-md text-sm  bg-blue-600 text-white"
+            >
+              <RefreshCw
+                className={`h-5 w-5 ${ivrLoading ? "animate-spin" : ""}`}
+              />
+              fetch IVR User
+            </button>
+            <span className="text-gray-500 text-sm dark:text-gray-400">
+              Total: {pagination.total}
+            </span>
+          </div>
         </div>
 
         {/* Search & Filter */}

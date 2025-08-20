@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Plus,
   MapPin,
+  Eye,
 } from "lucide-react";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
@@ -241,7 +242,7 @@ const ShippingList: React.FC = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-          Shipping List 
+          Shipping List
         </h1>
         <span className="text-gray-500 text-sm dark:text-gray-400">
           Total: {total}
@@ -261,18 +262,18 @@ const ShippingList: React.FC = () => {
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             />
           </div>
-           {/* Add Zone Button */}
-    <div>
-      <Link to={`/shipping/zone/list`}>
-        <button
-          className="flex items-center gap-2 px-3 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
-          title="Add Zone"
-        >
-          <MapPin className="w-5 h-5" />
-           Zone List
-        </button>
-      </Link>
-    </div>
+          {/* Add Zone Button */}
+          {/* <div>
+            <Link to={`/shipping/zone/list`}>
+              <button
+                className="flex items-center gap-2 px-3 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors"
+                title="Add Zone"
+              >
+                <MapPin className="w-5 h-5" />
+                Zone List
+              </button>
+            </Link>
+          </div> */}
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-gray-400" />
             <select
@@ -386,11 +387,9 @@ const ShippingList: React.FC = () => {
                   </td>
 
                   <td className="px-6 py-4 text-right space-x-2">
-             
-                    
                     <Link to={`/shipping/zone/edit/${coupon._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                        <Plus className="h-5 w-5" />
+                        <Eye className="h-5 w-5" />
                       </button>
                     </Link>
                     <Link to={`/shipping/edit/${coupon._id}`}>
