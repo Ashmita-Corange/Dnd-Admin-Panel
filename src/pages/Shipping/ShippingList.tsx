@@ -388,11 +388,11 @@ const ShippingList: React.FC = () => {
                   <td className="px-6 py-4 text-right space-x-2">
              
                     
-                    {/* <Link to={`/shipping/zone/list`}>
+                    <Link to={`/shipping/zone/edit/${coupon._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Plus className="h-5 w-5" />
                       </button>
-                    </Link> */}
+                    </Link>
                     <Link to={`/shipping/edit/${coupon._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Pencil className="h-5 w-5" />
