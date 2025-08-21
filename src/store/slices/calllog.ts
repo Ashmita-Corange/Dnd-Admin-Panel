@@ -34,6 +34,9 @@ interface CallLogState {
   pagination: Pagination;
   searchQuery: string;
   filters: Filters;
+  leadCallLogs: CallLog[]; // <-- Add this line
+  leadCallLogsLoading: boolean; // <-- Add this line
+  leadCallLogsError: string | null; // <-- Add this line
 }
 
 // ====================== Initial State ======================
@@ -44,6 +47,9 @@ const initialState: CallLogState = {
   pagination: { page: 1, limit: 10, total: 0, totalPages: 1 },
   searchQuery: "",
   filters: {},
+  leadCallLogs: [], // <-- Add this line
+  leadCallLogsLoading: false, // <-- Add this line
+  leadCallLogsError: null, // <-- Add this line
 };
 
 // ====================== Async Thunk ======================
@@ -84,6 +90,23 @@ export const fetchCallLogs = createAsyncThunk(
   }
 );
 
+// Fetch Call Logs for a specific lead
+export const fetchLeadCallLogs = createAsyncThunk(
+  "calllog/fetchLeadCallLogs",
+  async (leadId: string, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/calllog/lead/${leadId}`, {
+        headers: { "x-tenant": getTenantFromURL() },
+      });
+      // Assuming response.data.callLogs contains the call logs for the lead
+      console.log("Fetched lead call logs:", response.data.callLogs);
+      return response.data.callLogs;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.message || err.message);
+    }
+  }
+);
+
 // ====================== Slice ======================
 const calllogSlice = createSlice({
   name: "calllog",
@@ -108,6 +131,11 @@ const calllogSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    clearLeadCallLogs: (state) => {
+      state.leadCallLogs = [];
+      state.leadCallLogsError = null;
+      state.leadCallLogsLoading = false;
+    },
   },
 
   extraReducers: (builder) => {
@@ -126,6 +154,18 @@ const calllogSlice = createSlice({
       state.loading = false;
       state.error = action.payload as string;
     });
+    builder.addCase(fetchLeadCallLogs.pending, (state) => {
+      state.leadCallLogsLoading = true;
+      state.leadCallLogsError = null;
+    });
+    builder.addCase(fetchLeadCallLogs.fulfilled, (state, action) => {
+      state.leadCallLogsLoading = false;
+      state.leadCallLogs = action.payload || [];
+    });
+    builder.addCase(fetchLeadCallLogs.rejected, (state, action) => {
+      state.leadCallLogsLoading = false;
+      state.leadCallLogsError = action.payload as string;
+    });
   },
 });
 
@@ -135,6 +175,7 @@ export const {
   setPagination,
   resetFilters,
   clearError,
+  clearLeadCallLogs, // <-- Add this line
 } = calllogSlice.actions;
 
 export default calllogSlice.reducer;
