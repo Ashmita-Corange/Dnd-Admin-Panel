@@ -347,7 +347,7 @@ const CategoryList: React.FC = () => {
             Categories
           </h1>
           <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination.total}
+            Total: {pagination.totalDocuments ?? pagination.total}
           </span>
         </div>
 

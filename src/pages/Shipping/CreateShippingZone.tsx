@@ -8,9 +8,11 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { Plus, Minus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CreateShippingZone: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const { loading, error } = useSelector((state: RootState) => state.shippingZone);
   const shippingList = useSelector((state: RootState) => state.shipping.shippingList);
 
@@ -125,6 +127,11 @@ const CreateShippingZone: React.FC = () => {
         postalCodes: [{ code: "", price: 0 }],
         isActive: true,
       });
+
+      // Redirect to zone list after short delay (optional for popup visibility)
+      setTimeout(() => {
+        navigate("/shipping/zone/list");
+      }, 1200); // 1.2s delay for popup, adjust as needed
     } catch (err: any) {
       console.error("Error creating shipping zone:", err);
       setPopup({

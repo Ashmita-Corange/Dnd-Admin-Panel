@@ -1,4 +1,4 @@
-  import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
   import axiosInstance from "../../services/axiosConfig";
 
   interface Category {
@@ -19,6 +19,7 @@
 
   interface Pagination {
     total: number;
+    totalDocuments?: number;
     page: number;
     limit: number;
     totalPages: number;
@@ -94,10 +95,11 @@
       return {
         categories: data?.result || [],
         pagination: {
-          total: data?.total || 0,
-          page: data?.page || 1,
+          total: data?.totalDocuments ?? data?.total ?? 0,
+          totalDocuments: data?.totalDocuments ?? 0,
+          page: data?.currentPage ?? data?.page ?? 1,
           limit: limit,
-          totalPages: data?.totalPages || 0,
+          totalPages: data?.totalPages ?? 0,
         },
       };
     } catch (err: any) {
