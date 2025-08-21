@@ -28,6 +28,8 @@ import {
   Hash,
   Download
 } from "lucide-react";
+import IverLead from './IverLead';
+import { useNavigate } from "react-router-dom";
 
 // Updated status options based on API data
 const statusOptions = [
@@ -320,6 +322,9 @@ const IvrLogs: React.FC = () => {
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
   const [selectedCallLog, setSelectedCallLog] = useState<CallLog | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [leadIdForModal, setLeadIdForModal] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -341,8 +346,6 @@ const IvrLogs: React.FC = () => {
         limit: pagination.limit,
         filters: activeFilters,
         search: searchInput || "",
-        sortField: "createdAt",
-        sortOrder: "desc",
       })
     );
   }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters]);
@@ -358,8 +361,6 @@ const IvrLogs: React.FC = () => {
             ...(localFilters.disposition ? { disposition: localFilters.disposition } : {}),
           },
           search: searchInput || "",
-          sortField: "createdAt",
-          sortOrder: "desc",
         })
       );
     }
@@ -375,8 +376,6 @@ const IvrLogs: React.FC = () => {
           ...(localFilters.disposition ? { disposition: localFilters.disposition } : {}),
         },
         search: searchInput || "",
-        sortField: "createdAt",
-        sortOrder: "desc",
       })
     );
   };
@@ -476,13 +475,15 @@ const IvrLogs: React.FC = () => {
               </select>
             </div>
             
-            <button
-              onClick={handleResetFilters}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Reset
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleResetFilters}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                <RotateCcw className="h-4 w-4" />
+                Reset
+              </button>
+            </div>
           </div>
         </div>
 
@@ -572,27 +573,29 @@ const IvrLogs: React.FC = () => {
                           <span className="text-xs text-gray-400">Not Available</span>
                         )}
                       </td>
-                      {/* <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 text-gray-400 mr-2" />
-                          <div>
-                            <div className="text-sm text-gray-900">
-                              {new Date(log.createdAt).toLocaleDateString()}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              {new Date(log.createdAt).toLocaleTimeString()}
-                            </div>
-                          </div>
-                        </div>
-                      </td> */}
+                     
                       <td className="px-6 py-4 whitespace-nowrap">
                         <button
                           onClick={() => handleViewDetails(log)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-700 bg-indigo-100 hover:bg-indigo-200 transition-colors"
+                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-700 transition-colors mr-2"
                         >
-                          <Eye className="w-4 h-4 mr-1" />
+                          <Eye className="w-5 h-5 mr-1" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (log.leadId?._id) {
+                              setLeadIdForModal(log.leadId._id);
+                              setLeadModalOpen(true);
+                            }
+                          }}
+                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-green-700 transition-colors"
+                          title="View Lead Call Logs"
+                          disabled={!log.leadId?._id}
+                        >
+                          <Phone className="w-5 h-5" />
                         </button>
                       </td>
+
                     </tr>
                   ))
                 )}
@@ -653,6 +656,23 @@ const IvrLogs: React.FC = () => {
           setSelectedCallLog(null);
         }}
       />
+      {/* IverLead Modal */}
+      {leadModalOpen && leadIdForModal && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto relative md:p-8 shadow-lg">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                setLeadModalOpen(false);
+                setLeadIdForModal(null);
+              }}
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <IverLead leadId={leadIdForModal} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

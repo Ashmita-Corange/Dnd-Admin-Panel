@@ -55,6 +55,9 @@ const initialState: CallLogState = {
 // ====================== Async Thunk ======================
 
 // Fetch Call Logs
+// ====================== Async Thunk ======================
+
+// Fetch Call Logs
 export const fetchCallLogs = createAsyncThunk(
   "calllog/fetchCallLogs",
   async (params: any, { rejectWithValue }) => {
@@ -70,18 +73,21 @@ export const fetchCallLogs = createAsyncThunk(
         headers: { "x-tenant": getTenantFromURL() },
       });
 
-      // Updated extraction based on API response
-      const callLogs = response.data.callLogs;
-      const pagination = response.data.pagination;
-      console.log("Fetched call logs:", callLogs);
+      // ✅ handle multiple possible API structures
+      const callLogs =
+        response.data?.callLogs || response.data?.data?.callLogs || [];
+      const pagination =
+        response.data?.pagination || response.data?.data?.pagination || {};
+
+      console.log("Fetched call logs (parsed):", callLogs);
 
       return {
         data: callLogs,
         pagination: {
-          page: pagination.currentPage,
-          limit: pagination.itemsPerPage,
-          total: pagination.totalItems,
-          totalPages: pagination.totalPages,
+          page: pagination.currentPage || 1,
+          limit: pagination.itemsPerPage || 10,
+          total: pagination.totalItems || 0,
+          totalPages: pagination.totalPages || 1,
         },
       };
     } catch (err: any) {
@@ -90,17 +96,46 @@ export const fetchCallLogs = createAsyncThunk(
   }
 );
 
+
 // Fetch Call Logs for a specific lead
 export const fetchLeadCallLogs = createAsyncThunk(
   "calllog/fetchLeadCallLogs",
-  async (leadId: string, { rejectWithValue }) => {
+  async (params: string | { leadId: string; page?: number; limit?: number }, { rejectWithValue }) => {
     try {
+      let leadId: string;
+      let page: number | undefined;
+      let limit: number | undefined;
+
+      if (typeof params === "string") {
+        leadId = params;
+      } else {
+        leadId = params.leadId;
+        page = params.page;
+        limit = params.limit;
+      }
+
+      const queryParams: any = {};
+      if (page) queryParams.page = page;
+      if (limit) queryParams.limit = limit;
+
       const response = await axiosInstance.get(`/calllog/lead/${leadId}`, {
+        params: queryParams,
         headers: { "x-tenant": getTenantFromURL() },
       });
-      // Assuming response.data.callLogs contains the call logs for the lead
-      console.log("Fetched lead call logs:", response.data.callLogs);
-      return response.data.callLogs;
+
+      // Support pagination if returned
+      const callLogs = response.data.callLogs || [];
+      const pagination = response.data.pagination || {};
+
+      return {
+        callLogs,
+        pagination: {
+          page: pagination.currentPage || 1,
+          limit: pagination.itemsPerPage || 10,
+          total: pagination.totalItems || callLogs.length,
+          totalPages: pagination.totalPages || 1,
+        },
+      };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message || err.message);
     }
@@ -160,7 +195,14 @@ const calllogSlice = createSlice({
     });
     builder.addCase(fetchLeadCallLogs.fulfilled, (state, action) => {
       state.leadCallLogsLoading = false;
-      state.leadCallLogs = action.payload || [];
+      // Support both old and new payload shape
+      if (action.payload?.callLogs) {
+        state.leadCallLogs = action.payload.callLogs;
+        state.leadCallLogsPagination = action.payload.pagination;
+      } else {
+        state.leadCallLogs = action.payload || [];
+        state.leadCallLogsPagination = undefined;
+      }
     });
     builder.addCase(fetchLeadCallLogs.rejected, (state, action) => {
       state.leadCallLogsLoading = false;
