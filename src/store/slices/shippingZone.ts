@@ -137,20 +137,24 @@ export const fetchShippingZones = createAsyncThunk<
 export const updateShippingZone = createAsyncThunk<
   ShippingZone,
   UpdateShippingZonePayload
->("shippingZones/update", async ({ id, ...data }, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.put(`/shipping-zones/${id}`, data);
+>(
+  "shippingZones/update",
+  async ({ id, shippingId, ...data }, { rejectWithValue }) => {
+    try {
+      // Use shippingId for endpoint
+      const response = await axiosInstance.put(`/shipping-zones/${shippingId}`, data);
 
-    // if API returns success but missing _id, fallback to id
-    if (!response.data?.data) {
-      return { _id: id, ...data } as ShippingZone;
+      // if API returns success but missing _id, fallback to id
+      if (!response.data?.data) {
+        return { _id: id, shippingId, ...data } as ShippingZone;
+      }
+
+      return response.data.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message);
     }
-
-    return response.data.data;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
   }
-});
+);
 
 
 // Delete

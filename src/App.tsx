@@ -77,6 +77,7 @@ import EditStaff from "./pages/staff/EditStaff";
 import ZoneList from "./pages/Shipping/ZoneList";
 import CreateShippingZone from "./pages/Shipping/CreateShippingZone";
 import EditZone from "./pages/Shipping/Editzone";
+import IvrLogs from "./pages/Ivr/IvrLogs";
 
 // Lazy load pages
 
@@ -267,6 +268,9 @@ export default function App() {
               {/* Content Management Routes */}
 
               <Route path="/contents/list" element={<ContentList />} />
+
+
+              <Route path="/ivr/logs" element={<IvrLogs />} />
 
               <Route
                 path="/emailtemplate/list"

@@ -57,6 +57,7 @@ const EditZone: React.FC = () => {
       }
       setShipping(response.payload);
 
+      // Use id as shippingId for fetching zone
       const response2 = await axiosInstance.get(
         `/shipping-zones/by-shipping/${id}`
       );
@@ -149,7 +150,7 @@ const EditZone: React.FC = () => {
     // Clean up data before submission
     const zoneData = {
       id: zoneId,
-      shippingId: shipping?._id,
+      shippingId: id, // <-- use shippingId from route param
       postalCodes: originalZone.map((pc) => {
         const data = {
           code: pc.code.trim().toUpperCase(),
