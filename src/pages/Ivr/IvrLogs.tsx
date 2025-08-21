@@ -123,7 +123,7 @@ const CallDetailModal: React.FC<{
   if (!isOpen || !callLog) return null;
 
   return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 mt-25">
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 mt-22">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -286,33 +286,27 @@ const CallDetailModal: React.FC<{
           </div>
 
           {/* Recording Section */}
-          {callLog.recordingUrl && (
-             <div className="mt-6 p-4 bg-purple-50 rounded-lg">
-               <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
-                 <Headphones className="w-5 h-5" />
-                 Call Recording
-               </h4>
-               <div className="flex items-center gap-4">
-                 <audio controls className="flex-1">
-                   <source src={callLog.recordingUrl} type="audio/mpeg" />
-                   Your browser does not support the audio element.
-                 </audio>
-           
-                 {/* Download button */}
-                 <a
-                   href={callLog.recordingUrl}
-                   download={`call-recording-${callLog._id}.mp3`}
-                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                 >
-                   <Download className="w-4 h-4" />
-                   Download
-                 </a>
-               </div>
-             </div>
-           )}
-
-
-
+         {callLog.recordingUrl && (
+            <div className="mt-6 p-4 bg-purple-50 rounded-lg">
+              {console.log("🎧 Recording URL:", callLog.recordingUrl, "ID:", callLog._id)}
+          
+              <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                <Headphones className="w-5 h-5" />
+                Call Recording
+              </h4>
+              <div className="flex items-center gap-4">
+                {/* Direct src use karo */}
+                <audio
+                  controls
+                  preload="none"
+                  className="flex-1"
+                  src={callLog.recordingUrl} 
+                >
+                </audio>
+          
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
