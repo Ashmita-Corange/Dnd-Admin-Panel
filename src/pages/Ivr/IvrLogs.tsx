@@ -658,21 +658,25 @@ const IvrLogs: React.FC = () => {
       />
       {/* IverLead Modal */}
       {leadModalOpen && leadIdForModal && (
-        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto relative md:p-8 shadow-lg">
-            <button
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              onClick={() => {
-                setLeadModalOpen(false);
-                setLeadIdForModal(null);
-              }}
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <IverLead leadId={leadIdForModal} />
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative shadow-2xl border border-gray-200">
+      <button
+        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+        onClick={() => {
+          setLeadModalOpen(false);
+          setLeadIdForModal(null);
+        }}
+      >
+        {/* <X className="w-6 h-6" /> */}
+      </button>
+      <IverLead leadId={leadIdForModal} onClose={() => {
+        setLeadModalOpen(false);
+        setLeadIdForModal(null);
+      }} />
+    </div>
+  </div>
+)}
+
     </div>
   );
 };
