@@ -467,7 +467,7 @@ const BrandList: React.FC = () => {
                   </td>
 
                   <td className="px-6 py-4 text-sm">
-                    {cat.status == "active" || cat?.status == "Active" ? (
+                    {cat.status ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
