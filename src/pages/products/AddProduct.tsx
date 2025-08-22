@@ -88,6 +88,8 @@ interface ProductState {
   category: string;
   subcategory: string;
   brand: string;
+  price: string;
+  salePrice: string;
   images: Image[];
   thumbnail: Image | null;
   howToUseTitle: string;
@@ -112,6 +114,8 @@ export default function AddProduct() {
     name: "",
     description: "",
     category: "",
+    price: "",
+    salePrice: "",
     subcategory: "",
     brand: "",
     images: [],
@@ -502,7 +506,8 @@ export default function AddProduct() {
     formData.append("howToUseVideo", product.howToUseVideo);
     formData.append("descriptionVideo", product.descriptionVideo);
     formData.append("status", product.status);
-
+    formData.append("price", product.price);
+    formData.append("salePrice", product.salePrice);
     // Add search keywords
     product.searchKeywords.forEach((kw, index) => {
       formData.append(`searchKeywords[${index}]`, kw);
@@ -792,6 +797,37 @@ export default function AddProduct() {
                   onChange={(value: string) => {
                     setProduct({ ...product, description: value });
                   }}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="">
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Price <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="price"
+                  value={product.price}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
+                  placeholder="Enter product price"
+                  required
+                />
+              </div>
+              <div className="">
+                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Sale Price <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="salePrice"
+                  value={product.salePrice}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
+                  placeholder="Enter product sale price"
+                  required
                 />
               </div>
             </div>
