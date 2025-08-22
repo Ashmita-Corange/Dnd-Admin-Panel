@@ -78,6 +78,7 @@ import ZoneList from "./pages/Shipping/ZoneList";
 import CreateShippingZone from "./pages/Shipping/CreateShippingZone";
 import EditZone from "./pages/Shipping/Editzone";
 import IvrLogs from "./pages/Ivr/IvrLogs";
+import IverLead from "./pages/Ivr/IverLead";
 
 // Lazy load pages
 
@@ -271,6 +272,9 @@ export default function App() {
 
 
               <Route path="/ivr/logs" element={<IvrLogs />} />
+              <Route path="/ivr/lead-list/:leadId" element={<IverLead />} />
+
+              {/* Email Template Management Routes */}
 
               <Route
                 path="/emailtemplate/list"
