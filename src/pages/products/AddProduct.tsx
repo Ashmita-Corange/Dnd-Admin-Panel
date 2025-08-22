@@ -88,8 +88,8 @@ interface ProductState {
   category: string;
   subcategory: string;
   brand: string;
-  price: string;
-  salePrice: string;
+  // price: string;
+  // salePrice: string;
   images: Image[];
   thumbnail: Image | null;
   howToUseTitle: string;
@@ -114,8 +114,8 @@ export default function AddProduct() {
     name: "",
     description: "",
     category: "",
-    price: "",
-    salePrice: "",
+    // price: "",
+    // salePrice: "",
     subcategory: "",
     brand: "",
     images: [],
@@ -506,8 +506,8 @@ export default function AddProduct() {
     formData.append("howToUseVideo", product.howToUseVideo);
     formData.append("descriptionVideo", product.descriptionVideo);
     formData.append("status", product.status);
-    formData.append("price", product.price);
-    formData.append("salePrice", product.salePrice);
+    // formData.append("price", product.price);
+    // formData.append("salePrice", product.salePrice);
     // Add search keywords
     product.searchKeywords.forEach((kw, index) => {
       formData.append(`searchKeywords[${index}]`, kw);
@@ -801,7 +801,7 @@ export default function AddProduct() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-2 gap-4">
               <div className="">
                 <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Price <span className="text-red-500">*</span>
@@ -830,7 +830,7 @@ export default function AddProduct() {
                   required
                 />
               </div>
-            </div>
+            </div> */}
 
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">

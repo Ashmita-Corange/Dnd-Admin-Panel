@@ -118,8 +118,8 @@ export default function EditProduct() {
     category: "",
     subcategory: "",
     brand: "",
-    price: "",
-    salePrice: "",
+    // price: "",
+    // salePrice: "",
     images: [],
     thumbnail: null,
     howToUseTitle: "",
@@ -485,8 +485,8 @@ export default function EditProduct() {
     formData.append("howToUseVideo", product.howToUseVideo);
     formData.append("descriptionVideo", product.descriptionVideo);
     formData.append("status", product.status);
-    formData.append("price", product.price);
-    formData.append("salePrice", product.salePrice);
+    // formData.append("price", product.price);
+    // formData.append("salePrice", product.salePrice);
 
     product.searchKeywords.forEach((kw, index) => {
       formData.append(`searchKeywords[${index}]`, kw);
@@ -600,8 +600,8 @@ export default function EditProduct() {
         category: data.category?._id || data.category || "",
         subcategory: data.subcategory?._id || data.subcategory || "",
         brand: data.brand?._id || data.brand || "",
-        price: data.price || "",
-        salePrice: data.salePrice || "",
+        // price: data.price || "",
+        // salePrice: data.salePrice || "",
         images:
           data.images?.map((img: any) => ({
             file: img.url || img,
@@ -900,7 +900,7 @@ export default function EditProduct() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-2 gap-4">
               <div className="">
                 <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                   Price <span className="text-red-500">*</span>
@@ -929,7 +929,7 @@ export default function EditProduct() {
                   required
                 />
               </div>
-            </div>
+            </div> */}
             <div>
               <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Status
