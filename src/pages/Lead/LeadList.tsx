@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Search, 
-  Filter, 
-  RotateCcw, 
-  Edit, 
-  Trash2, 
-  ChevronLeft, 
-  ChevronRight, 
-  AlertTriangle, 
+import {
+  Search,
+  Filter,
+  RotateCcw,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  AlertTriangle,
   X,
   User,
   Pencil,
@@ -16,17 +16,17 @@ import {
   UserPlus,
   Check,
   ChevronDown,
-  FileText
+  FileText,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import { 
-  fetchLeads, 
-  deleteLead, 
-  setSearchQuery, 
-  setFilters, 
+import {
+  fetchLeads,
+  deleteLead,
+  setSearchQuery,
+  setFilters,
   resetFilters,
-  assignLeads
+  assignLeads,
 } from "../../store/slices/lead";
 import { fetchStaff } from "../../store/slices/staff";
 import { Lead } from "../../store/slices/lead";
@@ -36,17 +36,35 @@ import PopupAlert from "../../components/popUpAlert";
 // Helper function for status badges
 const getStatusBadge = (status: string) => {
   const statusConfig = {
-    new: { bg: "bg-blue-100 dark:bg-blue-900/20", text: "text-blue-800 dark:text-blue-200" },
-    contacted: { bg: "bg-yellow-100 dark:bg-yellow-900/20", text: "text-yellow-800 dark:text-yellow-200" },
-    qualified: { bg: "bg-purple-100 dark:bg-purple-900/20", text: "text-purple-800 dark:text-purple-200" },
-    converted: { bg: "bg-green-100 dark:bg-green-900/20", text: "text-green-800 dark:text-green-200" },
-    lost: { bg: "bg-red-100 dark:bg-red-900/20", text: "text-red-800 dark:text-red-200" },
+    new: {
+      bg: "bg-blue-100 dark:bg-blue-900/20",
+      text: "text-blue-800 dark:text-blue-200",
+    },
+    contacted: {
+      bg: "bg-yellow-100 dark:bg-yellow-900/20",
+      text: "text-yellow-800 dark:text-yellow-200",
+    },
+    qualified: {
+      bg: "bg-purple-100 dark:bg-purple-900/20",
+      text: "text-purple-800 dark:text-purple-200",
+    },
+    converted: {
+      bg: "bg-green-100 dark:bg-green-900/20",
+      text: "text-green-800 dark:text-green-200",
+    },
+    lost: {
+      bg: "bg-red-100 dark:bg-red-900/20",
+      text: "text-red-800 dark:text-red-200",
+    },
   };
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
-  
+  const config =
+    statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
+
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+    >
       {status?.charAt(0)?.toUpperCase() + status?.slice(1)}
     </span>
   );
@@ -131,7 +149,7 @@ const LeadDetailsModal: React.FC<{
                     Source
                   </label>
                   <p className="mt-1 text-sm text-gray-900 dark:text-white">
-                    {lead.source || 'Not specified'}
+                    {lead.source || "Not specified"}
                   </p>
                 </div>
                 {lead.company && (
@@ -148,9 +166,7 @@ const LeadDetailsModal: React.FC<{
                   <label className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                     Status
                   </label>
-                  <div className="mt-1">
-                    {getStatusBadge(lead.status)}
-                  </div>
+                  <div className="mt-1">{getStatusBadge(lead.status)}</div>
                 </div>
               </div>
             </div>
@@ -282,9 +298,11 @@ const DeleteModal: React.FC<{
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Are you sure you want to delete the lead{" "}
-              <strong className="text-gray-900 dark:text-white">
-                "{lead.fullName}"
-              </strong>
+              {lead.fullName &&
+                <strong className="text-gray-900 dark:text-white">
+                  "{lead.fullName}"
+                </strong>
+              }
               ?
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -328,9 +346,17 @@ const DeleteModal: React.FC<{
 const LeadList: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { leads = [], loading, error, pagination, searchQuery, filters } =
-    useAppSelector((state) => state.lead);
-  const { staff, loading: staffLoading } = useAppSelector((state) => state.staff);
+  const {
+    leads = [],
+    loading,
+    error,
+    pagination,
+    searchQuery,
+    filters,
+  } = useAppSelector((state) => state.lead);
+  const { staff, loading: staffLoading } = useAppSelector(
+    (state) => state.staff
+  );
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
@@ -338,7 +364,7 @@ const LeadList: React.FC = () => {
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [localFilters, setLocalFilters] = useState<Record<string, any>>({});
-  
+
   // Popup state for alerts
   const [popup, setPopup] = useState({
     message: "",
@@ -514,25 +540,29 @@ const LeadList: React.FC = () => {
   // Handle clicking outside dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowStaffDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   // Filter staff based on search term
-  const filteredStaff = staff.filter(staffMember =>
-    staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
-    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
+  const filteredStaff = staff.filter(
+    (staffMember) =>
+      staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
+      staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
   );
 
   // Get leads that can be assigned (only "new" status)
-  const assignableLeads = leads.filter(lead => lead.status === "new");
+  const assignableLeads = leads.filter((lead) => lead.status === "new");
 
   // Bulk assignment handlers
   const toggleAssignMode = () => {
@@ -543,9 +573,9 @@ const LeadList: React.FC = () => {
   };
 
   const handleLeadSelection = (leadId: string) => {
-    setSelectedLeads(prev => 
-      prev.includes(leadId) 
-        ? prev.filter(id => id !== leadId)
+    setSelectedLeads((prev) =>
+      prev.includes(leadId)
+        ? prev.filter((id) => id !== leadId)
         : [...prev, leadId]
     );
   };
@@ -554,11 +584,15 @@ const LeadList: React.FC = () => {
     if (selectedLeads.length === assignableLeads.length) {
       setSelectedLeads([]);
     } else {
-      setSelectedLeads(assignableLeads.map(lead => lead._id));
+      setSelectedLeads(assignableLeads.map((lead) => lead._id));
     }
   };
 
-  const handleStaffSelect = async (staffMember: { _id: string; name: string; email: string }) => {
+  const handleStaffSelect = async (staffMember: {
+    _id: string;
+    name: string;
+    email: string;
+  }) => {
     if (selectedLeads.length === 0) {
       setPopup({
         message: "Please select at least one lead to assign",
@@ -572,10 +606,12 @@ const LeadList: React.FC = () => {
     setShowStaffDropdown(false);
 
     try {
-      await dispatch(assignLeads({
-        leadIds: selectedLeads,
-        assignedTo: staffMember._id
-      })).unwrap();
+      await dispatch(
+        assignLeads({
+          leadIds: selectedLeads,
+          assignedTo: staffMember._id,
+        })
+      ).unwrap();
 
       setPopup({
         message: `Successfully assigned ${selectedLeads.length} lead(s) to ${staffMember.name}`,
@@ -638,13 +674,13 @@ const LeadList: React.FC = () => {
 
   // Generate avatar initials from full name
   const getAvatarInitials = (fullName: string) => {
-    if (!fullName || typeof fullName !== 'string') {
-      return 'NA';
+    if (!fullName || typeof fullName !== "string") {
+      return "NA";
     }
     return fullName
-      .split(' ')
-      .map(name => name.charAt(0))
-      .join('')
+      .split(" ")
+      .map((name) => name.charAt(0))
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
@@ -664,7 +700,7 @@ const LeadList: React.FC = () => {
             <span className="text-gray-500 text-sm dark:text-gray-400">
               Total: {pagination.total}
             </span>
-            
+
             {/* Show Assign Leads button only if there are assignable leads */}
             {assignableLeads.length > 0 && (
               <button
@@ -697,16 +733,19 @@ const LeadList: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-indigo-800 dark:text-indigo-200">
-                  {selectedLeads.length} of {assignableLeads.length} assignable lead(s) selected
+                  {selectedLeads.length} of {assignableLeads.length} assignable
+                  lead(s) selected
                 </span>
                 <button
                   onClick={handleSelectAll}
                   className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-200"
                 >
-                  {selectedLeads.length === assignableLeads.length ? "Deselect All" : "Select All"}
+                  {selectedLeads.length === assignableLeads.length
+                    ? "Deselect All"
+                    : "Select All"}
                 </button>
               </div>
-              
+
               {selectedLeads.length > 0 && (
                 <div className="relative" ref={dropdownRef}>
                   <div className="relative">
@@ -715,7 +754,11 @@ const LeadList: React.FC = () => {
                       value={staffSearchTerm}
                       onChange={handleStaffSearchChange}
                       onFocus={() => setShowStaffDropdown(true)}
-                      placeholder={staffLoading ? "Loading staff..." : "Search staff to assign..."}
+                      placeholder={
+                        staffLoading
+                          ? "Loading staff..."
+                          : "Search staff to assign..."
+                      }
                       className="w-64 rounded border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                       disabled={staffLoading || isAssigning}
                     />
@@ -727,7 +770,7 @@ const LeadList: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  
+
                   {showStaffDropdown && !staffLoading && !isAssigning && (
                     <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-10 max-h-60 overflow-y-auto">
                       {filteredStaff.length > 0 ? (
@@ -739,7 +782,11 @@ const LeadList: React.FC = () => {
                           >
                             <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center">
                               <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-                                {staffMember.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                {staffMember.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()}
                               </span>
                             </div>
                             <div>
@@ -754,7 +801,9 @@ const LeadList: React.FC = () => {
                         ))
                       ) : (
                         <div className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                          {staffSearchTerm ? "No staff members found" : "Type to search staff"}
+                          {staffSearchTerm
+                            ? "No staff members found"
+                            : "Type to search staff"}
                         </div>
                       )}
                     </div>
@@ -842,7 +891,10 @@ const LeadList: React.FC = () => {
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedLeads.length === assignableLeads.length && assignableLeads.length > 0}
+                      checked={
+                        selectedLeads.length === assignableLeads.length &&
+                        assignableLeads.length > 0
+                      }
                       onChange={handleSelectAll}
                       className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
                     />
@@ -875,9 +927,12 @@ const LeadList: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
-              {(!leads || leads.length === 0) ? (
+              {!leads || leads.length === 0 ? (
                 <tr>
-                  <td colSpan={isAssignMode ? 9 : 8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td
+                    colSpan={isAssignMode ? 9 : 8}
+                    className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+                  >
                     <div className="flex flex-col items-center gap-2">
                       <User className="w-12 h-12 text-gray-300 dark:text-gray-600" />
                       <p>No leads found</p>
@@ -886,7 +941,10 @@ const LeadList: React.FC = () => {
                 </tr>
               ) : (
                 (leads || []).map((lead, idx) => (
-                  <tr key={lead._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <tr
+                    key={lead._id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
                     {isAssignMode && (
                       <td className="px-6 py-4">
                         {lead.status === "new" ? (
@@ -909,12 +967,12 @@ const LeadList: React.FC = () => {
                     <td className="px-6 py-4">
                       <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/20 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                          {getAvatarInitials(lead.fullName || '')}
+                          {getAvatarInitials(lead.fullName || "")}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {lead.fullName || 'No Name'}
+                      {lead.fullName || "No Name"}
                       {lead.company && (
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {lead.company}
@@ -927,9 +985,7 @@ const LeadList: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {lead.phone}
                     </td>
-                    <td className="px-6 py-4">
-                      {getStatusBadge(lead.status)}
-                    </td>
+                    <td className="px-6 py-4">{getStatusBadge(lead.status)}</td>
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {lead.source || "Not specified"}
                     </td>
@@ -1011,7 +1067,7 @@ const LeadList: React.FC = () => {
         isVisible={popup.isVisible}
         onClose={() => setPopup({ ...popup, isVisible: false })}
       />
-      
+
       {/* Delete Modal */}
       <DeleteModal
         isOpen={deleteModalOpen}

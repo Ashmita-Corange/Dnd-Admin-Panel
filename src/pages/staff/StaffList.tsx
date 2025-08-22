@@ -62,7 +62,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Category
+                Delete Staff Member
               </h3>
             </div>
             <button
@@ -76,21 +76,13 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the category{" "}
+              Are you sure you want to delete the staff member{" "}
               <strong className="text-gray-900 dark:text-white">
                 "{category.name}"
               </strong>
               ?
             </p>
-            {category.subCategoryCount > 0 && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Warning:</strong> This category has{" "}
-                  {category.subCategoryCount} subcategory(ies). Deleting this
-                  category may affect related subcategories.
-                </p>
-              </div>
-            )}
+
             <p className="text-sm text-gray-500 dark:text-gray-400">
               This action cannot be undone.
             </p>
@@ -479,7 +471,7 @@ const StaffList: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {staff.map((cat, idx) => (
                 <tr
-                  key={cat._id}
+                  key={cat?._id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
@@ -487,14 +479,14 @@ const StaffList: React.FC = () => {
                   </td>
 
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {cat.name}
+                    {cat?.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {cat.email}
+                    {cat?.email}
                   </td>
 
                   <td className="px-6 py-4 text-sm">
-                    {cat.isActive ? (
+                    {cat?.isActive ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
@@ -502,10 +494,10 @@ const StaffList: React.FC = () => {
                   </td>
 
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(cat.createdAt).toLocaleDateString()}
+                    {new Date(cat?.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/staff/edit/${cat._id}`}>
+                    <Link to={`/staff/edit/${cat?._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Pencil className="h-5 w-5" />
                       </button>

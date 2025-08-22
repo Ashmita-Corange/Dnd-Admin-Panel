@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { User, Mail, Phone, FileText, Users, Search, ChevronDown, X } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  FileText,
+  Users,
+  Search,
+  ChevronDown,
+  X,
+} from "lucide-react";
 import { createLead, clearError } from "../../store/slices/lead";
 import { fetchStaff } from "../../store/slices/staff";
 import { RootState, AppDispatch } from "../../store";
@@ -23,42 +32,41 @@ interface PopupAlert {
   type: string;
 }
 
-const PopupAlert: React.FC<PopupAlert & { onClose: () => void }> = ({ 
-  message, 
-  type, 
-  isVisible, 
-  onClose 
+const PopupAlert: React.FC<PopupAlert & { onClose: () => void }> = ({
+  message,
+  type,
+  isVisible,
+  onClose,
 }) => {
   if (!isVisible) return null;
 
   return (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-md">
-  <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
-    <div className="flex items-center justify-between mb-4">
-      <h3
-        className={`text-lg font-semibold ${
-          type === 'success' ? 'text-green-600' : 'text-red-600'
-        }`}
-      >
-        {type === 'success' ? 'Success' : 'Error'}
-      </h3>
-      <button
-        onClick={onClose}
-        className="text-gray-400 hover:text-gray-600"
-      >
-        ×
-      </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-md">
+      <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full mx-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3
+            className={`text-lg font-semibold ${
+              type === "success" ? "text-green-600" : "text-red-600"
+            }`}
+          >
+            {type === "success" ? "Success" : "Error"}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
+        </div>
+        <p className="text-gray-700 dark:text-gray-300">{message}</p>
+        <button
+          onClick={onClose}
+          className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
+        >
+          Close
+        </button>
+      </div>
     </div>
-    <p className="text-gray-700 dark:text-gray-300">{message}</p>
-    <button
-      onClick={onClose}
-      className="mt-4 w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 transition"
-    >
-      Close
-    </button>
-  </div>
-</div>
-
   );
 };
 
@@ -67,14 +75,19 @@ const PageBreadcrumb: React.FC<{ pageTitle: string }> = ({ pageTitle }) => (
     <nav className="flex mb-4" aria-label="Breadcrumb">
       <ol className="flex items-center space-x-1 md:space-x-3">
         <li className="flex items-center">
-          <a href="#" className="text-gray-700 hover:text-blue-600 dark:text-gray-300">
+          <a
+            href="#"
+            className="text-gray-700 hover:text-blue-600 dark:text-gray-300"
+          >
             Home
           </a>
         </li>
         <li>
           <div className="flex items-center">
             <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-500 dark:text-gray-400">{pageTitle}</span>
+            <span className="text-gray-500 dark:text-gray-400">
+              {pageTitle}
+            </span>
           </div>
         </li>
       </ol>
@@ -88,7 +101,9 @@ const PageBreadcrumb: React.FC<{ pageTitle: string }> = ({ pageTitle }) => (
 const AddLead: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((state: RootState) => state.lead);
-  const { staff, loading: staffLoading } = useSelector((state: RootState) => state.staff);
+  const { staff, loading: staffLoading } = useSelector(
+    (state: RootState) => state.staff
+  );
   const [popup, setPopup] = useState<PopupAlert>({
     isVisible: false,
     message: "",
@@ -131,14 +146,17 @@ const AddLead: React.FC = () => {
   // Handle clicking outside dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsStaffDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -161,16 +179,23 @@ const AddLead: React.FC = () => {
   ];
 
   // Filter staff based on search term
-  const filteredStaff = staff.filter(staffMember =>
-    staffMember.name.toLowerCase().includes(staffSearchTerm.toLowerCase()) ||
-    staffMember.email.toLowerCase().includes(staffSearchTerm.toLowerCase())
+  const filteredStaff = staff.filter(
+    (staffMember) =>
+      staffMember?.name
+        ?.toLowerCase()
+        ?.includes(staffSearchTerm?.toLowerCase()) ||
+      staffMember?.email
+        ?.toLowerCase()
+        ?.includes(staffSearchTerm?.toLowerCase())
   );
 
   // Get selected staff member details
-  const selectedStaff = staff.find(s => s._id === formData.assignedTo);
+  const selectedStaff = staff.find((s) => s._id === formData.assignedTo);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -230,20 +255,30 @@ const AddLead: React.FC = () => {
         fullName: formData.fullName,
         email: formData.email,
         phone: formData.phone,
-        source: formData.source as "website" | "newsletter" | "popup" | "referral" | "manual" | "other",
+        source: formData.source as
+          | "website"
+          | "newsletter"
+          | "popup"
+          | "referral"
+          | "manual"
+          | "other",
         status: formData.status,
-        notes: formData.notes ? [{ 
-          note: formData.notes,
-          createdAt: new Date().toISOString()
-        }] : [],
+        notes: formData.notes
+          ? [
+              {
+                note: formData.notes,
+                createdAt: new Date().toISOString(),
+              },
+            ]
+          : [],
         assignedTo: formData.assignedTo || undefined,
       };
-      
+
       console.log("Lead Data:", leadData);
 
       // Dispatch the createLead action
       const result = await dispatch(createLead(leadData));
-      
+
       if (createLead.fulfilled.match(result)) {
         setPopup({
           isVisible: true,
@@ -262,12 +297,15 @@ const AddLead: React.FC = () => {
           assignedTo: "",
         });
       } else {
-        throw new Error(result.payload as string || "Failed to create lead");
+        throw new Error((result.payload as string) || "Failed to create lead");
       }
     } catch (error) {
       setPopup({
         isVisible: true,
-        message: error instanceof Error ? error.message : "Failed to create lead. Please try again.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to create lead. Please try again.",
         type: "error",
       });
     }
@@ -278,7 +316,7 @@ const AddLead: React.FC = () => {
       <div className="h-fit rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
         <div className="mx-auto w-full">
           <PageBreadcrumb pageTitle="Add Lead" />
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Basic Information Section */}
             <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
@@ -355,10 +393,18 @@ const AddLead: React.FC = () => {
                     <div className="relative">
                       <input
                         type="text"
-                        value={selectedStaff ? `${selectedStaff.name} - ${selectedStaff.email}` : staffSearchTerm}
+                        value={
+                          selectedStaff
+                            ? `${selectedStaff.name} - ${selectedStaff.email}`
+                            : staffSearchTerm
+                        }
                         onChange={handleStaffSearchChange}
                         onFocus={() => setIsStaffDropdownOpen(true)}
-                        placeholder={staffLoading ? "Loading staff..." : "Search and select staff member"}
+                        placeholder={
+                          staffLoading
+                            ? "Loading staff..."
+                            : "Search and select staff member"
+                        }
                         className="w-full rounded border border-gray-300 px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                         disabled={staffLoading}
                       />
@@ -367,7 +413,10 @@ const AddLead: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              setFormData(prev => ({ ...prev, assignedTo: "" }));
+                              setFormData((prev) => ({
+                                ...prev,
+                                assignedTo: "",
+                              }));
                               setStaffSearchTerm("");
                             }}
                             className="pointer-events-auto text-gray-400 hover:text-gray-600"
@@ -379,7 +428,7 @@ const AddLead: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {isStaffDropdownOpen && !staffLoading && (
                       <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg dark:bg-gray-800 dark:border-gray-600 max-h-60 overflow-y-auto">
                         {filteredStaff.length > 0 ? (
@@ -393,11 +442,17 @@ const AddLead: React.FC = () => {
                             {filteredStaff.map((staffMember) => (
                               <div
                                 key={staffMember._id}
-                                onClick={() => handleStaffSelect(staffMember._id)}
+                                onClick={() =>
+                                  handleStaffSelect(staffMember._id)
+                                }
                                 className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer flex flex-col"
                               >
-                                <span className="font-medium">{staffMember.name}</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">{staffMember.email}</span>
+                                <span className="font-medium">
+                                  {staffMember.name}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  {staffMember.email}
+                                </span>
                               </div>
                             ))}
                           </>
@@ -410,7 +465,9 @@ const AddLead: React.FC = () => {
                     )}
                   </div>
                   {staffLoading && (
-                    <p className="text-sm text-gray-500 mt-1">Loading staff...</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Loading staff...
+                    </p>
                   )}
                 </div>
               </div>
@@ -480,8 +537,6 @@ const AddLead: React.FC = () => {
                 />
               </div>
             </div>
-
-            
 
             {/* Submit Button */}
             <div className="pt-6">

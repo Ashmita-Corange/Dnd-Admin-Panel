@@ -433,6 +433,7 @@ const EditVariantList = () => {
                           e.currentTarget.src = "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200";
                         }}
                       />
+                      <h2>{img}</h2>
                       <button
                         type="button"
                         onClick={() => removeExistingImage(idx)}

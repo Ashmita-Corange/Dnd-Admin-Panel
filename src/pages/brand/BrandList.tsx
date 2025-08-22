@@ -452,7 +452,7 @@ const BrandList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <img
-                      src={`${import.meta.env.VITE_IMAGE_URL}/${cat?.image}`}
+                      src={`${import.meta.env.VITE_IMAGE_URL}${cat?.image}`}
                       onError={(e) => {
                         e.currentTarget.onerror = null;
                         e.currentTarget.src =

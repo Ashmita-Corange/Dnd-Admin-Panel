@@ -156,9 +156,13 @@ export const fetchProducts = createAsyncThunk<
   { tenant: string }
 >("products/fetchAll", async ({ tenant }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.get("/product", {
-      headers: { "x-tenant": getTenantFromURL() },
-    });
+    const queryParams = new URLSearchParams();
+
+    queryParams.append("limit", "500");
+
+    const response = await axiosInstance.get(
+      `/product?${queryParams.toString()}`
+    );
     console.log("Fetched products response:", response.data);
 
     // Correct extraction of products array

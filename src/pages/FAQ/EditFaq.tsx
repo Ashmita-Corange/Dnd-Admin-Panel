@@ -102,13 +102,14 @@ const EditFaq: React.FC = () => {
   useEffect(() => {
     if (id && faqs && faqs.length > 0) {
       const currentFaq = faqs.find(faq => faq._id === id);
+      console.log("Current FAQ:", currentFaq);
       if (currentFaq && !isFormLoaded) {
         setFormData({
           question: currentFaq.question || "",
           answer: currentFaq.answer || "",
           type: currentFaq.type || "website",
           status: currentFaq.status === "inactive" ? "inactive" : "active",
-          product: currentFaq.product || ""
+          product: currentFaq?.product || currentFaq?.product?._id 
         });
         setIsFormLoaded(true);
       }

@@ -10,9 +10,14 @@ import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import axiosInstance from "../../services/axiosConfig";
+import { useSearchParams } from "react-router-dom";
+
+
 
 export default function AddVariant() {
   const dispatch = useDispatch<AppDispatch>();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const {
     products = [],
     attributes = [],
@@ -35,6 +40,25 @@ export default function AddVariant() {
     images: [] as File[],
     attributes: [{ attributeId: "", value: "" }],
   });
+  // On mount, check for product in URL and set variant.productId
+  useEffect(() => {
+    const urlProductId = searchParams.get("product");
+    if (urlProductId && urlProductId !== variant.productId) {
+      setVariant((prev) => ({ ...prev, productId: urlProductId }));
+    }
+  }, [searchParams]);
+
+  // When productId changes, update the URL query param
+  useEffect(() => {
+    if (variant.productId) {
+      searchParams.set("product", variant.productId);
+      setSearchParams(searchParams, { replace: true });
+    } else {
+      searchParams.delete("product");
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant.productId]);
   const [tenant] = useState("tenant1"); // Replace with actual tenant logic
 
   useEffect(() => {
@@ -47,9 +71,9 @@ export default function AddVariant() {
   ) => {
     const { name, value, type } = e.target;
     if (type === "number") {
-      setVariant({ ...variant, [name]: parseFloat(value) || 0 });
+      setVariant((prev) => ({ ...prev, [name]: parseFloat(value) || 0 }));
     } else {
-      setVariant({ ...variant, [name]: value });
+      setVariant((prev) => ({ ...prev, [name]: value }));
     }
   };
 
@@ -59,9 +83,9 @@ export default function AddVariant() {
     }
   };
 
-  const handleAttributeChange = (idx: number, field: string, value: string) => {
+  const handleAttributeChange = (idx: number, field: "attributeId" | "value", value: string) => {
     const updated = [...variant.attributes];
-    updated[idx][field] = value;
+    updated[idx] = { ...updated[idx], [field]: value };
     setVariant({ ...variant, attributes: updated });
   };
 

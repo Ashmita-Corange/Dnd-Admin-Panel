@@ -82,7 +82,7 @@ export const fetchTemplates = createAsyncThunk<
     const data = response.data?.data;
 
     return {
-      templates: data.templates || [],
+      templates: data.result || [],
       pagination: {
         total: data.totalDocuments || 0,
         page: data.currentPage || page,
@@ -100,7 +100,8 @@ export const fetchTemplateById = createAsyncThunk<Template, string>(
   async (id, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/template?id=${id}`);
-      return response.data?.body?.message || response.data;
+      console.log("Fetched Template Data: ===>", response.data);
+      return response?.data?.body?.data || response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }

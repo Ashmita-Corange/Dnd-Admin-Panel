@@ -20,7 +20,11 @@ import PopupAlert from "../../../components/popUpAlert";
 import { Link } from "react-router";
 
 import { setSearchQuery } from "../../../store/slices/reviewSlice";
-import { fetchReviews, updateReview, deleteReview } from "../../../store/slices/reviewSlice";
+import {
+  fetchReviews,
+  updateReview,
+  deleteReview,
+} from "../../../store/slices/reviewSlice";
 
 interface Category {
   _id: string;
@@ -82,7 +86,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Product
+                Delete Review
               </h3>
             </div>
             <button
@@ -96,9 +100,9 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the product{" "}
+              Are you sure you want to delete the review for{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.name}"
+                "{category.productId.name}"
               </strong>
               ?
             </p>
@@ -164,8 +168,7 @@ const ReviewList: React.FC = () => {
     isVisible: false,
   });
 
-
-  const ImageUrl = import.meta.env.VITE_IMAGE_URL; 
+  const ImageUrl = import.meta.env.VITE_IMAGE_URL;
 
   // Debounce search input
   useEffect(() => {
@@ -453,7 +456,10 @@ const ReviewList: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {reviews?.length > 0 &&
                 reviews.map((review: Review, idx: number) => (
-                  <tr key={review._id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <tr
+                    key={review._id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                  >
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {(pagination.page - 1) * pagination.limit + idx + 1}
                     </td>
@@ -463,7 +469,7 @@ const ReviewList: React.FC = () => {
                     <td className="px-6 py-4">
                       {review.productId?.thumbnail?.url ? (
                         <img
-                          src={`${ImageUrl}/${review.productId.thumbnail.url}`}  
+                          src={`${ImageUrl}/${review.productId.thumbnail.url}`}
                           alt={review.productId.thumbnail.alt || "Product"}
                           className="w-12 h-12 object-cover rounded"
                         />
@@ -475,7 +481,9 @@ const ReviewList: React.FC = () => {
                       {review.userId?.name}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {review.comment || <span className="text-gray-400">No comment</span>}
+                      {review.comment || (
+                        <span className="text-gray-400">No comment</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-yellow-500 dark:text-yellow-400">
                       {review.rating}

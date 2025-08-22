@@ -637,13 +637,13 @@ export default function EditProduct() {
         })) || [
           { name: "", quantity: "", description: "", image: null, alt: "" },
         ],
-        benefits: data.benefits?.map((b: any) => ({
+        benefits: Object.values(data?.benefits)?.map((b: any) => ({
           title: b.title || "",
           description: b.description || "",
           image: b.image?.url || b.image || null,
           alt: b.image?.alt || "",
         })) || [{ title: "", description: "", image: null, alt: "" }],
-        precautions: data.precautions?.map((p: any) => ({
+        precautions: Object.values(data?.precautions)?.map((p: any) => ({
           title: p.title || "",
           description: p.description || "",
           image: p.image?.url || p.image || null,

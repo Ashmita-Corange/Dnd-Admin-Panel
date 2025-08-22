@@ -104,7 +104,7 @@ export const createProduct = createAsyncThunk<Product, any>(
           "Content-Type": "multipart/form-data",
         },
       });
-      return response.data?.data || {};
+      return response.data || {};
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
     }
@@ -129,7 +129,7 @@ export const fetchProductById = createAsyncThunk<Product, string>(
   async (productId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/product/${productId}`);
-      console?.log("dat fetc",response.data);
+      console?.log("dat fetc", response.data);
       return response.data?.product || {};
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);

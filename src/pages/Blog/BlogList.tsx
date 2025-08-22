@@ -59,7 +59,7 @@ const DeleteModal: React.FC<{
                 <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Delete Category
+                Delete Blog
               </h3>
             </div>
             <button
@@ -73,21 +73,13 @@ const DeleteModal: React.FC<{
           {/* Content */}
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
-              Are you sure you want to delete the category{" "}
+              Are you sure you want to delete the Blog{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.name}"
+                "{category.title}"
               </strong>
               ?
             </p>
-            {category.subCategoryCount > 0 && (
-              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-3 mb-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  <strong>Warning:</strong> This category has{" "}
-                  {category.subCategoryCount} subcategory(ies). Deleting this
-                  category may affect related subcategories.
-                </p>
-              </div>
-            )}
+
             <p className="text-sm text-gray-500 dark:text-gray-400">
               This action cannot be undone.
             </p>
@@ -190,7 +182,7 @@ const BlogList: React.FC = () => {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-        search: searchInput !== "" ? searchInput : undefined,
+          search: searchInput !== "" ? searchInput : undefined,
           sort: { createdAt: "desc" },
         })
       );
@@ -295,7 +287,7 @@ const BlogList: React.FC = () => {
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-        search: searchInput !== "" ? searchInput : undefined,
+            search: searchInput !== "" ? searchInput : undefined,
             sort: { createdAt: "desc" },
           })
         );

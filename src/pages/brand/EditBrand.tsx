@@ -284,7 +284,7 @@ export default function EditBrand() {
                     <img
                       src={
                         typeof brand.image === "string"
-                          ? brand.image
+                          ? `${import.meta.env.VITE_IMAGE_URL}${brand?.image}`
                           : URL.createObjectURL(brand.image)
                       }
                       alt="Brand Preview"

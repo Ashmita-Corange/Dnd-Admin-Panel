@@ -12,6 +12,7 @@ import {
   RotateCcw,
   X,
   AlertTriangle,
+  Layers2,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 
@@ -265,7 +266,7 @@ const ProductList: React.FC = () => {
         );
 
         // Optional: Show success message
-        console.log(`Product "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Product "${subcategoryToDelete.name}" deleted successfully`);
       } catch (error) {
         console.error("Failed to delete product:", error);
         setPopup({
@@ -444,6 +445,11 @@ const ProductList: React.FC = () => {
                       <Link to={`/product/edit/${cat._id}`}>
                         <button className="text-blue-500 hover:text-blue-700 transition-colors">
                           <Pencil className="h-5 w-5" />
+                        </button>
+                      </Link>
+                      <Link to={`/variant/add?product=${cat._id}`}>
+                        <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                          <Layers2 className="h-5 w-5" />
                         </button>
                       </Link>
                       <button

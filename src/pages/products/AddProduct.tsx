@@ -30,6 +30,7 @@ import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
 import { fetchBrands } from "../../store/slices/brandSlice";
 import { createFaq } from "../../store/slices/faq"; // Import the FAQ thunk
+import { Link } from "react-router";
 
 // Interfaces
 interface Category {
@@ -110,6 +111,8 @@ interface ProductState {
 
 export default function AddProduct() {
   const [activeTab, setActiveTab] = useState(0);
+  const [productId, setProductId] = useState<string>("");
+  const [variantPopup, setVariantPopup] = useState<boolean>(false);
   const [product, setProduct] = useState<ProductState>({
     name: "",
     description: "",
@@ -597,7 +600,10 @@ export default function AddProduct() {
 
     try {
       const response = await dispatch(createProduct(formData)).unwrap();
+      console.log("Product created successfully: >>> ", response);
       const createdProductId = response?.product?.data?._id;
+
+      setProductId(createdProductId);
       if (createProduct.fulfilled) {
         // FAQ integration: create FAQ for each item in product.qa
         if (product.qa && product.qa.length > 0 && createdProductId) {
@@ -618,6 +624,7 @@ export default function AddProduct() {
             }
           }
         }
+        setVariantPopup(true);
         setProduct({
           name: "",
           description: "",
@@ -1867,6 +1874,25 @@ export default function AddProduct() {
           type={popup.type}
           onClose={() => setPopup({ ...popup, isVisible: false })}
         />
+      )}
+
+      {variantPopup && (
+        <div className="h-screen w-full flex justify-center items-center fixed top-0 left-0 bg-black/20   z-[9999]">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Variants
+            </h3>
+            <p className="text-sm text-gray-600">
+              Add variants to the product by filling out the form below.
+            </p>
+
+            <Link to={`/variant/add?product=${productId}`}>
+              <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                Add Variant
+              </button>
+            </Link>
+          </div>
+        </div>
       )}
     </div>
   );

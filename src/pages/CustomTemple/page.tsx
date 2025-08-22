@@ -59,6 +59,7 @@ import {
 } from "../../store/slices/template";
 import { AppDispatch } from "../../store";
 import { Link, useLocation, useParams } from "react-router";
+import toast from "react-hot-toast";
 
 // Types for the component structure
 interface ComponentType {
@@ -1993,7 +1994,7 @@ export default function ProductPageBuilder() {
         });
 
       const templateData = {
-        productId: 123456, // Use actual product ID or fallback
+        // productId: 123456, // Use actual product ID or fallback
         layoutId: 1,
         layoutName: templateName,
         totalColumns: 3, // Maximum columns supported
@@ -2009,15 +2010,14 @@ export default function ProductPageBuilder() {
       const result = templateId
         ? await dispatch(updateTemplate({ id: templateId, data: templateData }))
         : await dispatch(createTemplate(templateData));
-
-      if (result.type === "templates/create/fulfilled") {
-        alert("Template saved successfully!");
+      if (result.type === "templates/update/fulfilled") {
+        toast.success("Template saved successfully!");
         console.log("Template created:", result.payload);
       } else {
-        throw new Error(result.payload || "Failed to save template");
+        toast.error("Failed to save template.");
+        console.log("Template save error:", result);
       }
     } catch (error) {
-      console.error("Error saving template:", error);
       alert("Failed to save template. Please try again.");
     }
   }, [
@@ -2043,15 +2043,13 @@ export default function ProductPageBuilder() {
       // If templateId exists, fetch and set template data
       if (templateId) {
         const res = await dispatch(fetchTemplateById(templateId));
-        const data = (res.payload as any)?.data as TemplateData;
-
+        console.log("Fetched Template Data:", res);
+        const data = res.payload;
         // Set layout configuration
-        setColumnGap(data.columnGap || 2);
-        setComponentGap(data.componentGap || 2);
-        setRowGap(data.rowGap || 4);
-        setTemplateName(data.layoutName || "");
-
-        console.log("Fetched Template Data:", data);
+        setColumnGap(data?.columnGap || 2);
+        setComponentGap(data?.componentGap || 2);
+        setRowGap(data?.rowGap || 4);
+        setTemplateName(data?.layoutName || "");
 
         // Transform template data to sections format
         if (data.columns && data.columns.length > 0) {
@@ -2300,7 +2298,7 @@ export default function ProductPageBuilder() {
                 className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
               >
                 <Save size={20} />
-               { templateId ? "Update Template" : "Save Template"}
+                {templateId ? "Update Template" : "Save Template"}
               </button>
             </div>
           </div>
