@@ -170,6 +170,32 @@ export const deleteShippingZone = createAsyncThunk<
   }
 });
 
+// Bulk Import Pincodes
+export const bulkImportPincodes = createAsyncThunk<
+  { success: boolean; message: string },
+  { shippingId: string; file: File }
+>("shippingZones/bulkImport", async ({ shippingId, file }, { rejectWithValue }) => {
+  try {
+    const formData = new FormData();
+    formData.append("shippingId", shippingId);
+    formData.append("file", file);
+
+    // If you need to add custom headers (token, tenant), do it here or in axios config
+    const response = await axiosInstance.post("/shipping-zones/import", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+    
+      },
+    });
+    return {
+      success: true,
+      message: response.data?.message || "Bulk import successful",
+    };
+  } catch (err: any) {
+    return rejectWithValue(err.response?.data?.message || err.message);
+  }
+});
+
 // --- Slice ---
 const shippingZoneSlice = createSlice({
   name: "shippingZones",
@@ -226,6 +252,19 @@ const shippingZoneSlice = createSlice({
         state.zoneList = state.zoneList.filter(
           (zone) => zone._id !== action.payload
         );
+      })
+      // Bulk Import
+      .addCase(bulkImportPincodes.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(bulkImportPincodes.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(bulkImportPincodes.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

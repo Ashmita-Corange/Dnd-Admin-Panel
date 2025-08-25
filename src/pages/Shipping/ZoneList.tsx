@@ -266,7 +266,12 @@ const ZoneList: React.FC = () => {
         Zone
       </button>
     </Link>
-
+    {/* Bulk Import Button */}
+    <Link to="/shipping/zone/bulk-import">
+      <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+        Bulk Import
+      </button>
+    </Link>
     <span className="text-gray-500 text-sm dark:text-gray-400">
       Total: {total}
     </span>

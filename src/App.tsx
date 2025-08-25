@@ -79,6 +79,7 @@ import CreateShippingZone from "./pages/Shipping/CreateShippingZone";
 import EditZone from "./pages/Shipping/Editzone";
 import IvrLogs from "./pages/Ivr/IvrLogs";
 import IverLead from "./pages/Ivr/IverLead";
+import BulkPincodeImport from "./pages/Shipping/BulkPincodeImport";
 
 // Lazy load pages
 
@@ -265,6 +266,7 @@ export default function App() {
               <Route path="/shipping/zone/list" element={<ZoneList />} />
               <Route path="/shipping/zone/create" element={<CreateShippingZone />} />
               <Route path="/shipping/zone/edit/:id" element={<EditZone />} />
+              <Route path="/bulkpincodeimport/add" element={<BulkPincodeImport />} />
 
               {/* Content Management Routes */}
 
