@@ -28,6 +28,7 @@ import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
 import { updateFaq } from "../../store/slices/faq"; // <-- import updateFaq thunk
 import { fetchBrands } from "../../store/slices/brandSlice";
+import axiosInstance from "../../services/axiosConfig";
 
 // Interfaces
 interface Category {
@@ -229,14 +230,6 @@ export default function EditProduct() {
         thumbnail: { ...product.thumbnail, alt: value },
       });
     }
-  };
-
-  const removeImage = (
-    index: number,
-    fieldName: "images" | "descriptionImages"
-  ) => {
-    const updatedImages = product[fieldName].filter((_, i) => i !== index);
-    setProduct({ ...product, [fieldName]: updatedImages });
   };
 
   const addHowToUseStep = () => {
@@ -606,6 +599,7 @@ export default function EditProduct() {
           data.images?.map((img: any) => ({
             file: img.url || img,
             alt: img.alt || "",
+            _id: img._id || "",
           })) || [],
         thumbnail: data.thumbnail
           ? {
@@ -620,6 +614,7 @@ export default function EditProduct() {
           data.descriptionImages?.map((img: any) => ({
             file: img.url || img,
             alt: img.alt || "",
+            _id: img._id || "",
           })) || [],
         descriptionVideo: data.descriptionVideo || "",
         highlights: data.highlights || [""],
@@ -758,6 +753,34 @@ export default function EditProduct() {
   // Remove QA handler for FAQ tab
   const removeQA = (index: number) => {
     setFaqList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeImage = (
+    index: number,
+    fieldName: "images" | "descriptionImages"
+  ) => {
+    const updatedImages = product[fieldName].filter((_, i) => i !== index);
+    setProduct({ ...product, [fieldName]: updatedImages });
+  };
+
+  const handleRemoveImage = async (image, index, fieldName) => {
+    try {
+      console.log("Removing image:", image);
+      if (image._id) {
+        const response = await axiosInstance.delete(
+          `/product/image/${image._id}`
+        );
+        console.log("Image removed successfully:", response);
+      }
+      removeImage(index, fieldName);
+    } catch (error) {
+      console.error("Error removing image:", error);
+      setPopup({
+        isVisible: true,
+        message: "Failed to remove image.",
+        type: "error",
+      });
+    }
   };
 
   useEffect(() => {
@@ -1008,7 +1031,9 @@ export default function EditProduct() {
                         />
                         <button
                           type="button"
-                          onClick={() => removeImage(index, "images")}
+                          onClick={() =>
+                            handleRemoveImage(image, index, "images")
+                          }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           <Trash2 size={14} />
@@ -1204,7 +1229,7 @@ export default function EditProduct() {
                         <button
                           type="button"
                           onClick={() =>
-                            removeImage(index, "descriptionImages")
+                            handleRemoveImage(image, index, "descriptionImages")
                           }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >

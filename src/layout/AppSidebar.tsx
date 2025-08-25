@@ -353,11 +353,11 @@ const AppSidebar: React.FC = () => {
     try {
       const response = await axiosInstance.get("/module");
 
-      const formattedItems: NavItem[] = response.data.modules.map(
+      const formattedItems: NavItem[] = response?.data?.modules?.map(
         (module: any) => {
           const name = module.name.toLowerCase().replace(/\s+/g, "");
 
-          const payload = {
+          const payload: any = {
             name: module.name,
             icon: <ListIcon />,
           };
@@ -378,7 +378,7 @@ const AppSidebar: React.FC = () => {
           }
           if (module.permissions.includes("create")) {
             payload.subItems = [
-              ...payload.subItems,
+              ...(payload.subItems || []),
               { name: `Add ${module.name}`, path: `/${name}/add` },
             ];
           }

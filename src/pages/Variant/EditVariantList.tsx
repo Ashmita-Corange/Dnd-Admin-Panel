@@ -2,11 +2,19 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router";
 import { AppDispatch, RootState } from "../../store";
-import { fetchProducts, updateVariant,  fetchAttributes, fetchVariants } from "../../store/slices/variant";
+import {
+  fetchProducts,
+  updateVariant,
+  fetchAttributes,
+  fetchVariants,
+} from "../../store/slices/variant";
 import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { ArrowLeft, Plus, X, Upload, Trash2 } from "lucide-react";
+import axiosInstance from "../../services/axiosConfig";
+
+const Image_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
 
 interface Variant {
   _id: string;
@@ -37,9 +45,18 @@ const EditVariantList = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  
-  const { products = [], attributes = [], variants = [], loading } = useSelector((state: RootState) => state.variant);
-  const [popup, setPopup] = useState({ isVisible: false, message: "", type: "" });
+
+  const {
+    products = [],
+    attributes = [],
+    variants = [],
+    loading,
+  } = useSelector((state: RootState) => state.variant);
+  const [popup, setPopup] = useState({
+    isVisible: false,
+    message: "",
+    type: "",
+  });
   const [currentVariant, setCurrentVariant] = useState<Variant | null>(null);
   const [variant, setVariant] = useState({
     productId: "",
@@ -63,13 +80,13 @@ const EditVariantList = () => {
         await Promise.all([
           dispatch(fetchProducts({ tenant })),
           dispatch(fetchAttributes({ page: 1, limit: 50 })),
-          dispatch(fetchVariants({ tenant }))
+          dispatch(fetchVariants({ tenant })),
         ]);
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     initializeData();
   }, [dispatch, tenant]);
 
@@ -88,21 +105,27 @@ const EditVariantList = () => {
           offerTag: foundVariant.offerTag || "",
           images: [],
           existingImages: foundVariant.images || [],
-          attributes: foundVariant.attributes.length > 0 
-            ? foundVariant.attributes.map(attr => ({
-                attributeId: attr.attributeId,
-                value: attr.value
-              }))
-            : [{ attributeId: "", value: "" }],
+          attributes:
+            foundVariant.attributes.length > 0
+              ? foundVariant.attributes.map((attr) => ({
+                  attributeId: attr.attributeId,
+                  value: attr.value,
+                }))
+              : [{ attributeId: "", value: "" }],
         });
       } else {
-        toast.error("Variant not found", { duration: 8000, position: "top-right" });
+        toast.error("Variant not found", {
+          duration: 8000,
+          position: "top-right",
+        });
         navigate("/variants");
       }
     }
   }, [id, variants, navigate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     if (type === "number") {
       setVariant({ ...variant, [name]: parseFloat(value) || 0 });
@@ -124,8 +147,37 @@ const EditVariantList = () => {
   };
 
   const removeExistingImage = (index: number) => {
-    const updatedExistingImages = variant.existingImages.filter((_, i) => i !== index);
+    const updatedExistingImages = variant.existingImages.filter(
+      (_, i) => i !== index
+    );
     setVariant({ ...variant, existingImages: updatedExistingImages });
+  };
+
+  const getImageUrl = (image: File | string | null) => {
+    if (typeof image === "string") {
+      return `${Image_URL}/${image}`;
+    } else if (image instanceof File) {
+      return URL.createObjectURL(image);
+    }
+    return "";
+  };
+  const handleRemoveImage = async (image, index) => {
+    try {
+      console.log("Removing image:", image);
+      const response = await axiosInstance.delete(
+        `/variant/image/${index}?index=${index}&type=images&variantId=${id}`
+      );
+      console.log("Image removed successfully:", response);
+
+      removeExistingImage(index);
+    } catch (error) {
+      console.error("Error removing image:", error);
+      setPopup({
+        isVisible: true,
+        message: "Failed to remove image.",
+        type: "error",
+      });
+    }
   };
 
   const handleAttributeChange = (idx: number, field: string, value: string) => {
@@ -135,17 +187,17 @@ const EditVariantList = () => {
   };
 
   const addAttribute = () => {
-    setVariant({ 
-      ...variant, 
-      attributes: [...variant.attributes, { attributeId: "", value: "" }] 
+    setVariant({
+      ...variant,
+      attributes: [...variant.attributes, { attributeId: "", value: "" }],
     });
   };
 
   const removeAttribute = (idx: number) => {
     if (variant.attributes.length > 1) {
-      setVariant({ 
-        ...variant, 
-        attributes: variant.attributes.filter((_, i) => i !== idx) 
+      setVariant({
+        ...variant,
+        attributes: variant.attributes.filter((_, i) => i !== idx),
       });
     }
   };
@@ -153,43 +205,61 @@ const EditVariantList = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitting variant:", variant);
-    
-    if (!variant.productId || !variant.title || !variant.sku || !variant.price || !variant.stock) {
-      toast.error("Please fill all required fields.", { duration: 8000, position: "top-right" });
+
+    if (
+      !variant.productId ||
+      !variant.title ||
+      !variant.sku ||
+      !variant.price ||
+      !variant.stock
+    ) {
+      toast.error("Please fill all required fields.", {
+        duration: 8000,
+        position: "top-right",
+      });
       return;
     }
 
     if (!id) {
-      toast.error("Variant ID is missing.", { duration: 8000, position: "top-right" });
+      toast.error("Variant ID is missing.", {
+        duration: 8000,
+        position: "top-right",
+      });
       return;
     }
 
     try {
-      await dispatch(updateVariant({
-        tenant,
-        variantId: id,
-        productId: variant.productId,
-        title: variant.title,
-        sku: variant.sku,
-        price: variant.price,
-        salePrice: variant.salePrice,
-        stock: variant.stock,
-        offerTag: variant.offerTag,
-        images: variant.images,
-        attributes: variant.attributes.filter(attr => attr.attributeId && attr.value),
-      })).unwrap();
+      await dispatch(
+        updateVariant({
+          tenant,
+          variantId: id,
+          productId: variant.productId,
+          title: variant.title,
+          sku: variant.sku,
+          price: variant.price,
+          salePrice: variant.salePrice,
+          stock: variant.stock,
+          offerTag: variant.offerTag,
+          images: variant.images,
+          attributes: variant.attributes.filter(
+            (attr) => attr.attributeId && attr.value
+          ),
+        })
+      ).unwrap();
 
-      setPopup({ 
-        isVisible: true, 
-        message: "Variant updated successfully!", 
-        type: "success" 
+      setPopup({
+        isVisible: true,
+        message: "Variant updated successfully!",
+        type: "success",
       });
 
       // Refresh the variants list
       await dispatch(fetchVariants({ tenant }));
 
       // Refresh the current variant data in the form
-      const updatedVariants = await dispatch(fetchVariants({ tenant })).unwrap();
+      const updatedVariants = await dispatch(
+        fetchVariants({ tenant })
+      ).unwrap();
       const foundVariant = updatedVariants.find((v: Variant) => v._id === id);
       if (foundVariant) {
         setCurrentVariant(foundVariant);
@@ -203,23 +273,23 @@ const EditVariantList = () => {
           offerTag: foundVariant.offerTag || "",
           images: [],
           existingImages: foundVariant.images || [],
-          attributes: foundVariant.attributes.length > 0 
-            ? foundVariant.attributes.map(attr => ({
-                attributeId: attr.attributeId,
-                value: attr.value
-              }))
-            : [{ attributeId: "", value: "" }],
+          attributes:
+            foundVariant.attributes.length > 0
+              ? foundVariant.attributes.map((attr) => ({
+                  attributeId: attr.attributeId,
+                  value: attr.value,
+                }))
+              : [{ attributeId: "", value: "" }],
         });
       }
 
       // Do NOT navigate away after update
-
     } catch (err: any) {
       console.error("Update error:", err);
-      setPopup({ 
-        isVisible: true, 
-        message: err || "Failed to update variant. Please try again.", 
-        type: "error" 
+      setPopup({
+        isVisible: true,
+        message: err || "Failed to update variant. Please try again.",
+        type: "error",
       });
     }
   };
@@ -239,8 +309,11 @@ const EditVariantList = () => {
   return (
     <div>
       <Toaster position="top-right" />
-      <PageMeta title="Edit Variant | TailAdmin" description="Edit product variant" />
-      
+      <PageMeta
+        title="Edit Variant | TailAdmin"
+        description="Edit product variant"
+      />
+
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -271,53 +344,55 @@ const EditVariantList = () => {
                 Update the basic details of your variant
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Product <span className="text-red-500">*</span>
                 </label>
-                <select 
-                  name="productId" 
-                  value={variant.productId} 
-                  onChange={handleChange} 
-                  required 
+                <select
+                  name="productId"
+                  value={variant.productId}
+                  onChange={handleChange}
+                  required
                   className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
                 >
                   <option value="">Select Product</option>
                   {products?.map((prod: any) => (
-                    <option key={prod._id} value={prod._id}>{prod.name}</option>
+                    <option key={prod._id} value={prod._id}>
+                      {prod.name}
+                    </option>
                   ))}
                 </select>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Variant Title <span className="text-red-500">*</span>
                 </label>
-                <input 
-                  type="text" 
-                  name="title" 
-                  value={variant.title} 
-                  onChange={handleChange} 
-                  required 
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors" 
-                  placeholder="Enter variant title" 
+                <input
+                  type="text"
+                  name="title"
+                  value={variant.title}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                  placeholder="Enter variant title"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   SKU <span className="text-red-500">*</span>
                 </label>
-                <input 
-                  type="text" 
-                  name="sku" 
-                  value={variant.sku} 
-                  onChange={handleChange} 
-                  required 
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors" 
-                  placeholder="Enter SKU" 
+                <input
+                  type="text"
+                  name="sku"
+                  value={variant.sku}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                  placeholder="Enter SKU"
                 />
               </div>
             </div>
@@ -334,57 +409,61 @@ const EditVariantList = () => {
                 Set pricing and stock information
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Price <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
-                  <input 
-                    type="number" 
-                    name="price" 
-                    value={variant.price} 
-                    onChange={handleChange} 
-                    required 
-                    className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors" 
-                    min="0" 
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    name="price"
+                    value={variant.price}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                    min="0"
                     step="0.01"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Sale Price
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
-                  <input 
-                    type="number" 
-                    name="salePrice" 
-                    value={variant.salePrice} 
-                    onChange={handleChange} 
-                    className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors" 
-                    min="0" 
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    name="salePrice"
+                    value={variant.salePrice}
+                    onChange={handleChange}
+                    className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                    min="0"
                     step="0.01"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Stock Quantity <span className="text-red-500">*</span>
                 </label>
-                <input 
-                  type="number" 
-                  name="stock" 
-                  value={variant.stock} 
-                  onChange={handleChange} 
-                  required 
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors" 
-                  min="0" 
+                <input
+                  type="number"
+                  name="stock"
+                  value={variant.stock}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                  min="0"
                 />
               </div>
             </div>
@@ -394,13 +473,13 @@ const EditVariantList = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Offer Tag
                 </label>
-                <input 
-                  type="text" 
-                  name="offerTag" 
-                  value={variant.offerTag} 
-                  onChange={handleChange} 
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors" 
-                  placeholder="e.g., Best Seller, New Arrival" 
+                <input
+                  type="text"
+                  name="offerTag"
+                  value={variant.offerTag}
+                  onChange={handleChange}
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                  placeholder="e.g., Best Seller, New Arrival"
                 />
               </div>
             </div>
@@ -421,22 +500,23 @@ const EditVariantList = () => {
             {/* Existing Images */}
             {variant.existingImages.length > 0 && (
               <div className="space-y-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Current Images</h4>
+                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Current Images
+                </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {variant.existingImages.map((img, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600">
-                      <img 
-                        src={img} 
-                        alt={`Existing ${idx + 1}`} 
+                    <div
+                      key={idx}
+                      className="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
+                    >
+                      <img
+                        src={getImageUrl(img)}
+                        alt={`Existing ${idx + 1}`}
                         className="w-full h-24 object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200";
-                        }}
                       />
-                      <h2>{img}</h2>
                       <button
                         type="button"
-                        onClick={() => removeExistingImage(idx)}
+                        onClick={() => handleRemoveImage(img, idx)}
                         className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                       >
                         <X className="w-3 h-3" />
@@ -454,33 +534,38 @@ const EditVariantList = () => {
               </label>
               <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
                 <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                <input 
-                  type="file" 
-                  name="images" 
-                  multiple 
-                  onChange={handleImageChange} 
-                  accept="image/*" 
-                  className="hidden" 
+                <input
+                  type="file"
+                  name="images"
+                  multiple
+                  onChange={handleImageChange}
+                  accept="image/*"
+                  className="hidden"
                   id="image-upload"
                 />
-                <label 
-                  htmlFor="image-upload" 
+                <label
+                  htmlFor="image-upload"
                   className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium"
                 >
                   Click to upload images
                 </label>
-                <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF up to 10MB each</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  PNG, JPG, GIF up to 10MB each
+                </p>
               </div>
 
               {/* New Images Preview */}
               {variant.images.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   {variant.images.map((img, idx) => (
-                    <div key={idx} className="relative group rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-600">
-                      <img 
-                        src={URL.createObjectURL(img)} 
-                        alt={`New ${idx + 1}`} 
-                        className="w-full h-24 object-cover" 
+                    <div
+                      key={idx}
+                      className="relative group rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-600"
+                    >
+                      <img
+                        src={URL.createObjectURL(img)}
+                        alt={`New ${idx + 1}`}
+                        className="w-full h-24 object-cover"
                       />
                       <button
                         type="button"
@@ -507,14 +592,23 @@ const EditVariantList = () => {
                 Define variant attributes like color, size, etc.
               </p>
             </div>
-            
+
             <div className="space-y-4">
               {variant.attributes.map((attr, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div
+                  key={idx}
+                  className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
                   <div className="flex-1">
                     <select
                       value={attr.attributeId}
-                      onChange={e => handleAttributeChange(idx, "attributeId", e.target.value)}
+                      onChange={(e) =>
+                        handleAttributeChange(
+                          idx,
+                          "attributeId",
+                          e.target.value
+                        )
+                      }
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 transition-colors"
                     >
                       <option value="">Select Attribute</option>
@@ -530,13 +624,15 @@ const EditVariantList = () => {
                       type="text"
                       placeholder="Attribute value"
                       value={attr.value}
-                      onChange={e => handleAttributeChange(idx, "value", e.target.value)}
+                      onChange={(e) =>
+                        handleAttributeChange(idx, "value", e.target.value)
+                      }
                       className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 transition-colors"
                     />
                   </div>
-                  <button 
-                    type="button" 
-                    onClick={() => removeAttribute(idx)} 
+                  <button
+                    type="button"
+                    onClick={() => removeAttribute(idx)}
                     disabled={variant.attributes.length === 1}
                     className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Remove attribute"
@@ -545,10 +641,10 @@ const EditVariantList = () => {
                   </button>
                 </div>
               ))}
-              
-              <button 
-                type="button" 
-                onClick={addAttribute} 
+
+              <button
+                type="button"
+                onClick={addAttribute}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-medium transition-colors dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/40"
               >
                 <Plus className="w-4 h-4" />
@@ -566,8 +662,8 @@ const EditVariantList = () => {
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={loading}
               className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
@@ -584,11 +680,11 @@ const EditVariantList = () => {
         </form>
       </div>
 
-      <PopupAlert 
-        message={popup.message} 
-        type={popup.type} 
-        isVisible={popup.isVisible} 
-        onClose={() => setPopup({ ...popup, isVisible: false })} 
+      <PopupAlert
+        message={popup.message}
+        type={popup.type}
+        isVisible={popup.isVisible}
+        onClose={() => setPopup({ ...popup, isVisible: false })}
       />
     </div>
   );
