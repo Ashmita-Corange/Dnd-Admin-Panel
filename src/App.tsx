@@ -80,6 +80,7 @@ import EditZone from "./pages/Shipping/Editzone";
 import IvrLogs from "./pages/Ivr/IvrLogs";
 import IverLead from "./pages/Ivr/IverLead";
 import BulkPincodeImport from "./pages/Shipping/BulkPincodeImport";
+import SettingsList from "./pages/Settings/SettingsList";
 
 // Lazy load pages
 
@@ -306,6 +307,9 @@ export default function App() {
                <Route path="/staff/add" element={<AddStaff />} />
                <Route path="/staff/list" element={<StaffList />} />
                <Route path="/staff/edit/:id" element={<EditStaff />} />
+
+               {/* Settings Management Route */}
+               <Route path="/settings/list" element={<SettingsList />} />
             </Route>
           </Route>
 
