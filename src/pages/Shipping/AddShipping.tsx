@@ -20,6 +20,7 @@ export default function AddShipping() {
       | "international"
       | "pickup",
     cost: 0,
+    priority: 0,
     freeShippingThreshold: "",
     estimatedDeliveryDays: {
       min: 1,
@@ -568,6 +569,20 @@ export default function AddShipping() {
                     onChange={handleChange}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     placeholder="Enter tracking number"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Priority <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    name="priority"
+                    value={shipping.priority}
+                    onChange={handleChange}
+                    min="1"
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    required
                   />
                 </div>
               </div>

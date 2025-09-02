@@ -340,6 +340,9 @@ const ShippingList: React.FC = () => {
                 cost
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                Priority
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                 Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
@@ -375,6 +378,9 @@ const ShippingList: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {coupon?.cost}
                   </td>
+                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                    {coupon?.priority}
+                  </td>
                   <td className="px-6 py-4 text-sm">
                     {coupon?.status === "active" ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
@@ -397,12 +403,12 @@ const ShippingList: React.FC = () => {
                         <Pencil className="h-5 w-5" />
                       </button>
                     </Link>
-                    <button
+                    {/* <button
                       onClick={() => openDeleteModal(coupon)}
                       className="text-red-500 hover:text-red-700 transition-colors"
                     >
                       <Trash2 className="h-5 w-5" />
-                    </button>
+                    </button> */}
                   </td>
                 </tr>
               ))
