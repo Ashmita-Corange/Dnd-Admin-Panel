@@ -18,7 +18,6 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
@@ -37,8 +36,7 @@ import {
   Trash2,
   Save,
   Layout,
-  Move,
-  Maximize2,
+
   X,
   ShoppingCart,
   Gift,
@@ -58,7 +56,7 @@ import {
   updateTemplate,
 } from "../../store/slices/template";
 import { AppDispatch } from "../../store";
-import { Link, useLocation, useParams } from "react-router";
+import { Link, useLocation } from "react-router";
 import toast from "react-hot-toast";
 
 // Types for the component structure
@@ -106,40 +104,8 @@ interface TemplateComponent {
   settings: any;
 }
 
-interface TemplateData {
-  productId: number;
-  layoutId: number;
-  layoutName: string;
-  totalColumns: number;
-  columnGap: number;
-  componentGap: number;
-  rowGap: number;
-  columns: TemplateColumn[];
-}
 
-// Sample product data
-const sampleProduct = {
-  name: "Premium Wirel",
-  price: "$299.99",
-  images: [
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=500&fit=crop",
-    "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&h=500&fit=crop",
-  ],
-  description:
-    "Experience crystal-clear audio with our premium wireless headphones featuring advanced noise cancellation technology.",
-  features: [
-    "Bluetooth 5.0",
-    "30-hour battery",
-    "Quick charge",
-    "Noise cancellation",
-  ],
-  reviews: [
-    { name: "John D.", rating: 5, comment: "Amazing sound quality!" },
-    { name: "Sarah M.", rating: 4, comment: "Very comfortable for long use." },
-    { name: "Mike R.", rating: 5, comment: "Best headphones I've owned." },
-  ],
-};
+
 
 // Column width configurations (updated for 3 columns)
 const COLUMN_WIDTHS: Record<
@@ -357,503 +323,7 @@ function SortableItem({
 }
 
 // Individual component renderers (updated with full width styling and variants)
-function ProductImages({
-  component,
-  product,
-  settings,
-  onUpdateSettings,
-  onUpdateSpan,
-  isFullWidth = false,
-  isPreviewMode = false,
-}) {
-  const imageSettings = settings[component.id] || {
-    showThumbnails: true,
-    imageSize: "medium",
-    span: component.span || 1,
-    variant: "classic",
-  };
 
-  const renderClassicVariant = () => (
-    <div
-      className={`flex ${isFullWidth ? "flex-row gap-4" : "flex-col"} gap-2`}
-    >
-      <div
-        className={`${
-          imageSettings.imageSize === "small"
-            ? "max-w-24"
-            : imageSettings.imageSize === "medium"
-            ? "max-w-32"
-            : isFullWidth
-            ? "max-w-md"
-            : "w-full"
-        } ${isFullWidth ? "" : "mx-auto"}`}
-      >
-        <img
-          src={product.images[0]}
-          alt="Main product"
-          className="w-full h-auto rounded-lg object-cover"
-        />
-      </div>
-
-      {imageSettings.showThumbnails && (
-        <div
-          className={`flex ${isFullWidth ? "flex-col" : "flex-row"} gap-1 ${
-            isFullWidth ? "" : "justify-center"
-          } overflow-x-auto`}
-        >
-          {product.images.slice(1).map((img, idx) => (
-            <img
-              key={idx}
-              src={img}
-              alt={`Product ${idx + 2}`}
-              className="w-8 h-8 rounded object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderGalleryVariant = () => (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="col-span-2">
-        <img
-          src={product.images[0]}
-          alt="Main product"
-          className="w-full h-auto rounded-lg object-cover"
-        />
-      </div>
-      {product.images.slice(1, 3).map((img, idx) => (
-        <img
-          key={idx}
-          src={img}
-          alt={`Product ${idx + 2}`}
-          className="w-full h-24 rounded object-cover cursor-pointer hover:opacity-80 transition-opacity"
-        />
-      ))}
-    </div>
-  );
-
-  const renderShowcaseVariant = () => (
-    <div className="space-y-3">
-      <div className="relative">
-        <img
-          src={product.images[0]}
-          alt="Main product"
-          className="w-full h-64 rounded-lg object-cover"
-        />
-        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
-          Featured
-        </div>
-      </div>
-      {imageSettings.showThumbnails && (
-        <div className="flex gap-2 justify-center">
-          {product.images.slice(1).map((img, idx) => (
-            <img
-              key={idx}
-              src={img}
-              alt={`Product ${idx + 2}`}
-              className="w-16 h-16 rounded border-2 border-transparent hover:border-blue-500 object-cover cursor-pointer transition-all"
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderVariant = () => {
-    switch (imageSettings.variant) {
-      case "gallery":
-        return renderGalleryVariant();
-      case "showcase":
-        return renderShowcaseVariant();
-      default:
-        return renderClassicVariant();
-    }
-  };
-
-  return (
-    <div
-      className={`${
-        isPreviewMode
-          ? "bg-transparent"
-          : "bg-white rounded-lg shadow-lg border border-gray-200"
-      } ${isPreviewMode ? "" : "p-3 mb-2"} ${isFullWidth ? "w-full" : ""}`}
-    >
-      {!isPreviewMode && (
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <Image size={16} />
-            Product Images{" "}
-            {isFullWidth && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                Full Width
-              </span>
-            )}
-          </h3>
-          <div className="flex gap-1 items-center text-xs">
-            <select
-              value={imageSettings.variant}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...imageSettings,
-                  variant: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-              title="Component Variant"
-            >
-              {Object.entries(COMPONENT_VARIANTS[COMPONENT_TYPES.IMAGES]).map(
-                ([key, variant]) => (
-                  <option key={key} value={key}>
-                    {variant.label}
-                  </option>
-                )
-              )}
-            </select>
-            <select
-              value={imageSettings.span}
-              onChange={(e) => {
-                const newSpan = parseInt(e.target.value);
-                onUpdateSpan(component.id, newSpan);
-                onUpdateSettings(component.id, {
-                  ...imageSettings,
-                  span: newSpan,
-                });
-              }}
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-              title="Component Span"
-            >
-              {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
-                <option key={value} value={value}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={imageSettings.imageSize}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...imageSettings,
-                  imageSize: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              <option value="small">Small</option>
-              <option value="medium">Medium</option>
-              <option value="large">Large</option>
-            </select>
-            <label className="flex items-center gap-1 text-xs">
-              <input
-                type="checkbox"
-                checked={imageSettings.showThumbnails}
-                onChange={(e) =>
-                  onUpdateSettings(component.id, {
-                    ...imageSettings,
-                    showThumbnails: e.target.checked,
-                  })
-                }
-              />
-              Thumbs
-            </label>
-          </div>
-        </div>
-      )}
-
-      {renderVariant()}
-    </div>
-  );
-}
-
-function ProductDetails({
-  component,
-  product,
-  settings,
-  onUpdateSettings,
-  onUpdateSpan,
-  isFullWidth = false,
-  isPreviewMode = false,
-}) {
-  const detailSettings = settings[component.id] || {
-    showPrice: true,
-    showFeatures: true,
-    layout: "vertical",
-    span: component.span || 1,
-    variant: "standard",
-  };
-
-  const renderStandardVariant = () => (
-    <div
-      className={`${
-        detailSettings.layout === "horizontal" || isFullWidth
-          ? "flex gap-3"
-          : "space-y-2"
-      }`}
-    >
-      <div className="flex-1">
-        <h1
-          className={`${
-            isFullWidth ? "text-2xl" : "text-lg"
-          } font-bold text-gray-900 mb-1`}
-        >
-          {product.name}
-        </h1>
-        {detailSettings.showPrice && (
-          <p
-            className={`${
-              isFullWidth ? "text-xl" : "text-lg"
-            } font-semibold text-blue-600 mb-2`}
-          >
-            {product.price}
-          </p>
-        )}
-        <p
-          className={`text-gray-700 ${
-            isFullWidth ? "text-sm" : "text-xs"
-          } leading-relaxed`}
-        >
-          {product.description}
-        </p>
-      </div>
-
-      {detailSettings.showFeatures && (
-        <div className="flex-1">
-          <h4
-            className={`font-semibold text-gray-900 mb-1 ${
-              isFullWidth ? "text-sm" : "text-xs"
-            }`}
-          >
-            Key Features:
-          </h4>
-          <ul className="space-y-1">
-            {product.features.map((feature, idx) => (
-              <li
-                key={idx}
-                className={`flex items-center gap-1 ${
-                  isFullWidth ? "text-sm" : "text-xs"
-                }`}
-              >
-                <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-700">{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderDetailedVariant = () => (
-    <div className="space-y-3">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h1
-              className={`${
-                isFullWidth ? "text-2xl" : "text-lg"
-              } font-bold text-gray-900`}
-            >
-              {product.name}
-            </h1>
-            <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-              Premium
-            </span>
-          </div>
-          {detailSettings.showPrice && (
-            <div className="flex items-center gap-2 mb-2">
-              <p
-                className={`${
-                  isFullWidth ? "text-xl" : "text-lg"
-                } font-semibold text-blue-600`}
-              >
-                {product.price}
-              </p>
-              <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
-                Limited Time
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <p
-        className={`text-gray-700 ${
-          isFullWidth ? "text-sm" : "text-xs"
-        } leading-relaxed bg-gray-50 p-3 rounded-lg`}
-      >
-        {product.description}
-      </p>
-
-      {detailSettings.showFeatures && (
-        <div className="bg-blue-50 p-3 rounded-lg">
-          <h4
-            className={`font-semibold text-blue-900 mb-2 ${
-              isFullWidth ? "text-sm" : "text-xs"
-            }`}
-          >
-            ✨ Key Features:
-          </h4>
-          <div className="grid grid-cols-2 gap-2">
-            {product.features.map((feature, idx) => (
-              <div
-                key={idx}
-                className={`flex items-center gap-2 ${
-                  isFullWidth ? "text-sm" : "text-xs"
-                } bg-white p-2 rounded`}
-              >
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <span className="text-gray-700 font-medium">{feature}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const renderMinimalVariant = () => (
-    <div className="text-center space-y-2">
-      <h1
-        className={`${
-          isFullWidth ? "text-3xl" : "text-xl"
-        } font-light text-gray-900 mb-2`}
-      >
-        {product.name}
-      </h1>
-      {detailSettings.showPrice && (
-        <p
-          className={`${
-            isFullWidth ? "text-2xl" : "text-xl"
-          } font-light text-gray-600 mb-3`}
-        >
-          {product.price}
-        </p>
-      )}
-      <p
-        className={`text-gray-600 ${
-          isFullWidth ? "text-base" : "text-sm"
-        } leading-relaxed max-w-md mx-auto`}
-      >
-        {product.description}
-      </p>
-      {detailSettings.showFeatures && (
-        <div className="flex flex-wrap justify-center gap-2 mt-4">
-          {product.features.map((feature, idx) => (
-            <span
-              key={idx}
-              className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs"
-            >
-              {feature}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderVariant = () => {
-    switch (detailSettings.variant) {
-      case "detailed":
-        return renderDetailedVariant();
-      case "minimal":
-        return renderMinimalVariant();
-      default:
-        return renderStandardVariant();
-    }
-  };
-
-  return (
-    <div
-      className={`${
-        isPreviewMode
-          ? "bg-transparent"
-          : "bg-white rounded-lg shadow-lg border border-gray-200"
-      } ${isPreviewMode ? "" : "p-3 mb-2"} ${isFullWidth ? "w-full" : ""}`}
-    >
-      {!isPreviewMode && (
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm font-semibold flex items-center gap-2">
-            <FileText size={16} />
-            Product Details{" "}
-            {isFullWidth && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                Full Width
-              </span>
-            )}
-          </h3>
-          <div className="flex gap-1 items-center text-xs">
-            <select
-              value={detailSettings.variant}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...detailSettings,
-                  variant: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-              title="Component Variant"
-            >
-              {Object.entries(COMPONENT_VARIANTS[COMPONENT_TYPES.DETAILS]).map(
-                ([key, variant]) => (
-                  <option key={key} value={key}>
-                    {variant.label}
-                  </option>
-                )
-              )}
-            </select>
-            <select
-              value={detailSettings.span}
-              onChange={(e) => {
-                const newSpan = parseInt(e.target.value);
-                onUpdateSpan(component.id, newSpan);
-                onUpdateSettings(component.id, {
-                  ...detailSettings,
-                  span: newSpan,
-                });
-              }}
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
-                <option key={value} value={value}>
-                  {config.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={detailSettings.layout}
-              onChange={(e) =>
-                onUpdateSettings(component.id, {
-                  ...detailSettings,
-                  layout: e.target.value,
-                })
-              }
-              className="text-xs border border-gray-300 rounded px-1 py-1"
-            >
-              <option value="vertical">Vertical</option>
-              <option value="horizontal">Horizontal</option>
-            </select>
-            <label className="flex items-center gap-1 text-xs">
-              <input
-                type="checkbox"
-                checked={detailSettings.showPrice}
-                onChange={(e) =>
-                  onUpdateSettings(component.id, {
-                    ...detailSettings,
-                    showPrice: e.target.checked,
-                  })
-                }
-              />
-              Price
-            </label>
-          </div>
-        </div>
-      )}
-
-      {renderVariant()}
-    </div>
-  );
-}
 
 // Component renderer - delegated to componentVariants.tsx
 // (Note: ComponentRenderer is imported from componentVariants.tsx)
@@ -910,69 +380,70 @@ function ComponentLibrary({
   );
 
   return (
-    <div className="w-64 bg-gray-50 border-r border-gray-200 p-2 overflow-y-auto">
-      <Link to="/custom-temple/list">
-        <div className="flex items-center bg-blue-500/10 px-2 py-1 w-fit pr-4 rounded-md gap-2 mb-4 cursor-pointer">
-          <ArrowLeft className="h-5 w-5" />
-          <h2>Back</h2>
+    <div>
+      <div className="w-56 bg-gray-50 border-r border-gray-200 p-2 overflow-y-auto">
+        <Link to="/custom-temple/list">
+          <div className="flex items-center bg-blue-500/10 px-2 py-1 w-fit pr-4 rounded-md gap-2 mb-4 cursor-pointer">
+            <ArrowLeft className="h-5 w-5" />
+            <h2>Back</h2>
+          </div>
+        </Link>
+        <div className="mb-4">
+          <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            Template Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={name}
+            onChange={onChangeName}
+            className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            placeholder="Enter template name"
+            required
+          />
         </div>
-      </Link>
-      <div className="mb-4">
-        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-          Template Name <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="text"
-          name="name"
-          value={name}
-          onChange={onChangeName}
-          className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-          placeholder="Enter template name"
-          required
-        />
-      </div>
-      <h2 className="text-lg font-semibold mb-4 text-gray-900">Components</h2>
+        <h2 className="text-lg font-semibold mb-4 text-gray-900">Components</h2>
 
-      <div className="space-y-2">
-        {availableComponents.map((comp) => {
-          const IconComponent = comp.icon;
-          const isAdded = existingTypes.includes(comp.type);
+        <div className="space-y-2">
+          {availableComponents.map((comp) => {
+            const IconComponent = comp.icon;
+            const isAdded = existingTypes.includes(comp.type);
 
-          return (
-            <button
-              key={comp.type}
-              onClick={() => onAddComponent(comp.type, comp.title)}
-              disabled={isAdded}
-              className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg transition-colors ${
-                isAdded
-                  ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300"
-              }`}
-            >
-              <IconComponent
-                size={16}
-                className={isAdded ? "text-gray-400" : "text-gray-600"}
-              />
-              <span
-                className={`font-medium text-xs ${
-                  isAdded ? "text-gray-400" : "text-gray-900"
+            return (
+              <button
+                key={comp.type}
+                onClick={() => onAddComponent(comp.type, comp.title)}
+                disabled={isAdded}
+                className={`w-full flex items-center gap-3 px-3 py-2 border rounded-lg transition-colors ${
+                  isAdded
+                    ? "bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-white border-gray-200 hover:bg-blue-50 hover:border-blue-300"
                 }`}
               >
-                {comp.title}
-              </span>
-              {isAdded ? (
-                <span className="ml-auto text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                  Added
+                <IconComponent
+                  size={16}
+                  className={isAdded ? "text-gray-400" : "text-gray-600"}
+                />
+                <span
+                  className={`font-medium text-xs ${
+                    isAdded ? "text-gray-400" : "text-gray-900"
+                  }`}
+                >
+                  {comp.title}
                 </span>
-              ) : (
-                <Plus size={14} className="ml-auto text-gray-400" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+                {isAdded ? (
+                  <span className="ml-auto text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                    Added
+                  </span>
+                ) : (
+                  <Plus size={14} className="ml-auto text-gray-400" />
+                )}
+              </button>
+            );
+          })}
+        </div>
 
-      {/* <div className="mt-6 p-3 bg-blue-50 rounded-lg">
+        {/* <div className="mt-6 p-3 bg-blue-50 rounded-lg">
         <h3 className="font-semibold text-blue-900 mb-2 text-sm">Features</h3>
         <ul className="text-xs text-blue-800 space-y-1">
           <li>• Multiple component variants</li>
@@ -987,7 +458,7 @@ function ComponentLibrary({
           <li>• Section-based layout</li>
         </ul>
       </div> */}
-      {/* 
+        {/* 
       <div className="mt-4 p-3 bg-green-50 rounded-lg">
         <h3 className="font-semibold text-green-900 mb-2 text-sm">
           Component Variants
@@ -1012,7 +483,7 @@ function ComponentLibrary({
         </div>
       </div> */}
 
-      {/* <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+        {/* <div className="mt-4 p-3 bg-gray-50 rounded-lg">
         <h3 className="font-semibold text-gray-900 mb-2 text-sm">
           Current Configuration
         </h3>
@@ -1072,221 +543,222 @@ function ComponentLibrary({
         </div>
       </div> */}
 
-      {/* Component Settings Panel */}
-      {selectedComponent && (
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <h3 className="font-semibold text-yellow-900 mb-3 text-sm flex items-center gap-2">
-            <Settings size={14} />
-            Component Settings
-          </h3>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Selected: {selectedComponent.title}
-              </label>
-            </div>
-
-            {/* Component Span */}
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Width
-              </label>
-              <select
-                value={selectedComponent.span || 1}
-                onChange={(e) =>
-                  onUpdateSpan(selectedComponent.id, parseInt(e.target.value))
-                }
-                className="w-full text-xs border border-gray-300 rounded px-2 py-1"
-              >
-                {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
-                  <option key={value} value={value}>
-                    {config.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Component Variant */}
-            {COMPONENT_VARIANTS[selectedComponent.type] && (
+        {/* Component Settings Panel */}
+        {selectedComponent && (
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <h3 className="font-semibold text-yellow-900 mb-3 text-sm flex items-center gap-2">
+              <Settings size={14} />
+              Component Settings
+            </h3>
+            <div className="space-y-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Variant
+                  Selected: {selectedComponent.title}
+                </label>
+              </div>
+
+              {/* Component Span */}
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Width
                 </label>
                 <select
-                  value={
-                    componentSettings[selectedComponent.id]?.variant ||
-                    "default"
-                  }
+                  value={selectedComponent.span || 1}
                   onChange={(e) =>
-                    onUpdateSettings(selectedComponent.id, {
-                      ...componentSettings[selectedComponent.id],
-                      variant: e.target.value,
-                    })
+                    onUpdateSpan(selectedComponent.id, parseInt(e.target.value))
                   }
                   className="w-full text-xs border border-gray-300 rounded px-2 py-1"
                 >
-                  {Object.entries(
-                    COMPONENT_VARIANTS[selectedComponent.type]
-                  ).map(([key, variant]) => (
-                    <option key={key} value={key}>
-                      {variant.label}
+                  {Object.entries(COMPONENT_SPANS).map(([value, config]) => (
+                    <option key={value} value={value}>
+                      {config.label}
                     </option>
                   ))}
                 </select>
               </div>
-            )}
 
-            {/* Component-specific settings */}
-            {selectedComponent.type === COMPONENT_TYPES.IMAGES && (
-              <>
+              {/* Component Variant */}
+              {COMPONENT_VARIANTS[selectedComponent.type] && (
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Image Size
+                    Variant
                   </label>
                   <select
                     value={
-                      componentSettings[selectedComponent.id]?.imageSize ||
-                      "medium"
+                      componentSettings[selectedComponent.id]?.variant ||
+                      "default"
                     }
                     onChange={(e) =>
                       onUpdateSettings(selectedComponent.id, {
                         ...componentSettings[selectedComponent.id],
-                        imageSize: e.target.value,
+                        variant: e.target.value,
                       })
                     }
                     className="w-full text-xs border border-gray-300 rounded px-2 py-1"
                   >
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
+                    {Object.entries(
+                      COMPONENT_VARIANTS[selectedComponent.type]
+                    ).map(([key, variant]) => (
+                      <option key={key} value={key}>
+                        {variant.label}
+                      </option>
+                    ))}
                   </select>
                 </div>
-                <div>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={
-                        componentSettings[selectedComponent.id]
-                          ?.showThumbnails !== false
-                      }
-                      onChange={(e) =>
-                        onUpdateSettings(selectedComponent.id, {
-                          ...componentSettings[selectedComponent.id],
-                          showThumbnails: e.target.checked,
-                        })
-                      }
-                    />
-                    Show Thumbnails
-                  </label>
-                </div>
-              </>
-            )}
+              )}
 
-            {selectedComponent.type === COMPONENT_TYPES.DETAILS && (
-              <>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Layout
-                  </label>
-                  <select
-                    value={
-                      componentSettings[selectedComponent.id]?.layout ||
-                      "vertical"
-                    }
-                    onChange={(e) =>
-                      onUpdateSettings(selectedComponent.id, {
-                        ...componentSettings[selectedComponent.id],
-                        layout: e.target.value,
-                      })
-                    }
-                    className="w-full text-xs border border-gray-300 rounded px-2 py-1"
-                  >
-                    <option value="vertical">Vertical</option>
-                    <option value="horizontal">Horizontal</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={
-                        componentSettings[selectedComponent.id]?.showPrice !==
-                        false
+              {/* Component-specific settings */}
+              {selectedComponent.type === COMPONENT_TYPES.IMAGES && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Image Size
+                    </label>
+                    <select
+                      value={
+                        componentSettings[selectedComponent.id]?.imageSize ||
+                        "medium"
                       }
                       onChange={(e) =>
                         onUpdateSettings(selectedComponent.id, {
                           ...componentSettings[selectedComponent.id],
-                          showPrice: e.target.checked,
+                          imageSize: e.target.value,
                         })
                       }
-                    />
-                    Show Price
-                  </label>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={
-                        componentSettings[selectedComponent.id]
-                          ?.showFeatures !== false
-                      }
-                      onChange={(e) =>
-                        onUpdateSettings(selectedComponent.id, {
-                          ...componentSettings[selectedComponent.id],
-                          showFeatures: e.target.checked,
-                        })
-                      }
-                    />
-                    Show Features
-                  </label>
-                </div>
-              </>
-            )}
+                      className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={
+                          componentSettings[selectedComponent.id]
+                            ?.showThumbnails !== false
+                        }
+                        onChange={(e) =>
+                          onUpdateSettings(selectedComponent.id, {
+                            ...componentSettings[selectedComponent.id],
+                            showThumbnails: e.target.checked,
+                          })
+                        }
+                      />
+                      Show Thumbnails
+                    </label>
+                  </div>
+                </>
+              )}
 
-            {selectedComponent.type === COMPONENT_TYPES.DESCRIPTION && (
-              <>
-                <div>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={
-                        componentSettings[selectedComponent.id]?.showVideo !==
-                        false
+              {selectedComponent.type === COMPONENT_TYPES.DETAILS && (
+                <>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      Layout
+                    </label>
+                    <select
+                      value={
+                        componentSettings[selectedComponent.id]?.layout ||
+                        "vertical"
                       }
                       onChange={(e) =>
                         onUpdateSettings(selectedComponent.id, {
                           ...componentSettings[selectedComponent.id],
-                          showVideo: e.target.checked,
+                          layout: e.target.value,
                         })
                       }
-                    />
-                    Show Video
-                  </label>
-                </div>
-                <div>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input
-                      type="checkbox"
-                      checked={
-                        componentSettings[selectedComponent.id]?.showImages !==
-                        false
-                      }
-                      onChange={(e) =>
-                        onUpdateSettings(selectedComponent.id, {
-                          ...componentSettings[selectedComponent.id],
-                          showImages: e.target.checked,
-                        })
-                      }
-                    />
-                    Show Images
-                  </label>
-                </div>
-              </>
-            )}
+                      className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+                    >
+                      <option value="vertical">Vertical</option>
+                      <option value="horizontal">Horizontal</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={
+                          componentSettings[selectedComponent.id]?.showPrice !==
+                          false
+                        }
+                        onChange={(e) =>
+                          onUpdateSettings(selectedComponent.id, {
+                            ...componentSettings[selectedComponent.id],
+                            showPrice: e.target.checked,
+                          })
+                        }
+                      />
+                      Show Price
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={
+                          componentSettings[selectedComponent.id]
+                            ?.showFeatures !== false
+                        }
+                        onChange={(e) =>
+                          onUpdateSettings(selectedComponent.id, {
+                            ...componentSettings[selectedComponent.id],
+                            showFeatures: e.target.checked,
+                          })
+                        }
+                      />
+                      Show Features
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {selectedComponent.type === COMPONENT_TYPES.DESCRIPTION && (
+                <>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={
+                          componentSettings[selectedComponent.id]?.showVideo !==
+                          false
+                        }
+                        onChange={(e) =>
+                          onUpdateSettings(selectedComponent.id, {
+                            ...componentSettings[selectedComponent.id],
+                            showVideo: e.target.checked,
+                          })
+                        }
+                      />
+                      Show Video
+                    </label>
+                  </div>
+                  <div>
+                    <label className="flex items-center gap-2 text-xs">
+                      <input
+                        type="checkbox"
+                        checked={
+                          componentSettings[selectedComponent.id]
+                            ?.showImages !== false
+                        }
+                        onChange={(e) =>
+                          onUpdateSettings(selectedComponent.id, {
+                            ...componentSettings[selectedComponent.id],
+                            showImages: e.target.checked,
+                          })
+                        }
+                      />
+                      Show Images
+                    </label>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
