@@ -36,7 +36,6 @@ import {
   Trash2,
   Save,
   Layout,
-
   X,
   ShoppingCart,
   Gift,
@@ -103,9 +102,6 @@ interface TemplateComponent {
   isVisible: boolean;
   settings: any;
 }
-
-
-
 
 // Column width configurations (updated for 3 columns)
 const COLUMN_WIDTHS: Record<
@@ -323,7 +319,6 @@ function SortableItem({
 }
 
 // Individual component renderers (updated with full width styling and variants)
-
 
 // Component renderer - delegated to componentVariants.tsx
 // (Note: ComponentRenderer is imported from componentVariants.tsx)
@@ -1435,35 +1430,41 @@ export default function ProductPageBuilder() {
     return renderSections;
   }, [sections]);
 
+  // Transform UI sections state to API sections format for saving
+  const transformSectionsForSave = (sections, componentSettings) => {
+    return sections.map((section, sectionIdx) => ({
+      sectionId: section.id,
+      sectionTitle: section.title || `Section ${sectionIdx + 1}`,
+      columns: section.columns.map((column, columnIndex) => ({
+        columnIndex,
+        columnWidth: column.width * (100 / 3), // Convert to percentage (assuming 3 columns max)
+        columnTitle: `Column ${columnIndex + 1}`,
+        components: column.components
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+          .map((component) => ({
+            componentType: component.type,
+            componentVariant:
+              componentSettings[component.id]?.variant || "default",
+            componentSpan: component.span || 1,
+            sortOrder: component.order || 0,
+            isVisible: true,
+            settings: componentSettings[component.id] || {},
+          })),
+      })),
+    }));
+  };
+
   const handleSave = useCallback(async () => {
     try {
-      // Transform sections data to template format
-
       if (!templateName.trim()) {
         alert("Please enter a template name before saving.");
         return;
       }
 
-      const columnsData = sections
-        .filter((section) => section.type === "columns")
-        .flatMap((section) => {
-          return section.columns.map((column, columnIndex) => ({
-            columnIndex,
-            columnWidth: column.width * (100 / 3), // Convert to percentage (assuming 3 columns max)
-            columnTitle: `Column ${columnIndex + 1}`,
-            components: column.components
-              .sort((a, b) => (a.order || 0) - (b.order || 0))
-              .map((component) => ({
-                componentType: component.type,
-                componentVariant:
-                  componentSettings[component.id]?.variant || "default",
-                componentSpan: component.span || 1,
-                sortOrder: component.order || 0,
-                isVisible: true,
-                settings: componentSettings[component.id] || {},
-              })),
-          }));
-        });
+      const sectionsData = transformSectionsForSave(
+        sections,
+        componentSettings
+      );
 
       const templateData = {
         // productId: 123456, // Use actual product ID or fallback
@@ -1473,7 +1474,7 @@ export default function ProductPageBuilder() {
         columnGap,
         componentGap,
         rowGap,
-        columns: columnsData,
+        sections: sectionsData,
       };
 
       console.log("Saving template data:", templateData);
@@ -1482,7 +1483,7 @@ export default function ProductPageBuilder() {
       const result = templateId
         ? await dispatch(updateTemplate({ id: templateId, data: templateData }))
         : await dispatch(createTemplate(templateData));
-      if (result.type === "templates/update/fulfilled") {
+      if (result.type === "templates/create/fulfilled") {
         toast.success("Template saved successfully!");
         console.log("Template created:", result.payload);
       } else {
@@ -1523,90 +1524,77 @@ export default function ProductPageBuilder() {
         setRowGap(data?.rowGap || 4);
         setTemplateName(data?.layoutName || "");
 
-        // Transform template data to sections format
-        if (data.columns && data.columns.length > 0) {
-          // Group columns by their columnIndex to create sections
-          const maxColumnIndex = Math.max(
-            ...data.columns.map((col: TemplateColumn) => col.columnIndex)
-          );
-          const totalColumns = maxColumnIndex + 1;
-
-          // Create a new section with the template data
-          const newSection: SectionType = {
-            id: "section-1",
-            type: "columns",
-            order: 0,
-            columns: [],
-          };
-
-          // Initialize columns array
-          for (let i = 0; i < totalColumns; i++) {
-            newSection.columns.push({
-              id: `column-${i + 1}`,
-              width: 1, // Will be calculated from columnWidth
-              components: [],
-            });
-          }
-
-          // Process each column from template data
+        // Transform template data to sections format (new schema)
+        if (data.sections && data.sections.length > 0) {
+          const newSections: SectionType[] = [];
           const componentSettingsToSet: ComponentSettings = {};
 
-          data.columns.forEach((templateColumn: TemplateColumn) => {
-            const columnIndex = templateColumn.columnIndex;
+          data.sections.forEach((section: any, sectionIdx: number) => {
+            const newSection: SectionType = {
+              id: section.sectionId || `section-${sectionIdx + 1}`,
+              type: "columns",
+              order: sectionIdx,
+              columns: [],
+            };
 
-            // Calculate width (convert percentage back to 1-3 scale)
-            const widthRatio = templateColumn.columnWidth / (100 / 3);
-            const width = Math.round(widthRatio);
-            newSection.columns[columnIndex].width = Math.max(
-              1,
-              Math.min(3, width)
-            );
-
-            // Process components in this column
-            templateColumn.components.forEach(
-              (templateComponent: TemplateComponent) => {
-                const componentId = `${
-                  templateComponent.componentType
-                }-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-                const component: ComponentType = {
-                  id: componentId,
-                  type: templateComponent.componentType,
-                  title: getComponentTitle(templateComponent.componentType),
-                  span: templateComponent.componentSpan || 1,
-                  order: templateComponent.sortOrder || 0,
+            // Initialize columns
+            section.columns.forEach(
+              (templateColumn: TemplateColumn, columnIndex: number) => {
+                const newColumn: ColumnType = {
+                  id: `column-${newSection.id}-${columnIndex + 1}`,
+                  width: Math.max(
+                    1,
+                    Math.min(
+                      3,
+                      Math.round(templateColumn.columnWidth / (100 / 3))
+                    )
+                  ),
+                  components: [],
                 };
 
-                // Add component to appropriate column based on span
-                if (templateComponent.componentSpan === 3) {
-                  // Full-width components go to first column
-                  newSection.columns[0].components.push(component);
-                } else {
-                  // Regular components go to their designated column
-                  newSection.columns[columnIndex].components.push(component);
-                }
-
-                // Set component settings
-                componentSettingsToSet[componentId] = {
-                  variant: templateComponent.componentVariant || "default",
-                  ...templateComponent.settings,
-                };
+                // Process components in this column
+                templateColumn.components.forEach(
+                  (templateComponent: TemplateComponent) => {
+                    const componentId = `${
+                      templateComponent.componentType
+                    }-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                    const component: ComponentType = {
+                      id: componentId,
+                      type: templateComponent.componentType,
+                      title: getComponentTitle(templateComponent.componentType),
+                      span: templateComponent.componentSpan || 1,
+                      order: templateComponent.sortOrder || 0,
+                    };
+                    // Add component to appropriate column based on span
+                    if (templateComponent.componentSpan === 3) {
+                      // Full-width components go to first column
+                      newSection.columns[0]?.components.push(component);
+                    } else {
+                      newColumn.components.push(component);
+                    }
+                    // Set component settings
+                    componentSettingsToSet[componentId] = {
+                      variant: templateComponent.componentVariant || "default",
+                      ...templateComponent.settings,
+                    };
+                  }
+                );
+                newSection.columns.push(newColumn);
               }
             );
+
+            // Sort components by order within each column
+            newSection.columns.forEach((column: ColumnType) => {
+              column.components.sort(
+                (a: ComponentType, b: ComponentType) =>
+                  (a.order || 0) - (b.order || 0)
+              );
+            });
+
+            newSections.push(newSection);
           });
 
-          // Sort components by order within each column
-          newSection.columns.forEach((column: ColumnType) => {
-            column.components.sort(
-              (a: ComponentType, b: ComponentType) =>
-                (a.order || 0) - (b.order || 0)
-            );
-          });
-
-          // Set the sections state
-          setSections([newSection]);
-
-          // Set component settings
+          setSections(newSections);
           setComponentSettings(componentSettingsToSet);
         }
       }
