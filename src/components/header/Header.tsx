@@ -15,7 +15,6 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
- 
   return (
     <header className="sticky top-0 flex w-full bg-white border-gray-200 z-999 dark:border-gray-800 dark:bg-gray-900 lg:border-b">
       <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6">
@@ -79,14 +78,10 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
           </button>
 
           <Link to="/" className="lg:hidden">
-            <img
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
-              alt="Logo"
-            />
+         
             <img
               className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
+              src="./images/BOTH_LOGO.webp"
               alt="Logo"
             />
           </Link>

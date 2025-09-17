@@ -376,7 +376,7 @@ function ComponentLibrary({
 
   return (
     <div>
-      <div className="w-56 bg-gray-50 border-r border-gray-200 p-2 overflow-y-auto">
+      <div className=" w-56 bg-gray-50 border-r border-gray-200 p-2 overflow-y-auto">
         <Link to="/custom-temple/list">
           <div className="flex items-center bg-blue-500/10 px-2 py-1 w-fit pr-4 rounded-md gap-2 mb-4 cursor-pointer">
             <ArrowLeft className="h-5 w-5" />
@@ -1483,13 +1483,10 @@ export default function ProductPageBuilder() {
       const result = templateId
         ? await dispatch(updateTemplate({ id: templateId, data: templateData }))
         : await dispatch(createTemplate(templateData));
-      if (result.type === "templates/create/fulfilled") {
-        toast.success("Template saved successfully!");
-        console.log("Template created:", result.payload);
-      } else {
-        toast.error("Failed to save template.");
-        console.log("Template save error:", result);
-      }
+      console.log("Template save result:", result);
+
+      toast.success("Template saved successfully!");
+      console.log("Template created:", result.payload);
     } catch (error) {
       alert("Failed to save template. Please try again.");
     }
