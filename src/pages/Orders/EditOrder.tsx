@@ -16,8 +16,8 @@ const image_url = import.meta.env.VITE_IMAGE_URL;
 export default function EditOrder() {
   const [deliveryOption, setDeliveryOption] = useState("");
   const [orderStatus, setOrderStatus] = useState("");
-  const [selectedMethod, setSelectedMethod] = useState("");
-  const [selectedService, setSelectedService] = useState("DTDC");
+  const [selectedMethod, setSelectedMethod] = useState("DTDC");
+  const [selectedService, setSelectedService] = useState("");
   const [availableServices, setAvailableServices] = useState([]);
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -98,6 +98,25 @@ export default function EditOrder() {
       setPopup({
         isVisible: true,
         message: "Failed to fetch order data.",
+        type: "error",
+      });
+    }
+  };
+
+  const createShipment = async (e) => {
+    try {
+      e.preventDefault();
+      const response = await axiosInstance.post("/shipping/create", {
+        orderId: orderId,
+        courier: selectedMethod,
+      });
+      console.log(response.data);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error creating shipment:", error);
+      setPopup({
+        isVisible: true,
+        message: "Failed to create shipment.",
         type: "error",
       });
     }
@@ -185,6 +204,15 @@ export default function EditOrder() {
                     </p>
                     <p className="font-medium text-gray-800 dark:text-white">
                       {formatDate(currentOrder.createdAt)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Order track number
+                    </p>
+                    <p className="font-medium text-gray-800 dark:text-white">
+                      {currentOrder.trackingNumber || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -326,7 +354,7 @@ export default function EditOrder() {
 
               {/* Update Form */}
               <form
-                onSubmit={handleSubmit}
+                onSubmit={createShipment}
                 className="border border-gray-200 dark:border-gray-700 rounded-lg p-6"
               >
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-6">
@@ -357,8 +385,8 @@ export default function EditOrder() {
                       Select Service
                     </label>
                     <select
-                      value={deliveryOption}
-                      onChange={(e) => setDeliveryOption(e.target.value)}
+                      value={selectedService}
+                      onChange={(e) => setSelectedService(e.target.value)}
                       className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     >
                       {availableServices
@@ -379,15 +407,17 @@ export default function EditOrder() {
                   </div>
                 </div>
 
-                <div className="mt-6">
-                  <button
-                    type="submit"
-                    className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled={loading}
-                  >
-                    {loading ? "Updating Order..." : "Update Order"}
-                  </button>
-                </div>
+                {currentOrder.status === "pending" && (
+                  <div className="mt-6">
+                    <button
+                      type="submit"
+                      className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={loading}
+                    >
+                      {loading ? "Updating Order..." : "Update Order"}
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           ) : (
