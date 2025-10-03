@@ -427,15 +427,15 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
-                className="dark:hidden h-20"
-                src="/images/BOTH_LOGO.webp"
+                className="dark:hidden h-14 w-14 my-4"
+                src="/logo.webp"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <img
-                className="hidden dark:block h-20"
-                src="/images/BOTH_LOGO.webp"
+                className="hidden dark:block  h-14 w-14 my-4"
+                src="/logo.webp"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -443,13 +443,13 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <img
-              src="/images/BOTH_LOGO.webp"
-              className="h-20"
+              src="/logo.webp"
+              className="h-14 w-14 my-4"
               alt="Logo"
               width={32}
               height={32}
             />
-          )}
+          )}{" "}
         </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
