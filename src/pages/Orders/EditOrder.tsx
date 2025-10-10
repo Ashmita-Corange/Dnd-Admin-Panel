@@ -15,9 +15,12 @@ const image_url = import.meta.env.VITE_IMAGE_URL;
 
 export default function EditOrder() {
   const [deliveryOption, setDeliveryOption] = useState("");
+  const [labelLoading, setLabelLoading] = useState(false);
+
   const [orderStatus, setOrderStatus] = useState("");
   const [selectedMethod, setSelectedMethod] = useState("DTDC");
   const [selectedService, setSelectedService] = useState("");
+  const [selectedLabelCode, setSelectedLabelCode] = useState("SHIP_LABEL_POD");
   const [availableServices, setAvailableServices] = useState([]);
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -103,17 +106,40 @@ export default function EditOrder() {
     }
   };
 
-  const createShipment = async (e) => {
+  const createShipment = async (e: React.FormEvent) => {
     try {
       e.preventDefault();
-      const response = await axiosInstance.post("/shipping/create", {
+      const response = await axiosInstance.post("/orders/shipment/create", {
         orderId: orderId,
         courier: selectedMethod,
+        serviceCode: selectedMethod,
       });
-      console.log(response.data);
+      console.log("shipping response ===>", response.data);
       window.location.reload();
     } catch (error) {
       console.error("Error creating shipment:", error);
+      setPopup({
+        isVisible: true,
+        message: "Failed to create shipment.",
+        type: "error",
+      });
+    }
+  };
+
+  const GenerateLabel = async () => {
+    try {
+      setLabelLoading(true);
+      const response = await axiosInstance.post("/orders/shipment/label", {
+        orderId: orderId,
+        courier: selectedMethod,
+        labelCode: selectedLabelCode,
+      });
+      console.log("label generating response ===>", response.data);
+      setLabelLoading(false);
+      window.location.reload();
+    } catch (error) {
+      console.error("Error creating shipment:", error);
+      setLabelLoading(false);
       setPopup({
         isVisible: true,
         message: "Failed to create shipment.",
@@ -212,7 +238,74 @@ export default function EditOrder() {
                       Order track number
                     </p>
                     <p className="font-medium text-gray-800 dark:text-white">
-                      {currentOrder.trackingNumber || "N/A"}
+                      {currentOrder?.shipping_details?.reference_number ||
+                        "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-800 dark:text-white">
+                      {currentOrder?.shipping_details?.labelUrl ? (
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            Label
+                          </p>
+                          <a
+                            target="_blank"
+                            href={
+                              image_url +
+                              currentOrder?.shipping_details?.labelUrl
+                            }
+                            className="font-medium text-blue-500 underline cursor-pointer dark:text-white"
+                          >
+                            Download Label
+                          </a>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mt-2 flex items-center gap-3">
+                            <select
+                              value={selectedLabelCode}
+                              onChange={(e) =>
+                                setSelectedLabelCode(e.target.value)
+                              }
+                              className="rounded border border-gray-300 px-3 py-2 bg-white text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                            >
+                              <option value="">Select </option>
+                              <option value="SHIP_LABEL_A4">
+                                Shipping Label A4
+                              </option>
+                              <option value="SHIP_LABEL_A6">
+                                Shipping Label A6
+                              </option>
+                              <option value="SHIP_LABEL_POD">
+                                Shipping Label POD
+                              </option>
+                              <option value="SHIP_LABEL_4X6">
+                                Shipping Label 4x6
+                              </option>
+                              <option value="ROUTE_LABEL_A4">
+                                Routing Label A4
+                              </option>
+                              <option value="ROUTE_LABEL_4X4">
+                                Routing Label 4x4
+                              </option>
+                            </select>
+
+                            {labelLoading ? (
+                              <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
+                                Generating...
+                              </div>
+                            ) : (
+                              <button
+                                onClick={GenerateLabel}
+                                className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
+                              >
+                                Generate Label
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
                     </p>
                   </div>
                 </div>
@@ -232,7 +325,7 @@ export default function EditOrder() {
                       <img
                         src={
                           image_url +
-                          (item?.product?.thumbnail.url ||
+                          (item?.product?.thumbnail?.url ||
                             item?.product?.images[0]?.url)
                         }
                         alt={item?.product?.name}
