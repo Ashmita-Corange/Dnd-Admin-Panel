@@ -81,6 +81,8 @@ import IvrLogs from "./pages/Ivr/IvrLogs";
 import IverLead from "./pages/Ivr/IverLead";
 import BulkPincodeImport from "./pages/Shipping/BulkPincodeImport";
 import SettingsList from "./pages/Settings/SettingsList";
+import OrderList from "./pages/Orders/OrderList";
+import EditOrder from "./pages/Orders/EditOrder";
 
 // Lazy load pages
 
@@ -259,20 +261,30 @@ export default function App() {
                 element={<SupportTicketChat />}
               />
 
+              {/* order management */}
+
+              <Route path="/orders/list" element={<OrderList />} />
+              <Route path="/orders/:id" element={<EditOrder />} />
+
               {/* Page Management Routes */}
 
               <Route path="/shipping/add" element={<AddShipping />} />
               <Route path="/shipping/list" element={<ShippingList />} />
               <Route path="/shipping/edit/:id" element={<EditShipping />} />
               <Route path="/shipping/zone/list" element={<ZoneList />} />
-              <Route path="/shipping/zone/create" element={<CreateShippingZone />} />
+              <Route
+                path="/shipping/zone/create"
+                element={<CreateShippingZone />}
+              />
               <Route path="/shipping/zone/edit/:id" element={<EditZone />} />
-              <Route path="/bulkpincodeimport/add" element={<BulkPincodeImport />} />
+              <Route
+                path="/bulkpincodeimport/add"
+                element={<BulkPincodeImport />}
+              />
 
               {/* Content Management Routes */}
 
               <Route path="/contents/list" element={<ContentList />} />
-
 
               <Route path="/ivr/logs" element={<IvrLogs />} />
               <Route path="/ivr/lead-list/:leadId" element={<IverLead />} />
@@ -301,15 +313,13 @@ export default function App() {
               <Route path="/reviews/list" element={<ReviewList />} />
               <Route path="/reviews/:id" element={<ReviewDetails />} />
 
+              {/* staff */}
+              <Route path="/staff/add" element={<AddStaff />} />
+              <Route path="/staff/list" element={<StaffList />} />
+              <Route path="/staff/edit/:id" element={<EditStaff />} />
 
-
-               {/* staff */}
-               <Route path="/staff/add" element={<AddStaff />} />
-               <Route path="/staff/list" element={<StaffList />} />
-               <Route path="/staff/edit/:id" element={<EditStaff />} />
-
-               {/* Settings Management Route */}
-               <Route path="/settings/list" element={<SettingsList />} />
+              {/* Settings Management Route */}
+              <Route path="/settings/list" element={<SettingsList />} />
             </Route>
           </Route>
 

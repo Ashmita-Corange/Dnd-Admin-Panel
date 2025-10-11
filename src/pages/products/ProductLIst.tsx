@@ -266,7 +266,9 @@ const ProductList: React.FC = () => {
         );
 
         // Optional: Show success message
-        console.log(`Product "${subcategoryToDelete.name}" deleted successfully`);
+        console.log(
+          `Product "${subcategoryToDelete.name}" deleted successfully`
+        );
       } catch (error) {
         console.error("Failed to delete product:", error);
         setPopup({
@@ -416,7 +418,7 @@ const ProductList: React.FC = () => {
                     <td className="px-6 py-4">
                       <img
                         src={`${import.meta.env.VITE_IMAGE_URL}${
-                          cat.thumbnail
+                          cat?.thumbnail?.url || cat?.images[0]?.url || ""
                         }`}
                         onError={(e) => {
                           e.currentTarget.onerror = null;

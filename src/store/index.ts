@@ -28,7 +28,8 @@ import reviewSlice from "./slices/reviewSlice";
 import brandSlice from "./slices/brandSlice";
 import shippingZoneReducer from "./slices/shippingZone";
 import calllogReducer from "./slices/calllog";
-import  structureSlice  from "./slices/structure";
+import structureSlice from "./slices/structure";
+import orderReducer from "./slices/Orders";
 
 export const store = configureStore({
   reducer: {
@@ -61,6 +62,7 @@ export const store = configureStore({
     shippingZone: shippingZoneReducer,
     calllog: calllogReducer,
     structure: structureSlice,
+    orders: orderReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
