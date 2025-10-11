@@ -9,7 +9,7 @@ function Variant3({ descriptionData }) {
   };
   return (
     <div className="py-10 lg:py-20 px-4">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl w-auto mx-auto">
         {/* Header */}
         <h1 className="text-[50px] leading-[6vh] lg:leading-[18vh] lg:text-[130px] text-black bebas mb-10 md:mb-16 text-center">
           DESCRIPTION
@@ -19,7 +19,7 @@ function Variant3({ descriptionData }) {
         <div className="grid lg:grid-cols-5 gap-8 mb-16">
           {/* Video - Takes 3 columns */}
           <div className="lg:col-span-3">
-            <div className="aspect-video rounded-lg overflow-hidden bg-black">
+            <div className="aspect-video sticky top-10 rounded-lg overflow-hidden bg-black">
               {descriptionData?.descriptionVideo && (
                 <iframe
                   src={`https://www.youtube.com/embed/${extractVideoId(

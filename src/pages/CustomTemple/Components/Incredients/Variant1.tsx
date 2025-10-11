@@ -117,7 +117,7 @@ export default function RenderScrollingVariant({ data }) {
         </div>
 
         {/* Right Column - Sticky Image */}
-        <div className="hidden lg:flex flex-col flex-1">
+        <div className="hidden lg:hidden flex-col flex-1">
           <div className="sticky top-32">
             {/* Active Ingredient Image */}
             <div className="relative">

@@ -175,7 +175,7 @@ export default function RenderTestimonialVariant() {
             </p>
 
             {/* Quick Stats */}
-            <div className="flex gap-8">
+            <div className="flex !flex-col gap-8">
               <div className="text-center">
                 <div className="text-3xl font-bold text-black mb-1">
                   <AnimatedCounter end={mockData.totalReviews} />

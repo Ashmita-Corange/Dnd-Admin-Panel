@@ -100,7 +100,7 @@ export function Description({
         isPreviewMode
           ? "bg-transparent"
           : "bg-white rounded-2xl shadow-xl border border-gray-100"
-      } ${isPreviewMode ? "" : "p-6 mb-4"} ${isFullWidth ? "w-full" : ""}`}
+      } ${isPreviewMode ? "" : "p-6 mb-4"} ${isFullWidth ? "w-auto" : ""}`}
     >
       {!isPreviewMode && (
         <div className="flex justify-between items-center mb-6">

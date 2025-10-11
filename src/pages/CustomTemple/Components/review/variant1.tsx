@@ -1,5 +1,5 @@
 import { Star, ThumbsUp, ThumbsDown, MessageCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function RenderCardsVariant() {
   const [data, setData] = useState({
@@ -48,13 +48,57 @@ export default function RenderCardsVariant() {
     ],
   });
 
+  // measure wrapper width
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [width, setWidth] = useState<number>(0);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+    const measure = () => setWidth(Math.round(el.getBoundingClientRect().width));
+    measure();
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(measure);
+      ro.observe(el);
+    } else {
+      window.addEventListener("resize", measure);
+    }
+    return () => {
+      if (ro) ro.disconnect();
+      else window.removeEventListener("resize", measure);
+    };
+  }, []);
+
+  // optional: compute a title size based on measured width (adjust clamping as needed)
+  const computedTitleSize = Math.min(130, Math.max(40, Math.round(width * 0.01)));
+  const titleStyle: React.CSSProperties = { fontSize: `${computedTitleSize}px`, lineHeight: 1 };
+
+  // apply mobile layout when component width is less than 540px
+  const isMobileWidth = width < 540;
+
   return (
-    <div className="py-10 lg:py-20 px-4">
-      <div className="flex justify-between flex-col md:flex-row gap-12">
-        {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-12"> */}
+    // attach ref to the main wrapper so we measure the actual component width
+    <div ref={wrapperRef} className="py-10 lg:py-20 px-4">
+      {/* badge showing measured width */}
+      <div className="absolute top-4 right-4 z-50">
+        <span className="bg-black/70 text-white text-xs rounded px-2 py-1">{width}px</span>
+      </div>
+
+      {/* top layout: force column on narrow component */}
+      <div
+        className={
+          isMobileWidth
+            ? "flex flex-col gap-8"
+            : "flex justify-between flex-col md:flex-row gap-12"
+        }
+      >
         {/* Left Column */}
-        <div className="max-w-2xl">
-          <h1 className="text-[50px] leading-[6vh] lg:leading-[18vh] lg:text-[130px] text-black bebas mb-4 md:mb-0 ">
+        <div className={isMobileWidth ? "w-full" : "max-w-2xl"}>
+          <h1
+            className="text-[50px] leading-[6vh] lg:leading-[18vh] lg:text-[130px] text-black bebas mb-4 md:mb-0"
+            style={titleStyle}
+          >
             PRODUCT REVIEW
           </h1>
           <p className="text-black relative max-w-sm poppins-medium leading-tight text-lg mb-8">
@@ -65,7 +109,13 @@ export default function RenderCardsVariant() {
         </div>
 
         {/* Right Column - Rating Overview */}
-        <div className="flex items-start justify-between max-w-sm w-full gap-8">
+        <div
+          className={
+            isMobileWidth
+              ? "flex flex-col items-start gap-6 w-full"
+              : "flex items-start justify-between max-w-sm w-full gap-8"
+          }
+        >
           {/* Rating Circle */}
           <div className="relative">
             <div className="w-20 h-20 rounded-full border-4 border-green-500 flex items-center justify-center bg-white">
@@ -106,8 +156,11 @@ export default function RenderCardsVariant() {
         </div>
       </div>
 
-      {/* Review Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+      {/* Review Cards: force 1 column if component is narrow */}
+      <div
+        className="grid gap-6 mt-12"
+        style={{ gridTemplateColumns: isMobileWidth ? "1fr" : "repeat(3, 1fr)" }}
+      >
         {data &&
           data.Reviews.map((review, index) => (
             <div key={index} className="bg-white relative">

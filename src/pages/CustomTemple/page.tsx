@@ -1779,7 +1779,7 @@ export default function ProductPageBuilder() {
               )}
               strategy={verticalListSortingStrategy}
             >
-              <div className={`p-4 ${SPACE_CLASSES[rowGap] || "space-y-4"}`}>
+              <div className={`p-4 max-w-7xl mx-auto ${SPACE_CLASSES[rowGap] || "space-y-4"}`}>
                 {organizeSectionsForRender().map((row, rowIndex) => {
                   if (row.type === "fullWidth") {
                     return (
