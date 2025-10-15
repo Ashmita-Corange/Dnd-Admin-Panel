@@ -140,6 +140,7 @@ export default function EditProduct() {
     custom_template: false,
     templateId: "",
     showInAddons: false,
+    isFrequentlyPurchased: false,
   });
 
   const tabs = [
@@ -551,7 +552,7 @@ export default function EditProduct() {
       formData.append("templateId", product.templateId);
     }
     formData.append("isAddon", product.showInAddons);
-
+    formData.append("isFrequentlyPurchased", product.isFrequentlyPurchased);
     try {
       const response = await dispatch(
         updateProduct({ id: productId, data: formData })
@@ -648,6 +649,7 @@ export default function EditProduct() {
         custom_template: data.custom_template || false,
         templateId: data.templateId || "",
         showInAddons: data.isAddon || false,
+        isFrequentlyPurchased: data.isFrequentlyPurchased || false,
       });
     } catch (error) {
       console.error("Error fetching product data:", error);
@@ -967,23 +969,46 @@ export default function EditProduct() {
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            <div className="flex gap-2 items-center">
-              <input
-                type="checkbox"
-                name="showInAddons"
-                id="showInAddons"
-                checked={product.showInAddons}
-                onChange={(e) =>
-                  setProduct({ ...product, showInAddons: e.target.checked })
-                }
-                className="w-4 h-4 rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
-              ></input>
-              <label
-                htmlFor="showInAddons"
-                className="block  text-sm font-medium text-gray-700 dark:text-gray-300"
-              >
-                Show in Addons
-              </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex gap-2 items-center">
+                <input
+                  type="checkbox"
+                  name="showInAddons"
+                  id="showInAddons"
+                  checked={product.showInAddons}
+                  onChange={(e) =>
+                    setProduct({ ...product, showInAddons: e.target.checked })
+                  }
+                  className="w-4 h-4 rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
+                ></input>
+                <label
+                  htmlFor="showInAddons"
+                  className="block  text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Show in Addons
+                </label>
+              </div>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="checkbox"
+                  name="isFrequentlyPurchased"
+                  id="isFrequentlyPurchased"
+                  checked={product.isFrequentlyPurchased}
+                  onChange={(e) =>
+                    setProduct({
+                      ...product,
+                      isFrequentlyPurchased: e.target.checked,
+                    })
+                  }
+                  className="w-4 h-4 rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:focus:ring-blue-800 transition-all duration-200"
+                ></input>
+                <label
+                  htmlFor="isFrequentlyPurchased"
+                  className="block  text-sm font-medium text-gray-700 dark:text-gray-300"
+                >
+                  Is Frequently Purchased
+                </label>
+              </div>
             </div>
           </div>
         );

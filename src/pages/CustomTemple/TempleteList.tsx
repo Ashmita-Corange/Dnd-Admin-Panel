@@ -389,9 +389,9 @@ const TemplateList: React.FC = () => {
                   Name
                 </th>
 
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   product
-                </th>
+                </th> */}
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Created
                 </th>
@@ -402,38 +402,46 @@ const TemplateList: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {templates?.length > 0 &&
-                templates.map((cat, idx) => (
-                  <tr
-                    key={cat._id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                      {(pagination.page - 1) * pagination.limit + idx + 1}
-                    </td>
+                templates.map((cat, idx) => {
+                  return (
+                    <tr
+                      key={cat._id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-800"
+                    >
+                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                        {(pagination.page - 1) * pagination.limit + idx + 1}
+                      </td>
 
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                      {cat.layoutName}
-                    </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                        {cat.layoutName}
+                      </td>
 
-                    <td className="px-6 py-4 text-sm">{cat.productId}</td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(cat.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-right space-x-2">
-                      <Link to={`/custom-temple/add?templateId=${cat._id}`}>
-                        <button className="text-blue-500 hover:text-blue-700 transition-colors">
-                          <Pencil className="h-5 w-5" />
-                        </button>
-                      </Link>
-                      <button
-                        onClick={() => openDeleteModal(cat)}
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                      >
-                        <Trash2 className="h-5 w-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                      {/* <td className="px-6 py-4 text-sm">{cat.productId}</td> */}
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(cat.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4 text-right space-x-2">
+                        <Link to={`/custom-temple/add?templateId=${cat._id}`}>
+                          <button className="text-blue-500 hover:text-blue-700 transition-colors">
+                            <Pencil className="h-5 w-5" />
+                          </button>
+                        </Link>
+                        {cat._id === "68d24ac171a2e8abdeb160f0" ? (
+                          <button className="text-red-500 opacity-30 cursor-not-allowed hover:text-red-700 transition-colors">
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => openDeleteModal(cat)}
+                            className="text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="h-5 w-5" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>

@@ -22,7 +22,17 @@ export default function EditOrder() {
   const [selectedMethod, setSelectedMethod] = useState("DTDC");
   const [selectedService, setSelectedService] = useState("");
   const [selectedLabelCode, setSelectedLabelCode] = useState("SHIP_LABEL_POD");
-  const [availableServices, setAvailableServices] = useState([]);
+  // simple type for service options returned from API
+  type ServiceOption = {
+    code: string;
+    name?: string;
+    courier?: string;
+    [k: string]: any;
+  };
+
+  const [availableServices, setAvailableServices] = useState<ServiceOption[]>(
+    []
+  );
   const [popup, setPopup] = useState({
     isVisible: false,
     message: "",
@@ -111,14 +121,20 @@ export default function EditOrder() {
     try {
       e.preventDefault();
 
-      // If courier is BLUEDART, pass static values as requested
-      const isBluedart = String(selectedMethod).toUpperCase() === "BLUEDART";
+      // If courier is BLUEDART or DELHIVERY, pass static values as requested
+      const upMethod = String(selectedMethod).toUpperCase();
+      const isBluedart = upMethod === "BLUEDART";
+      const isDelhivery = upMethod === "DELHIVERY";
 
       const payload: Record<string, unknown> = {
         orderId: orderId,
-        courier: isBluedart ? "BLUEDART" : selectedMethod,
-        // For Bluedart we send serviceCode: 'D' statically, otherwise use selectedService
-        serviceCode: isBluedart ? "D" : selectedService,
+        courier: isBluedart
+          ? "BLUEDART"
+          : isDelhivery
+          ? "DELHIVERY"
+          : selectedMethod,
+        // For Bluedart send 'D', for Delhivery send 'SD1', otherwise use selectedService
+        serviceCode: isBluedart ? "D" : isDelhivery ? "SD1" : selectedService,
       };
 
       const response = await axiosInstance.post(
@@ -126,7 +142,7 @@ export default function EditOrder() {
         payload
       );
       console.log("shipping response ===>", response.data);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Error creating shipment:", error);
       setPopup({
@@ -142,12 +158,12 @@ export default function EditOrder() {
       setLabelLoading(true);
       const response = await axiosInstance.post("/orders/shipment/label", {
         orderId: orderId,
-        courier: selectedMethod,
+        courier: currentOrder?.shipping_details?.platform.toUpperCase(),
         labelCode: selectedLabelCode,
       });
       console.log("label generating response ===>", response.data);
       setLabelLoading(false);
-      window.location.reload();
+      // window.location.reload();
     } catch (error) {
       console.error("Error creating shipment:", error);
       setLabelLoading(false);
@@ -410,80 +426,58 @@ export default function EditOrder() {
                     </p>
                     <p className="font-medium text-gray-800 dark:text-white">
                       {currentOrder?.shipping_details?.reference_number ||
+                        currentOrder?.shipping_details?.raw_response
+                          ?.packages[0]?.waybill ||
                         "N/A"}
                     </p>
                   </div>
                   <div>
-                    {currentOrder?.shipping_details?.reference_number && (
-                      <p className="font-medium text-gray-800 dark:text-white">
-                        {currentOrder?.shipping_details?.labelUrl ? (
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Label
-                            </p>
-                            <a
-                              target="_blank"
-                              rel="noreferrer"
-                              href={
-                                image_url +
-                                currentOrder?.shipping_details?.labelUrl
-                              }
-                              className="font-medium text-blue-500 underline cursor-pointer dark:text-white"
-                            >
-                              Download Label
-                            </a>
-                          </div>
-                        ) : String(
-                            currentOrder?.shipping_details?.platform
-                          ).toUpperCase() === "BLUEDART" ? (
-                          <div className="mt-2 flex items-center gap-3">
-                            {currentOrder?.shipping_details?.raw_response
-                              ?.GenerateWayBillResult?.AWBPrintContent ? (
-                              <>
-                                <button
-                                  onClick={openAwbPdf}
-                                  className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
-                                >
-                                  {awbLoading ? "Opening..." : "Open AWB"}
-                                </button>
-                              </>
-                            ) : (
+                    {currentOrder?.shipping_details?.reference_number ||
+                      (currentOrder?.shipping_details?.platform && (
+                        <p className="font-medium text-gray-800 dark:text-white">
+                          {currentOrder?.shipping_details?.labelUrl ? (
+                            <div>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                AWB not available
+                                Label
                               </p>
-                            )}
-                          </div>
-                        ) : (
-                          <>
-                            <div className="mt-2 flex items-center gap-3">
-                              <select
-                                value={selectedLabelCode}
-                                onChange={(e) =>
-                                  setSelectedLabelCode(e.target.value)
+                              <a
+                                target="_blank"
+                                rel="noreferrer"
+                                href={
+                                  currentOrder?.shipping_details?.platform ===
+                                  "delhivery"
+                                    ? currentOrder?.shipping_details?.labelUrl
+                                    : `${image_url}${currentOrder?.shipping_details?.labelUrl}`
                                 }
-                                className="rounded border border-gray-300 px-3 py-2 bg-white text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                className="font-medium text-blue-500 underline cursor-pointer dark:text-white"
                               >
-                                <option value="">Select </option>
-                                <option value="SHIP_LABEL_A4">
-                                  Shipping Label A4
-                                </option>
-                                <option value="SHIP_LABEL_A6">
-                                  Shipping Label A6
-                                </option>
-                                <option value="SHIP_LABEL_POD">
-                                  Shipping Label POD
-                                </option>
-                                <option value="SHIP_LABEL_4X6">
-                                  Shipping Label 4x6
-                                </option>
-                                <option value="ROUTE_LABEL_A4">
-                                  Routing Label A4
-                                </option>
-                                <option value="ROUTE_LABEL_4X4">
-                                  Routing Label 4x4
-                                </option>
-                              </select>
-
+                                Download Label
+                              </a>
+                            </div>
+                          ) : String(
+                              currentOrder?.shipping_details?.platform
+                            ).toUpperCase() === "BLUEDART" ? (
+                            <div className="mt-2 flex items-center gap-3">
+                              {currentOrder?.shipping_details?.raw_response
+                                ?.GenerateWayBillResult?.AWBPrintContent ? (
+                                <>
+                                  <button
+                                    onClick={openAwbPdf}
+                                    className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
+                                  >
+                                    {awbLoading ? "Opening..." : "Open AWB"}
+                                  </button>
+                                </>
+                              ) : (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  AWB not available
+                                </p>
+                              )}
+                            </div>
+                          ) : String(
+                              currentOrder?.shipping_details?.platform
+                            ).toUpperCase() === "DELHIVERY" ? (
+                            <div>
                               {labelLoading ? (
                                 <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
                                   Generating...
@@ -497,10 +491,54 @@ export default function EditOrder() {
                                 </button>
                               )}
                             </div>
-                          </>
-                        )}
-                      </p>
-                    )}
+                          ) : (
+                            <>
+                              <div className="mt-2 flex items-center gap-3">
+                                <select
+                                  value={selectedLabelCode}
+                                  onChange={(e) =>
+                                    setSelectedLabelCode(e.target.value)
+                                  }
+                                  className="rounded border border-gray-300 px-3 py-2 bg-white text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                                >
+                                  <option value="">Select </option>
+                                  <option value="SHIP_LABEL_A4">
+                                    Shipping Label A4
+                                  </option>
+                                  <option value="SHIP_LABEL_A6">
+                                    Shipping Label A6
+                                  </option>
+                                  <option value="SHIP_LABEL_POD">
+                                    Shipping Label POD
+                                  </option>
+                                  <option value="SHIP_LABEL_4X6">
+                                    Shipping Label 4x6
+                                  </option>
+                                  <option value="ROUTE_LABEL_A4">
+                                    Routing Label A4
+                                  </option>
+                                  <option value="ROUTE_LABEL_4X4">
+                                    Routing Label 4x4
+                                  </option>
+                                </select>
+
+                                {labelLoading ? (
+                                  <div className="px-4 py-1 w-fit bg-blue-500 opacity-60 text-white rounded-full text-sm">
+                                    Generating...
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={GenerateLabel}
+                                    className="px-4 py-1 w-fit bg-blue-500 text-white rounded-full text-sm"
+                                  >
+                                    Generate Label
+                                  </button>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </p>
+                      ))}
                   </div>
                 </div>
               </div>
@@ -655,7 +693,20 @@ export default function EditOrder() {
                     </label>
                     <select
                       value={selectedMethod}
-                      onChange={(e) => setSelectedMethod(e.target.value)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedMethod(val);
+                        const up = String(val).toUpperCase();
+                        // If user selects BLUEDART or DELHIVERY set static service codes
+                        if (up === "BLUEDART") {
+                          setSelectedService("D");
+                        } else if (up === "DELHIVERY") {
+                          setSelectedService("SD1");
+                        } else {
+                          // Reset service for other couriers so user can pick from list
+                          setSelectedService("");
+                        }
+                      }}
                       className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     >
                       <option value="">Select Method</option>
@@ -667,8 +718,10 @@ export default function EditOrder() {
                     </select>
                   </div>
 
-                  {/* Only show service dropdown when courier is not BLUEDART */}
-                  {String(selectedMethod).toUpperCase() !== "BLUEDART" && (
+                  {/* Only show service dropdown when courier is not BLUEDART or DELHIVERY */}
+                  {!["BLUEDART", "DELHIVERY"].includes(
+                    String(selectedMethod).toUpperCase()
+                  ) && (
                     <div>
                       <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                         Select Service

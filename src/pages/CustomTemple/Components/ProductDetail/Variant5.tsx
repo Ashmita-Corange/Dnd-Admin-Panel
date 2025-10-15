@@ -105,8 +105,8 @@ function Variant5({ productData ,detailSettings }) {
                     key={idx}
                     className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-200"
                   >
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Icon size={20} className="text-blue-600" />
+                    <div className="h-9 w-9 flex justify-center items-center  text-green-800 bg-green-100 rounded-lg">
+                      {idx + 1}
                     </div>
                     <div>
                       <div className="font-semibold text-gray-900">
