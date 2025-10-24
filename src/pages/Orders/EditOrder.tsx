@@ -80,6 +80,8 @@ export default function EditOrder() {
         })
       ).unwrap();
 
+      // window.location.reload();
+
       setPopup({
         isVisible: true,
         message: "Order updated successfully!",
@@ -142,7 +144,7 @@ export default function EditOrder() {
         payload
       );
       console.log("shipping response ===>", response.data);
-      // window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.error("Error creating shipment:", error);
       setPopup({
@@ -163,7 +165,7 @@ export default function EditOrder() {
       });
       console.log("label generating response ===>", response.data);
       setLabelLoading(false);
-      // window.location.reload();
+      window.location.reload();
     } catch (error) {
       console.error("Error creating shipment:", error);
       setLabelLoading(false);
