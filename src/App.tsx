@@ -83,6 +83,9 @@ import BulkPincodeImport from "./pages/Shipping/BulkPincodeImport";
 import SettingsList from "./pages/Settings/SettingsList";
 import OrderList from "./pages/Orders/OrderList";
 import EditOrder from "./pages/Orders/EditOrder";
+import ContactList from "./pages/pages/contact/ContactList";
+import EditContact from "./pages/pages/contact/EditContact";
+import ViewContact from "./pages/pages/contact/ViewContact";
 
 // Lazy load pages
 
@@ -317,6 +320,11 @@ export default function App() {
               <Route path="/staff/add" element={<AddStaff />} />
               <Route path="/staff/list" element={<StaffList />} />
               <Route path="/staff/edit/:id" element={<EditStaff />} />
+
+              {/* Contact management */}
+              <Route path="/contactus/list" element={<ContactList />} />
+              <Route path="/contactus/view/:id" element={<ViewContact />} />
+              {/* <Route path="/contact/edit/:id" element={<EditContact />} /> */}
 
               {/* Settings Management Route */}
               <Route path="/settings/list" element={<SettingsList />} />

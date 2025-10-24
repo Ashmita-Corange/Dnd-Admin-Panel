@@ -32,6 +32,7 @@ export default function EditPage() {
     metaDescription: "",
     status: "draft" as "draft" | "published",
     showInFooter: false,
+    redirectBySlug: false,
   });
 
   const [contactUsData, setContactUsData] = useState({
@@ -139,6 +140,7 @@ export default function EditPage() {
       metaDescription: page.metaDescription.trim(),
       status: page.status,
       showInFooter: page.showInFooter,
+      redirectBySlug: page.redirectBySlug,
     };
 
     if (page.mainTitle === "contact-us") {
@@ -206,6 +208,7 @@ export default function EditPage() {
           metaDescription: response.metaDescription || "",
           status: response.status || "draft",
           showInFooter: response.showInFooter || false,
+          redirectBySlug: response.redirectBySlug || false,
         });
         setContactUsData({
           email: response.contactData?.email || "",
@@ -326,9 +329,29 @@ export default function EditPage() {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Slug <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center gap-6 mb-2">
+                  <div>
+                    <label className="block  text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Slug <span className="text-red-500">*</span>
+                    </label>
+                  </div>
+                  <div className="flex items-center mt-1 space-x-2">
+                    <input
+                      type="checkbox"
+                      id="redirectBySlug"
+                      name="redirectBySlug"
+                      checked={page.redirectBySlug}
+                      onChange={handleChange}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-900"
+                    />
+                    <label
+                      htmlFor="redirectBySlug"
+                      className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      Redirect by Slug
+                    </label>
+                  </div>
+                </div>
                 <input
                   type="text"
                   name="slug"

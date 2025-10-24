@@ -42,6 +42,8 @@ const ProfessionalCMS = () => {
   const [saveStatus, setSaveStatus] = useState(null);
   const [formData, setFormData] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
+  const [homePageLayout, setHomePageLayout] = useState("");
+  const [layoutLoading, setLayoutLoading] = useState(false);
 
   useEffect(() => {
     dispatch(fetchHomePageContent());
@@ -160,6 +162,58 @@ const ProfessionalCMS = () => {
     }
   };
 
+  const handelHomePageLayoutChange = async (layout) => {
+    // update active homepage layout via API
+    try {
+      setLayoutLoading(true);
+      // Optimistic local update
+      setHomePageLayout(layout);
+      setFormData((prev) => ({ ...prev, selectedLayout: layout }));
+
+      const payload = { activeHomepageLayout: layout };
+      const response = await axiosInstance.put(`/settings`, payload, {
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // handle possible response patterns
+      if (response?.data) {
+        setSaveStatus("success");
+        setTimeout(() => setSaveStatus(null), 3000);
+      }
+    } catch (error) {
+      console.error("Failed to update homepage layout:", error);
+      setSaveStatus("error");
+      // revert to previous if we can read it from server or clear selection
+      setTimeout(() => setSaveStatus(null), 5000);
+    } finally {
+      setLayoutLoading(false);
+    }
+  };
+
+  // Fetch current settings (activeHomepageLayout) on mount
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        setLayoutLoading(true);
+        const res = await axiosInstance.get(`/settings`);
+        console.log("setting is ====> ", res);
+        const active =
+          res?.data?.setting?.activeHomepageLayout ||
+          res?.setting?.activeHomePageLayout ||
+          "";
+        if (active) {
+          setHomePageLayout(active);
+          setFormData((prev) => ({ ...prev, selectedLayout: active }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      } finally {
+        setLayoutLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
   const handleFormChange = () => {
     setHasUnsavedChanges(true);
   };
@@ -880,7 +934,7 @@ const ProfessionalCMS = () => {
           {renderFieldsByType()}
 
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
               <Image size={16} />
               <span>Upload Image</span>
             </label>
@@ -1107,6 +1161,48 @@ const ProfessionalCMS = () => {
         </div>
       </div>
 
+      <div className="mx-auto p-6 mt-4 bg-white rounded-xl shadow-sm border">
+        <div className="mx-auto p-6 pb-0 ">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            Select home page layout
+          </h2>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+            {["Modern & Detailed UI", "Minimal & Organic UI"].map((layout) => {
+              const selectedLayout =
+                homePageLayout || formData.selectedLayout || "";
+              const isSelected = selectedLayout === layout;
+              return (
+                <button
+                  key={layout}
+                  type="button"
+                  onClick={() => {
+                    // Immediate local update and call API to persist change
+                    setFormData((prev) => ({
+                      ...prev,
+                      selectedLayout: layout,
+                    }));
+                    handelHomePageLayoutChange(layout);
+                  }}
+                  disabled={layoutLoading}
+                  className={`relative p-4 border rounded-lg text-left transition-colors text-sm ${
+                    isSelected
+                      ? "border-blue-600 shadow-lg bg-blue-50"
+                      : "border-gray-200 hover:shadow-sm hover:bg-gray-50"
+                  }`}
+                >
+                  <h2 className="text-lg">{layout}</h2>
+                  {layoutLoading && (
+                    <div className="absolute top-2 right-2 text-xs text-gray-500">
+                      Updating...
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
       {/* Main Content */}
       <div className="mx-auto p-6">
         <div className="bg-white rounded-xl shadow-sm border">
