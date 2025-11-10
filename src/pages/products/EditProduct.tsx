@@ -1079,7 +1079,7 @@ export default function EditProduct() {
                     <input
                       type="text"
                       value={product.storyVideoUrl.name}
-                      onChange={(e) => handleStoryFileChange(e)}
+                      onChange={( e) => handleStoryFileChange(e)}
                       className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                     />
                     <button
