@@ -16,6 +16,7 @@ interface ModulePermission {
 }
 
 export default function AddRole() {
+  const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState({
     name: "",
     scope: "global",
@@ -38,10 +39,24 @@ export default function AddRole() {
   const availablePermissions = ["create", "read", "update", "delete"];
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
     // Fetch tenants and modules when component mounts
     dispatch(fetchModules());
     dispatch(fetchTenants());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (user) {
+      setRole((prevRole) => ({
+        ...prevRole,
+        scope: user?.isSuperAdmin ? "global" : "tenant",
+        tenantId: user?.isSuperAdmin ? null : user?.tenant,
+      }));
+    }
+  }, [user]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -159,8 +174,8 @@ export default function AddRole() {
       // Reset form
       setRole({
         name: "",
-        scope: "global",
-        tenantId: null,
+        scope: user?.isSuperAdmin ? "global" : "tenant",
+        tenantId: user?.isSuperAdmin ? null : user?.tenant,
         modulePermissions: [],
       });
     } catch (err: any) {
@@ -205,24 +220,26 @@ export default function AddRole() {
                   />
                 </div>
 
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Scope <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="scope"
-                    value={role.scope}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  >
-                    <option value="global">Global</option>
-                    <option value="tenant">Tenant</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Global roles apply across all tenants, tenant roles are
-                    specific to one tenant
-                  </p>
-                </div>
+                {user?.isSuperAdmin && (
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Scope <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="scope"
+                      value={role.scope}
+                      onChange={handleChange}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    >
+                      <option value="global">Global</option>
+                      <option value="tenant">Tenant</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Global roles apply across all tenants, tenant roles are
+                      specific to one tenant
+                    </p>
+                  </div>
+                )}
               </div>
 
               {role.scope === "tenant" && (
@@ -236,6 +253,7 @@ export default function AddRole() {
                     onChange={handleChange}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     required={role.scope === "tenant"}
+                    disabled={!user?.isSuperAdmin}
                   >
                     <option value="">Select a tenant</option>
                     {tenants.map((tenant: any) => (

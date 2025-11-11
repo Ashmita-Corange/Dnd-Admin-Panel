@@ -404,11 +404,11 @@ const CategoryList: React.FC = () => {
         </div>
 
         {/* Error Message */}
-        {error && (
+        {/* {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-4 mb-6">
             <p className="text-red-800 dark:text-red-200">{error}</p>
           </div>
-        )}
+        )} */}
 
         {/* Loading State */}
         {loading && (
