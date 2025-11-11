@@ -17,6 +17,7 @@ interface ModulePermission {
 }
 
 export default function EditRole() {
+  const [user, setUser] = useState<any>(null);
   const [role, setRole] = useState({
     name: "",
     scope: "global",
@@ -40,6 +41,10 @@ export default function EditRole() {
   const availablePermissions = ["create", "read", "update", "delete"];
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
     // Fetch tenants and modules when component mounts
     dispatch(fetchModules());
     dispatch(fetchTenants());
@@ -156,7 +161,7 @@ export default function EditRole() {
 
       setPopup({
         isVisible: true,
-        message: "Role created successfully!",
+        message: "Role Updated successfully!",
         type: "success",
       });
     } catch (err: any) {
@@ -172,7 +177,7 @@ export default function EditRole() {
     try {
       const response = await dispatch(fetchRoleById(roleId)).unwrap();
       console.log("Fetched Role Data:", response);
-      setRole({
+      let updatedRole = {
         name: response.name,
         scope: response.scope,
         tenantId: response.tenantId || null,
@@ -181,7 +186,12 @@ export default function EditRole() {
             module: mp.module,
             permissions: mp.permissions || [],
           })) || [],
-      });
+      };
+      if (!user?.isSuperAdmin) {
+        updatedRole.scope = "tenant";
+        updatedRole.tenantId = user?.tenant || null;
+      }
+      setRole(updatedRole);
     } catch (error) {
       console.error("Failed to fetch role data:", error);
       setPopup({
@@ -193,8 +203,10 @@ export default function EditRole() {
   };
 
   useEffect(() => {
-    getData();
-  }, [roleId]);
+    if (user) {
+      getData();
+    }
+  }, [roleId, user]);
   return (
     <div>
       <Toaster position="top-right" />
@@ -228,24 +240,26 @@ export default function EditRole() {
                   />
                 </div>
 
-                <div>
-                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Scope <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="scope"
-                    value={role.scope}
-                    onChange={handleChange}
-                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  >
-                    <option value="global">Global</option>
-                    <option value="tenant">Tenant</option>
-                  </select>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Global roles apply across all tenants, tenant roles are
-                    specific to one tenant
-                  </p>
-                </div>
+                {user?.isSuperAdmin && (
+                  <div>
+                    <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Scope <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="scope"
+                      value={role.scope}
+                      onChange={handleChange}
+                      className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    >
+                      <option value="global">Global</option>
+                      <option value="tenant">Tenant</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      Global roles apply across all tenants, tenant roles are
+                      specific to one tenant
+                    </p>
+                  </div>
+                )}
               </div>
 
               {role.scope === "tenant" && (
@@ -259,6 +273,7 @@ export default function EditRole() {
                     onChange={handleChange}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     required={role.scope === "tenant"}
+                    disabled={!user?.isSuperAdmin}
                   >
                     <option value="">Select a tenant</option>
                     {tenants.map((tenant: any) => (

@@ -15,4 +15,11 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    allowedHosts: [
+      'localhost',
+      'bharatapi.nexprism.in',
+      'bharatadmin.nexprism.in'
+    ],
+  },
 });

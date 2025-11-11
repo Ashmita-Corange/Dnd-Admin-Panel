@@ -456,7 +456,7 @@ const RoleList: React.FC = () => {
         </td>
         <td className="px-6 py-4 capitalize text-sm text-gray-700 dark:text-gray-300">
           {cat?.tenantId && typeof cat.tenantId === "object"
-            ? cat.tenantId.companyName ?? "-"
+            ? cat?.name ?? "-"
             : cat?.tenantId ?? "-"}
         </td>
         <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
