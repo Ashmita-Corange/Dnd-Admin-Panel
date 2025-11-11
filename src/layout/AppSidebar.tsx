@@ -347,7 +347,7 @@ const AppSidebar: React.FC = () => {
         );
       })}
     </ul>
-  );
+  );  
 
   const getData = async () => {
     try {

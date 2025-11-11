@@ -139,6 +139,7 @@ export default function EditProduct() {
     searchKeywords: [""],
     custom_template: false,
     templateId: "",
+    storyVideoUrl: "",
     showInAddons: false,
     isFrequentlyPurchased: false,
   });
@@ -482,6 +483,11 @@ export default function EditProduct() {
     // formData.append("price", product.price);
     // formData.append("salePrice", product.salePrice);
 
+    const storyFile = (product as any).storyVideoUrl;
+    if (storyFile instanceof File) {
+      formData.append("storyVideoUrl", storyFile);
+    }
+
     product.searchKeywords.forEach((kw, index) => {
       formData.append(`searchKeywords[${index}]`, kw);
     });
@@ -594,6 +600,7 @@ export default function EditProduct() {
         category: data.category?._id || data.category || "",
         subcategory: data.subcategory?._id || data.subcategory || "",
         brand: data.brand?._id || data.brand || "",
+        storyVideoUrl: data.storyVideoUrl || "",
         // price: data.price || "",
         // salePrice: data.salePrice || "",
         images:
@@ -781,6 +788,16 @@ export default function EditProduct() {
         isVisible: true,
         message: "Failed to remove image.",
         type: "error",
+      });
+    }
+  };
+
+  const handleStoryFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files)[0];
+      setProduct({
+        ...product,
+        storyVideoUrl: filesArray,
       });
     }
   };
@@ -1015,6 +1032,72 @@ export default function EditProduct() {
       case 1:
         return (
           <div className="space-y-6">
+            {" "}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Product Story (video OR Gif)
+              </label>
+              <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center hover:border-blue-400 transition-colors duration-200">
+                <input
+                  type="file"
+                  multiple
+                  accept="video/*,image/gif"
+                  onChange={(e) => handleStoryFileChange(e)}
+                  className="hidden"
+                  id="product-story"
+                />
+                <label htmlFor="product-story" className="cursor-pointer">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Click to upload product story (MP4/WebM/OGG or GIF)
+                  </p>
+                </label>
+              </div>
+              {product?.storyVideoUrl && (
+                <div className="space-y-4">
+                  <div className="relative group">
+                    {product.storyVideoUrl.type === "image/gif" ? (
+                      <img
+                        src={
+                          typeof product?.storyVideoUrl === "string"
+                            ? product?.storyVideoUrl
+                            : URL.createObjectURL(product?.storyVideoUrl)
+                        }
+                        alt="Product Story Preview"
+                        className="w-full h-48 object-cover rounded-lg border shadow-sm"
+                      />
+                    ) : (
+                      <video
+                        src={ typeof product?.storyVideoUrl === "string"
+                            ? product?.storyVideoUrl
+                            : URL.createObjectURL(product?.storyVideoUrl)}
+                        controls
+                        className="w-full h-48 object-cover rounded-lg border shadow-sm"
+                      />
+                    )}
+
+                    <input
+                      type="text"
+                      value={product.storyVideoUrl.name}
+                      onChange={( e) => handleStoryFileChange(e)}
+                      className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setProduct((prev) => ({
+                          ...prev,
+                          storyVideoUrl: "",
+                        }))
+                      }
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">

@@ -323,7 +323,7 @@ export default function App() {
 
               {/* Contact management */}
               <Route path="/contactus/list" element={<ContactList />} />
-              <Route path="/contactus/view/:id" element={<ViewContact />} />
+              <Route path="/contact/view/:id" element={<ViewContact />} />
               {/* <Route path="/contact/edit/:id" element={<EditContact />} /> */}
 
               {/* Settings Management Route */}
