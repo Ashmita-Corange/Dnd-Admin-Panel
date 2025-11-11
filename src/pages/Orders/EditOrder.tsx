@@ -181,7 +181,7 @@ export default function EditOrder() {
     try {
       setAwbLoading(true);
 
-      const awbContentRaw =
+      let awbContentRaw: unknown =
         currentOrder?.shipping_details?.raw_response?.GenerateWayBillResult
           ?.AWBPrintContent;
 
@@ -237,7 +237,7 @@ export default function EditOrder() {
         // If not numeric bytes, maybe it's array of base64 chunks or strings -> join and handle below
         const joined = awbContentRaw.join("");
         // continue with joined string handling
-        (awbContentRaw as unknown) = joined;
+        awbContentRaw = joined;
       }
 
       // Ensure content is a string from here
