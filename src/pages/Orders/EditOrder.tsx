@@ -422,6 +422,18 @@ export default function EditOrder() {
                     </p>
                   </div>
 
+                  {currentOrder?.shipping_details?.current_status && (
+                    <div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Shipping status
+                      </p>
+                      <p className="font-medium text-gray-800 dark:text-white px-4 py-1 mt-1 rounded-full bg-blue-100 text-xs w-fit">
+                        {currentOrder?.shipping_details?.current_status ||
+                          "N/A"}
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Order track number
@@ -625,6 +637,86 @@ export default function EditOrder() {
                   </div>
                 </div>
               </div>
+
+              {currentOrder?.shipping_details?.status_history &&
+                currentOrder?.shipping_details?.status_history.length > 0 && (
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
+                      Shipping Status History
+                    </h3>
+                    <div className="relative">
+                      <div
+                        // ref callback to initialize arrow visibility and attach scroll handler
+                        ref={(el: HTMLDivElement | null) => {
+                          if (!el) return;
+                          const arrow = el.parentElement?.querySelector(
+                            ".status-scroll-arrow"
+                          ) as HTMLElement | null;
+
+                          const update = () => {
+                            const isScrollable =
+                              el.scrollHeight > el.clientHeight;
+                            const atBottom =
+                              el.scrollHeight -
+                                el.scrollTop -
+                                el.clientHeight <=
+                              1;
+                            if (arrow) {
+                              // hide arrow when not scrollable or scrolled to bottom
+                              arrow.style.opacity =
+                                !isScrollable || atBottom ? "0" : "1";
+                              arrow.style.pointerEvents =
+                                !isScrollable || atBottom ? "none" : "auto";
+                            }
+                          };
+
+                          // attach handler
+                          el.onscroll = update;
+                          // run once on mount
+                          setTimeout(update, 0);
+                        }}
+                        className="space-y-4 max-h-64 overflow-y-auto pr-2"
+                      >
+                        {currentOrder?.shipping_details?.status_history &&
+                          currentOrder?.shipping_details?.status_history.map(
+                            (status: any, index: number) => (
+                              <div
+                                key={index}
+                                className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
+                              >
+                                <p className="font-medium text-gray-800 dark:text-white">
+                                  {status.action}
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                  {formatDate(status.actionDate)}
+                                </p>
+                              </div>
+                            )
+                          )}
+                      </div>
+
+                      {/* down arrow indicator */}
+                      <div
+                        className="status-scroll-arrow pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-3 rounded-full bg-white/90 dark:bg-black/60 p-1 transition-opacity duration-200"
+                        aria-hidden="true"
+                        style={{ opacity: 0 }}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 text-gray-500 dark:text-gray-300"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 12a1 1 0 01-.707-.293l-3-3a1 1 0 111.414-1.414L10 9.586l2.293-2.293a1 1 0 111.414 1.414l-3 3A1 1 0 0110 12z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               {/* Addresses */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

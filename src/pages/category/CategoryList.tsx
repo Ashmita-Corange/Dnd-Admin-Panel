@@ -467,20 +467,20 @@ const CategoryList: React.FC = () => {
                     />
                   </td>
                   <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                    {cat.name}
+                    {cat?.name}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {cat.subCategoryCount}
+                    {cat?.subCategoryCount}
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {cat.status == "active" || cat?.status == "Active" ? (
+                    {cat?.status == "active" || cat?.status == "Active" ? (
                       <CheckCircle className="text-green-500 h-5 w-5" />
                     ) : (
                       <XCircle className="text-red-500 h-5 w-5" />
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {new Date(cat.createdAt).toLocaleDateString()}
+                    {new Date(cat?.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <Link to={`/category/edit/${cat._id}`}>
