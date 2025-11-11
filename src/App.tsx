@@ -22,7 +22,7 @@ import AddRole from "./pages/Role/AddRole";
 import RoleList from "./pages/Role/RoleList";
 import EditRole from "./pages/Role/EditRole";
 import AddSubscriptionPlan from "./pages/plan/AddPlan";
-import PlanList from "./pages/plan/PlanList";
+import PlanList from "./pages/plan/PlanLIst";
 import EditPlan from "./pages/plan/EditPlan";
 import EditCategory from "./pages/category/EditCategory";
 import AddSubcategory from "./pages/Subcategory/AddSubcategory";
