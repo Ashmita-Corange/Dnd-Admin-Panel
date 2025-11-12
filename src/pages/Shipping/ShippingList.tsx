@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteCoupon, fetchCoupons } from "../../store/slices/coupon";
+// import { deleteCoupon, fetchCoupons } from "../../store/slices/coupon";
 import { RootState, AppDispatch } from "../../store";
 import {
   CheckCircle,
@@ -14,15 +14,16 @@ import {
   Trash2,
   X,
   AlertTriangle,
-  Plus,
-  MapPin,
   Eye,
 } from "lucide-react";
+import type { Shipping } from "../../store/slices/shippingSlice";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 import {
   deleteShipping,
   fetchShipping,
+  setSearchQuery,
+  setPagination,
 } from "../../store/slices/shippingSlice";
 
 // Delete Confirmation Modal Component
@@ -30,10 +31,10 @@ const DeleteModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  category: Category | null;
+  shipping: Shipping | null;
   isDeleting: boolean;
-}> = ({ isOpen, onClose, onConfirm, category, isDeleting }) => {
-  if (!isOpen || !category) return null;
+}> = ({ isOpen, onClose, onConfirm, shipping, isDeleting }) => {
+  if (!isOpen || !shipping) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -69,7 +70,7 @@ const DeleteModal: React.FC<{
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Are you sure you want to delete the Shipping Method{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.name}"
+                "{shipping.name}"
               </strong>
               ?
             </p>
@@ -114,15 +115,15 @@ const DeleteModal: React.FC<{
 
 const ShippingList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, error, shippingList } = useSelector(
+  const { loading, error, shippingList, pagination, searchQuery } = useSelector(
     (state: RootState) => state.shipping
   );
 
   // Local state for search, filter, pagination, popup
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState(searchQuery);
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
+  const [shippingToDelete, setShippingToDelete] = useState<Shipping | null>(
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
@@ -141,25 +142,45 @@ const ShippingList: React.FC = () => {
     setIsDeleting(false);
   };
 
-  // Debounce search
+  // Debounce search: update slice searchQuery after user stops typing
   useEffect(() => {
     const timer = setTimeout(() => {
-      dispatch(fetchShipping()); // In real app, pass search/filter params
-    }, 400);
+      if (searchInput !== searchQuery) dispatch(setSearchQuery(searchInput));
+    }, 500);
     return () => clearTimeout(timer);
-  }, [dispatch, searchInput, statusFilter, page, limit]);
+  }, [searchInput, searchQuery, dispatch]);
+
+  // Fetch shipping list when page/limit/searchQuery/statusFilter changes
+  useEffect(() => {
+    const activeFilters: Record<string, any> = {};
+    if (statusFilter) activeFilters.status = statusFilter;
+
+    dispatch(
+      fetchShipping({
+        page,
+        limit,
+        filters: activeFilters,
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
+      })
+    );
+  }, [dispatch, page, limit, searchQuery, statusFilter]);
 
   // Pagination logic
   const total = shippingList.length;
   const totalPages = Math.ceil(total / limit) || 1;
   const paginatedCoupons = shippingList
-    .filter(
-      (c) =>
-        (!searchInput ||
-          c?.code?.toLowerCase()?.includes(searchInput?.toLowerCase())) &&
-        (!statusFilter ||
-          (statusFilter === "active" ? c.isActive : !c.isActive))
-    )
+    .filter((c) => {
+      const matchesSearch = !searchInput
+        ? true
+        : (c?.name || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchInput.toLowerCase());
+      const matchesStatus = !statusFilter ? true : c.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
     .slice((page - 1) * limit, page * limit);
 
   const handlePageChange = (newPage: number) => {
@@ -168,12 +189,16 @@ const ShippingList: React.FC = () => {
   const handleLimitChange = (newLimit: number) => {
     setLimit(newLimit);
     setPage(1);
+    // update slice pagination as well
+    dispatch(setPagination({ page: 1, limit: newLimit }));
   };
   const handleResetFilters = () => {
     setSearchInput("");
     setStatusFilter("");
     setPage(1);
     setLimit(10);
+    dispatch(setSearchQuery(""));
+    dispatch(setPagination({ page: 1, limit: 10 }));
   };
 
   const generatePageNumbers = () => {
@@ -188,14 +213,14 @@ const ShippingList: React.FC = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (categoryToDelete) {
+    if (shippingToDelete) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteShipping(categoryToDelete._id)).unwrap();
+        await dispatch(deleteShipping(shippingToDelete._id)).unwrap();
 
         setPopup({
-          message: `Shipping method "${categoryToDelete.name}" deleted successfully`,
+          message: `Shipping method "${shippingToDelete.name}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -221,7 +246,7 @@ const ShippingList: React.FC = () => {
 
         // Optional: Show success message
         console.log(
-          `Shipping method "${categoryToDelete.name}" deleted successfully`
+          `Shipping method "${shippingToDelete.name}" deleted successfully`
         );
       } catch (error) {
         console.error("Failed to delete shipping method:", error);
@@ -235,7 +260,7 @@ const ShippingList: React.FC = () => {
     }
   };
   const openDeleteModal = (category: Category) => {
-    setCategoryToDelete(category);
+    setShippingToDelete(category);
     setDeleteModalOpen(true);
   };
   return (
@@ -378,7 +403,7 @@ const ShippingList: React.FC = () => {
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {coupon?.cost}
                   </td>
-                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                  <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                     {coupon?.priority}
                   </td>
                   <td className="px-6 py-4 text-sm">

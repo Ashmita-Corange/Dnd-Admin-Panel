@@ -39,6 +39,9 @@ import ProductList from "./pages/products/ProductLIst";
 import EditProduct from "./pages/products/EditProduct";
 import ProductPageBuilder from "./pages/CustomTemple/page";
 import TemplateList from "./pages/CustomTemple/TempleteList";
+import CertificateList from "./pages/certificates/CertificateList";
+import AddCertificate from "./pages/certificates/AddCertificate";
+import EditCertificate from "./pages/certificates/EditCertificate";
 import CouponList from "./pages/coupons/CouponList";
 import AddCoupon from "./pages/coupons/AddCoupon";
 import AddBlog from "./pages/Blog/AddBlog";
@@ -244,6 +247,14 @@ export default function App() {
               <Route path="/blog/add" element={<AddBlog />} />
               <Route path="/blog/list" element={<BlogList />} />
               <Route path="/blog/edit/:id" element={<EditBlog />} />
+
+              {/* Certificate Routes */}
+              <Route path="/certificate/add" element={<AddCertificate />} />
+              <Route path="/certificate/list" element={<CertificateList />} />
+              <Route
+                path="/certificate/edit/:id"
+                element={<EditCertificate />}
+              />
 
               {/* Page Management Routes */}
               <Route path="/pages/add" element={<AddPage />} />

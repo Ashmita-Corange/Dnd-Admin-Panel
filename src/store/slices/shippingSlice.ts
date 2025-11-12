@@ -74,6 +74,7 @@ export interface Shipping {
   additionalCharges: AdditionalCharges;
   customs: Customs;
   proofOfDelivery: ProofOfDelivery;
+  priority?: number | string;
   status: "active" | "inactive";
   deletedAt?: string | null;
   createdAt: string;
@@ -84,6 +85,7 @@ interface FetchShippingParams {
   page?: number;
   limit?: number;
   search?: string;
+  filters?: Record<string, unknown>;
   sortField?: string;
   sortOrder?: "asc" | "desc";
 }
@@ -139,6 +141,7 @@ export const fetchShipping = createAsyncThunk<
       page = 1,
       limit = 10,
       search = "",
+      filters = {},
       sortField = "createdAt",
       sortOrder = "desc",
     } = params;
@@ -146,7 +149,19 @@ export const fetchShipping = createAsyncThunk<
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("search", search);
+    // Format filters as JSON object for the API
+    const apiFilters = { ...(filters || {}) };
+    if (Object.keys(apiFilters).length > 0) {
+      queryParams.append("filters", JSON.stringify(apiFilters));
+    }
+
+    // Format search fields as JSON object for the API
+    if (search && search.trim() !== "") {
+      const searchFields = {
+        name: search.trim(),
+      };
+      queryParams.append("searchFields", JSON.stringify(searchFields));
+    }
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
