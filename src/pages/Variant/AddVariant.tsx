@@ -12,12 +12,10 @@ import PopupAlert from "../../components/popUpAlert";
 import axiosInstance from "../../services/axiosConfig";
 import { useSearchParams } from "react-router-dom";
 
-
-
 export default function AddVariant() {
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const {
     products = [],
     attributes = [],
@@ -83,7 +81,11 @@ export default function AddVariant() {
     }
   };
 
-  const handleAttributeChange = (idx: number, field: "attributeId" | "value", value: string) => {
+  const handleAttributeChange = (
+    idx: number,
+    field: "attributeId" | "value",
+    value: string
+  ) => {
     const updated = [...variant.attributes];
     updated[idx] = { ...updated[idx], [field]: value };
     setVariant({ ...variant, attributes: updated });

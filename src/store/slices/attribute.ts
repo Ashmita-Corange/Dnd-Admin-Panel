@@ -68,7 +68,7 @@ export const fetchAttributes = createAsyncThunk<
       page,
       limit,
       ...filters,
-      search,
+      selectFields: JSON.stringify({ name: search }),
       ...sort,
     };
     const response = await axiosInstance.get("/attribute", {

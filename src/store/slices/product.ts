@@ -67,7 +67,7 @@ export const fetchProducts = createAsyncThunk<
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("search", JSON.stringify(search));
+    if (search) queryParams.append("searchFields", JSON.stringify(search));
     if (sortField) queryParams.append("sortBy", JSON.stringify(sortField));
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 

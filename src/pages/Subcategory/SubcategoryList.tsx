@@ -22,7 +22,7 @@ import {
   deleteSubcategory,
   fetchSubcategories,
 } from "../../store/slices/subCategory";
-import { setSearchQuery } from "../../store/slices/categorySlice";
+import { setSearchQuery } from "../../store/slices/subCategory";
 
 interface Category {
   _id: string;
@@ -178,9 +178,9 @@ const SubcategoryList: React.FC = () => {
       fetchSubcategories({
         page: pagination.page,
         limit: pagination.limit,
-        filters: activeFilters,
-        search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
@@ -191,12 +191,9 @@ const SubcategoryList: React.FC = () => {
         fetchSubcategories({
           page: newPage,
           limit: pagination.limit,
-          filters: {
-            isDeleted: false,
-            ...(localFilters.status ? { status: localFilters.status } : {}),
-          },
-          search: searchQuery || "", // Changed from searchFields to search
-          sort: { createdAt: "desc" },
+          search: searchQuery || "",
+          sortField: "createdAt",
+          sortOrder: "desc",
         })
       );
     }
@@ -207,12 +204,9 @@ const SubcategoryList: React.FC = () => {
       fetchSubcategories({
         page: 1,
         limit: newLimit,
-        filters: {
-          isDeleted: false,
-          ...(localFilters.status ? { status: localFilters.status } : {}),
-        },
-        search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
@@ -220,22 +214,25 @@ const SubcategoryList: React.FC = () => {
   const handleFilterChange = (key: string, value: string) => {
     const updated = { ...localFilters, [key]: value };
     setLocalFilters(updated);
-    dispatch(setFilters(updated));
+    // filters are kept locally and the effect watching `localFilters` will
+    // trigger fetchSubcategories; no global setFilters action for subcategories
+    // so we avoid dispatching a non-existent action here.
   };
 
   const handleResetFilters = () => {
     setSearchInput("");
     setLocalFilters({});
-    dispatch(resetFilters());
+    // Reset search in the subcategory slice so the fetch effect runs
+    dispatch(setSearchQuery(""));
   };
 
   const openEditModal = (category: Category) => {
-    setCategoryToEdit(category);
+    setSubcategoryToEdit(category);
     setEditModalOpen(true);
   };
 
   const closeEditModal = () => {
-    setCategoryToEdit(null);
+    setSubcategoryToEdit(null);
     setEditModalOpen(false);
   };
 

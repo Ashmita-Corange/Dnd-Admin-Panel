@@ -49,6 +49,7 @@ interface TemplateState {
   error: string | null;
   pagination: Pagination;
   searchQuery: string;
+  filters: Record<string, any>;
 }
 
 const initialState: TemplateState = {
@@ -62,29 +63,69 @@ const initialState: TemplateState = {
     totalPages: 0,
   },
   searchQuery: "",
+  filters: {},
 };
 
 // Thunks
 
 export const fetchTemplates = createAsyncThunk<
   { templates: Template[]; pagination: Pagination },
-  { page?: number; limit?: number }
+  {
+    page?: number;
+    limit?: number;
+    filters?: Record<string, any>;
+    search?: any;
+    sort?: Record<string, any>;
+  }
 >("templates/fetchAll", async (params = {}, { rejectWithValue }) => {
   try {
-    const { page = 1, limit = 10 } = params;
-    const response = await axiosInstance.get(
-      `/template?page=${page}&limit=${limit}`,
-      {
-        headers: { "x-tenant": getTenantFromURL() },
-      }
-    );
+    const {
+      page = 1,
+      limit = 10,
+      filters = {},
+      search = "",
+      sort = {},
+    } = params as any;
+
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", String(page));
+    queryParams.append("limit", String(limit));
+
+    // Add filters as simple key=value pairs
+    if (filters && typeof filters === "object") {
+      Object.keys(filters).forEach((k) => {
+        if (filters[k] !== undefined && filters[k] !== "") {
+          queryParams.append(k, String(filters[k]));
+        }
+      });
+    }
+
+    // Support search object or string; follow existing convention: send as searchFields JSON
+    if (search) {
+      queryParams.append("searchFields", JSON.stringify(search));
+    }
+
+    // Support sort
+    if (sort && typeof sort === "object") {
+      Object.keys(sort).forEach((k) => {
+        if (sort[k] !== undefined && sort[k] !== "") {
+          queryParams.append("sortBy", String(k));
+          queryParams.append("sortOrder", String(sort[k]));
+        }
+      });
+    }
+
+    const url = `/template?${queryParams.toString()}`;
+    const response = await axiosInstance.get(url, {
+      headers: { "x-tenant": getTenantFromURL() },
+    });
     console.log("Fetched templates:", response.data?.data);
-    const data = response.data?.data;
+    const data = response.data?.data || response.data;
 
     return {
       templates: data.result || [],
       pagination: {
-        total: data.totalDocuments || 0,
+        total: data.totalDocuments || data.total || 0,
         page: data.currentPage || page,
         limit: data.limit || limit,
         totalPages: data.totalPages || 0,
@@ -155,6 +196,12 @@ const templateSlice = createSlice({
     setSearchQuery: (state, action: PayloadAction<string>) => {
       state.searchQuery = action.payload;
     },
+    setFilters(state, action: PayloadAction<Record<string, any>>) {
+      state.filters = action.payload;
+    },
+    resetFilters(state) {
+      state.filters = {};
+    },
     setPagination: (state, action: PayloadAction<Partial<Pagination>>) => {
       if (action.payload.page !== undefined)
         state.pagination.page = action.payload.page;
@@ -207,7 +254,12 @@ const templateSlice = createSlice({
   },
 });
 
-export const { setSearchQuery, setPagination, clearTemplateError } =
-  templateSlice.actions;
+export const {
+  setSearchQuery,
+  setFilters,
+  resetFilters,
+  setPagination,
+  clearTemplateError,
+} = templateSlice.actions;
 
 export default templateSlice.reducer;

@@ -19,27 +19,26 @@ import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 
-import { setSearchQuery } from "../../store/slices/categorySlice";
-import { deleteTemplate, fetchTemplates } from "../../store/slices/template";
+import {
+  setSearchQuery,
+  setFilters,
+  resetFilters,
+} from "../../store/slices/template";
+import {
+  deleteTemplate,
+  fetchTemplates,
+  Template as TemplateType,
+} from "../../store/slices/template";
 
-interface Category {
-  _id: string;
-  name: string;
-  slug: string;
-  status: "active" | "inactive";
-  isDeleted: boolean;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
-  subCategoryCount: number;
-}
+// Using Template type from the slice for typings
+type LocalTemplate = TemplateType;
 
 // Delete Confirmation Modal Component
 const DeleteModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  category: Category | null;
+  category: LocalTemplate | null;
   isDeleting: boolean;
 }> = ({ isOpen, onClose, onConfirm, category, isDeleting }) => {
   if (!isOpen || !category) return null;
@@ -123,11 +122,12 @@ const DeleteModal: React.FC<{
 
 const TemplateList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { templates, loading, error, pagination, searchQuery, filters } =
-    useAppSelector((state) => state.template);
+  const { templates, loading, error, pagination, searchQuery } = useAppSelector(
+    (state) => state.template
+  );
 
   const [subcategoryToDelete, setSubcategoryToDelete] =
-    useState<Subcategory | null>(null);
+    useState<LocalTemplate | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [searchInput, setSearchInput] = useState(searchQuery);
@@ -165,7 +165,7 @@ const TemplateList: React.FC = () => {
         page: pagination?.page,
         limit: pagination?.limit,
         filters: activeFilters,
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        search: searchInput !== "" && { layoutName: searchInput }, // send as searchFields JSON
         sort: { createdAt: "desc" },
       })
     );
@@ -187,7 +187,7 @@ const TemplateList: React.FC = () => {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-          search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+          search: searchInput !== "" && { layoutName: searchInput }, // Changed from searchFields to search
           sort: { createdAt: "desc" },
         })
       );
@@ -203,7 +203,7 @@ const TemplateList: React.FC = () => {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
-        search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+        search: searchInput !== "" && { layoutName: searchInput }, // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
     );
@@ -221,8 +221,8 @@ const TemplateList: React.FC = () => {
     dispatch(resetFilters());
   };
 
-  const openDeleteModal = (category: Category) => {
-    setSubcategoryToDelete(category);
+  const openDeleteModal = (template: LocalTemplate) => {
+    setSubcategoryToDelete(template);
     setDeleteModalOpen(true);
   };
 
@@ -237,10 +237,12 @@ const TemplateList: React.FC = () => {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteTemplate(subcategoryToDelete._id)).unwrap();
+        await dispatch(
+          deleteTemplate(subcategoryToDelete._id as string)
+        ).unwrap();
 
         setPopup({
-          message: `Product "${subcategoryToDelete.name}" deleted successfully`,
+          message: `Template "${subcategoryToDelete.layoutName}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -259,13 +261,15 @@ const TemplateList: React.FC = () => {
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
-            search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
+            search: searchInput !== "" && { layoutName: searchInput }, // Changed from searchFields to search
             sort: { createdAt: "desc" },
           })
         );
 
         // Optional: Show success message
-        console.log(`Product "${categoryToDelete.name}" deleted successfully`);
+        console.log(
+          `Template "${subcategoryToDelete.layoutName}" deleted successfully`
+        );
       } catch (error) {
         console.error("Failed to delete product:", error);
         setPopup({
@@ -418,7 +422,9 @@ const TemplateList: React.FC = () => {
 
                       {/* <td className="px-6 py-4 text-sm">{cat.productId}</td> */}
                       <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                        {new Date(cat.createdAt).toLocaleDateString()}
+                        {cat.createdAt
+                          ? new Date(cat.createdAt).toLocaleDateString()
+                          : "-"}
                       </td>
                       <td className="px-6 py-4 text-right space-x-2">
                         <Link to={`/custom-temple/add?templateId=${cat._id}`}>
