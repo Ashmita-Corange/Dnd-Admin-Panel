@@ -17,9 +17,11 @@ export interface Attribute {
 interface FetchAttributeParams {
   page?: number;
   limit?: number;
-  search?: string;
+  // search can be a simple string or an object like { name: 'foo' }
+  search?: string | Record<string, unknown>;
   sortField?: string;
   sortOrder?: "asc" | "desc";
+  filters?: Record<string, unknown>;
 }
 
 interface Pagination {
@@ -65,7 +67,7 @@ export const createAttribute = createAsyncThunk<Attribute, Partial<Attribute>>(
 
 // Fetch attributes with pagination
 export const fetchAttributes = createAsyncThunk<
-  { attributes: Attribute[]; pagination: Pagination },
+  { attributes?: Attribute[]; result?: Attribute[]; pagination: Pagination },
   FetchAttributeParams
 >("attributes/fetchAll", async (params = {}, { rejectWithValue }) => {
   try {
@@ -75,12 +77,29 @@ export const fetchAttributes = createAsyncThunk<
       search = "",
       sortField = "createdAt",
       sortOrder = "desc",
-    } = params;
+      filters = {},
+    } = params as FetchAttributeParams;
+    console.log("filters ===> :");
 
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("search", search);
+
+    // search can be a string -> search by name, or an object specifying fields
+    if (search) {
+      if (typeof search === "string") {
+        queryParams.append("searchFields", JSON.stringify({ name: search }));
+      } else {
+        queryParams.append("searchFields", JSON.stringify(search));
+      }
+    }
+
+    // filters (e.g., status)
+    if (filters && Object.keys(filters).length > 0) {
+      // send as JSON in 'filters' param to match other slices
+      queryParams.append("filters", JSON.stringify(filters));
+    }
+
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
@@ -180,7 +199,8 @@ const attributeSlice = createSlice({
       .addCase(fetchAttributes.fulfilled, (state, action) => {
         console.log("payload =====> :", action);
         state.loading = false;
-        state.attributes = action.payload.attributes || action.payload.result;
+        state.attributes =
+          action.payload.attributes ?? action.payload.result ?? [];
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchAttributes.rejected, (state, action) => {

@@ -67,7 +67,7 @@ export const fetchAttributes = createAsyncThunk<
     const query: any = {
       page,
       limit,
-      ...filters,
+      filters: JSON.stringify(filters),
       selectFields: JSON.stringify({ name: search }),
       ...sort,
     };

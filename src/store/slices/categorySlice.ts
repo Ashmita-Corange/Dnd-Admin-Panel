@@ -15,6 +15,8 @@ interface FetchCategoryParams {
   search?: string;
   sortField?: string;
   sortOrder?: "asc" | "desc";
+  // optional arbitrary filters that will be appended as query params
+  filters?: Record<string, string | number | boolean>;
 }
 
 interface Pagination {
@@ -75,6 +77,7 @@ export const fetchCategories = createAsyncThunk<
       search = "",
       sortField = "createdAt",
       sortOrder = "desc",
+      filters = {},
     } = params;
 
     const queryParams = new URLSearchParams();
@@ -85,6 +88,9 @@ export const fetchCategories = createAsyncThunk<
     }
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
+    if (filters) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
 
     const response = await axiosInstance.get(
       `/category?${queryParams.toString()}`

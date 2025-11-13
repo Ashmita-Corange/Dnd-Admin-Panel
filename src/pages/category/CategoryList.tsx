@@ -29,7 +29,7 @@ interface Category {
   name: string;
   slug: string;
   status: "active" | "inactive";
-  isDeleted: boolean;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -170,7 +170,7 @@ const CategoryList: React.FC = () => {
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
+      deletedAt: null,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -192,7 +192,7 @@ const CategoryList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            isDeleted: false,
+            deletedAt: null,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
           search: searchQuery || "", // Changed from searchFields to search
@@ -208,7 +208,7 @@ const CategoryList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          isDeleted: false,
+          deletedAt: null,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
         search: searchQuery || "", // Changed from searchFields to search
@@ -242,7 +242,7 @@ const CategoryList: React.FC = () => {
   const handleEditSuccess = () => {
     // Refresh the categories list after successful edit
     const activeFilters = {
-      isDeleted: false,
+      deletedAt: null,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -291,8 +291,10 @@ const CategoryList: React.FC = () => {
 
         // Refresh the categories list
         const activeFilters = {
-          isDeleted: false,
-          ...(localFilters.status ? { status: localFilters.status } : {}),
+          deletedAt: null,
+          ...(localFilters.status
+            ? { status: localFilters.status ? "Active" : "Inactive" }
+            : {}),
         };
 
         dispatch(
@@ -448,7 +450,7 @@ const CategoryList: React.FC = () => {
             <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
               {categories.map((cat, idx) => (
                 <tr
-                  key={cat._id}
+                  key={cat?._id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
@@ -483,7 +485,7 @@ const CategoryList: React.FC = () => {
                     {new Date(cat?.createdAt).toLocaleDateString()}
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
-                    <Link to={`/category/edit/${cat._id}`}>
+                    <Link to={`/category/edit/${cat?._id}`}>
                       <button className="text-blue-500 hover:text-blue-700 transition-colors">
                         <Pencil className="h-5 w-5" />
                       </button>

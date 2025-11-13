@@ -29,7 +29,7 @@ interface Category {
   name: string;
   slug: string;
   status: "active" | "inactive";
-  isDeleted: boolean;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -170,7 +170,7 @@ const SubcategoryList: React.FC = () => {
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
+      deletedAt: null,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -179,6 +179,7 @@ const SubcategoryList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         search: searchQuery || "",
+        filters: activeFilters,
         sortField: "createdAt",
         sortOrder: "desc",
       })
@@ -192,6 +193,10 @@ const SubcategoryList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           search: searchQuery || "",
+          filters: {
+            deletedAt: null,
+            ...(localFilters.status ? { status: localFilters.status } : {}),
+          },
           sortField: "createdAt",
           sortOrder: "desc",
         })
@@ -205,6 +210,10 @@ const SubcategoryList: React.FC = () => {
         page: 1,
         limit: newLimit,
         search: searchQuery || "",
+        filters: {
+          deletedAt: null,
+          ...(localFilters.status ? { status: localFilters.status } : {}),
+        },
         sortField: "createdAt",
         sortOrder: "desc",
       })
@@ -239,7 +248,7 @@ const SubcategoryList: React.FC = () => {
   const handleEditSuccess = () => {
     // Refresh the categories list after successful edit
     const activeFilters = {
-      isDeleted: false,
+      deletedAt: null,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -253,6 +262,7 @@ const SubcategoryList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
+
         search: searchQuery || "", // Changed from searchFields to search
         sort: { createdAt: "desc" },
       })
@@ -288,7 +298,7 @@ const SubcategoryList: React.FC = () => {
 
         // Refresh the categories list
         const activeFilters = {
-          isDeleted: false,
+          deletedAt: null,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         };
 
@@ -297,6 +307,7 @@ const SubcategoryList: React.FC = () => {
             page: pagination.page,
             limit: pagination.limit,
             filters: activeFilters,
+
             search: searchQuery || "", // Changed from searchFields to search
             sort: { createdAt: "desc" },
           })

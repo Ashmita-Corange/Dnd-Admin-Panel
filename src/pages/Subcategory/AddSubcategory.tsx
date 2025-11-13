@@ -3,15 +3,12 @@ import { useDispatch, useSelector } from "react-redux";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
-import {
-  createSubcategory,
-} from "../../store/slices/subCategory";
-import {
-  fetchCategories,
-} from "../../store/slices/categorySlice";
+import { createSubcategory } from "../../store/slices/subCategory";
+import { fetchCategories } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
+import axiosInstance from "../../services/axiosConfig";
 
 interface SubCategoryInput {
   name: string;
@@ -32,9 +29,7 @@ export default function AddSubcategory() {
     isFeatured: false,
   });
 
-  const { categories: allCategories } = useSelector(
-    (state: RootState) => state.category
-  );
+  const [allCategories, setAllCategories] = useState([]);
 
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -45,12 +40,31 @@ export default function AddSubcategory() {
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.subcategory.loading);
 
+  const fetchCategories = async () => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", "1");
+    queryParams.append("limit", "100");
+
+    queryParams.append(
+      "filters",
+      JSON.stringify({
+        status: "Active",
+        deletedAt: null,
+      })
+    );
+
+    const response = await axiosInstance.get(
+      `/category?${queryParams.toString()}`
+    );
+    console.log("Response from fetchCategories:", response.data);
+    const data = response.data?.data?.body?.data;
+
+    setAllCategories(data?.result || []);
+  };
+
   useEffect(() => {
-    // Fetch categories if needed
-    if (allCategories.length === 0) {
-      dispatch(fetchCategories());
-    }
-  }, [allCategories.length, dispatch]);
+    fetchCategories();
+  }, []);
 
   // Auto-generate slug from name
   const generateSlug = (name: string) => {
@@ -136,12 +150,11 @@ export default function AddSubcategory() {
     try {
       // Create the subcategory and get the result
       // @ts-expect-error: FormData is accepted by the thunk for file upload
-      const createdSubcategory = await dispatch(createSubcategory(formData)).unwrap();
+      const createdSubcategory = await dispatch(
+        createSubcategory(formData)
+      ).unwrap();
 
-      console.log(
-        "Created Subcategory:",
-        createdSubcategory
-      );
+      console.log("Created Subcategory:", createdSubcategory);
 
       setPopup({
         isVisible: true,
@@ -201,11 +214,16 @@ export default function AddSubcategory() {
                   >
                     <option value="">Select Parent Category</option>
                     {/* Map through categories to create options */}
-                    {allCategories?.map((cat: any) => (
-                      <option key={cat?._id} value={cat?._id}>
-                        {cat?.name}
-                      </option>
-                    ))}
+                    {allCategories?.map((cat: any, index: number) => {
+                      if (cat.status === "Inactive" || cat.deletedAt !== null) {
+                        return null;
+                      }
+                      return (
+                        <option key={cat?._id} value={cat?._id}>
+                          {cat?.name}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div>

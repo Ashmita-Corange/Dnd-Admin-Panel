@@ -15,6 +15,7 @@ import {
   updateSubcategory,
 } from "../../store/slices/subCategory";
 import { useParams } from "react-router";
+import axiosInstance from "../../services/axiosConfig";
 
 interface SubCategoryInput {
   name: string;
@@ -37,9 +38,7 @@ export default function EditSubcategory() {
   const params = useParams();
   const subcategoryId = params.id;
 
-  const { categories: allCategories } = useSelector(
-    (state: RootState) => state.category
-  );
+  const [allCategories, setAllCategories] = useState([]);
 
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -50,11 +49,30 @@ export default function EditSubcategory() {
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.category.loading);
 
+  const fetchCategories = async () => {
+    const queryParams = new URLSearchParams();
+    queryParams.append("page", "1");
+    queryParams.append("limit", "100");
+
+    queryParams.append(
+      "filters",
+      JSON.stringify({
+        status: "Active",
+        deletedAt: null,
+      })
+    );
+
+    const response = await axiosInstance.get(
+      `/category?${queryParams.toString()}`
+    );
+    console.log("Response from fetchCategories:", response.data);
+    const data = response.data?.data?.body?.data;
+
+    setAllCategories(data?.result || []);
+  };
+
   useEffect(() => {
-    // Fetch categories if needed
-    if (allCategories.length === 0) {
-      dispatch(fetchCategories());
-    }
+    fetchCategories();
   }, []);
 
   // Auto-generate slug from name
@@ -247,11 +265,16 @@ export default function EditSubcategory() {
                   >
                     <option value="">Select Parent Category</option>
                     {/* Map through categories to create options */}
-                    {allCategories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
+                    {allCategories?.map((cat: any, index: number) => {
+                      if (cat.status === "Inactive" || cat.deletedAt !== null) {
+                        return null;
+                      }
+                      return (
+                        <option key={cat?._id} value={cat?._id}>
+                          {cat?.name}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div>

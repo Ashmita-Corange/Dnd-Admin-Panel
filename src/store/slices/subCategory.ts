@@ -76,15 +76,19 @@ export const fetchSubcategories = createAsyncThunk<
       search = "",
       sortField = "createdAt",
       sortOrder = "desc",
+      filters = {},
     } = params;
 
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("searchFields", JSON.stringify({ name: search }));
+    if (search)
+      queryParams.append("searchFields", JSON.stringify({ name: search }));
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
-
+    if (filters) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
     const response = await axiosInstance.get(
       `/subcategory?${queryParams.toString()}`
     );
