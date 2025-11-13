@@ -127,7 +127,9 @@ const ShippingList: React.FC = () => {
     null
   );
   const [isDeleting, setIsDeleting] = useState(false);
-
+  const [categoryToDelete, setCategoryToDelete] = useState<Shipping | null>(
+    null
+  );
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [popup, setPopup] = useState({

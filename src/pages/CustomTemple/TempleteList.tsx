@@ -329,7 +329,7 @@ const TemplateList: React.FC = () => {
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <Filter className="h-5 w-5 text-gray-400" />
               <select
                 value={localFilters.status || ""}
@@ -340,7 +340,7 @@ const TemplateList: React.FC = () => {
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
-            </div>
+            </div> */}
 
             {/* Limit */}
             <div className="flex items-center gap-2">
