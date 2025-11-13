@@ -102,9 +102,8 @@ const DeleteModal: React.FC<{
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Are you sure you want to delete the review for{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.productId.name}"
+                "{category?.productId?.name}"
               </strong>
-              ?
             </p>
 
             <p className="text-sm text-gray-500 dark:text-gray-400">
