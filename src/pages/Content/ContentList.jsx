@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   Plus,
@@ -19,6 +19,8 @@ import {
   Loader,
   Heart,
   BookOpen,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   fetchHomePageContent,
@@ -35,37 +37,6 @@ const ProfessionalCMS = () => {
   console?.log("Content sections:", sections);
   const BASE_IMAGE_URL =
     import.meta.env.VITE_IMAGE_URL || "http://localhost:3000/";
-
-  const [activeTab, setActiveTab] = useState("hero");
-  const [editingSection, setEditingSection] = useState(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [saveStatus, setSaveStatus] = useState(null);
-  const [formData, setFormData] = useState({});
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [homePageLayout, setHomePageLayout] = useState("");
-  const [layoutLoading, setLayoutLoading] = useState(false);
-
-  useEffect(() => {
-    dispatch(fetchHomePageContent());
-  }, [dispatch]);
-
-  // Auto-start editing when content loads
-  useEffect(() => {
-    if (sections[activeTab]?.[0] && !editingSection) {
-      setEditingSection(activeTab);
-      setFormData({ ...sections[activeTab][0].content });
-    }
-  }, [sections, activeTab, editingSection]);
-
-  useEffect(() => {
-    if (error) {
-      setSaveStatus("error");
-      setTimeout(() => {
-        setSaveStatus(null);
-        dispatch(clearError());
-      }, 5000);
-    }
-  }, [error, dispatch]);
 
   const tabs = [
     { id: "hero", name: "Hero Section", icon: Home, color: "blue" },
@@ -109,6 +80,54 @@ const ProfessionalCMS = () => {
       color: "blue",
     },
   ];
+
+  const [activeTab, setActiveTab] = useState("hero");
+  const [editingSection, setEditingSection] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [formData, setFormData] = useState({});
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [homePageLayout, setHomePageLayout] = useState("");
+  const [layoutLoading, setLayoutLoading] = useState(false);
+  const tabsNavRef = useRef(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchHomePageContent());
+  }, [dispatch]);
+
+  // Auto-start editing when content loads
+  useEffect(() => {
+    if (sections[activeTab]?.[0] && !editingSection) {
+      setEditingSection(activeTab);
+      setFormData({ ...sections[activeTab][0].content });
+    }
+  }, [sections, activeTab, editingSection]);
+
+  useEffect(() => {
+    if (error) {
+      setSaveStatus("error");
+      setTimeout(() => {
+        setSaveStatus(null);
+        dispatch(clearError());
+      }, 5000);
+    }
+  }, [error, dispatch]);
+
+  const updateTabArrows = () => {
+    const el = tabsNavRef.current;
+    if (!el) return;
+    setShowLeftArrow(el.scrollLeft > 0);
+    setShowRightArrow(el.scrollWidth > el.clientWidth + el.scrollLeft + 1);
+  };
+
+  useEffect(() => {
+    updateTabArrows();
+    const onResize = () => updateTabArrows();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [sections]);
 
   const handleSave = async (sectionType) => {
     const currentSection = sections[sectionType]?.[0];
@@ -249,20 +268,20 @@ const ProfessionalCMS = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Title
                   </label>
                   <input
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Button Text
                   </label>
                   <input
@@ -273,14 +292,14 @@ const ProfessionalCMS = () => {
                         cta: { ...formData.cta, title: e.target.value },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter button text"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Button Link
                 </label>
                 <input
@@ -291,13 +310,13 @@ const ProfessionalCMS = () => {
                       cta: { ...formData.cta, link: e.target.value },
                     })
                   }
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter button link"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -306,7 +325,7 @@ const ProfessionalCMS = () => {
                     updateFormData({ description: e.target.value })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter detailed description"
                 />
               </div>
@@ -318,20 +337,20 @@ const ProfessionalCMS = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Title
                   </label>
                   <input
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Button Text
                   </label>
                   <input
@@ -342,14 +361,14 @@ const ProfessionalCMS = () => {
                         cta: { ...formData.cta, title: e.target.value },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter button text"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Button Link
                 </label>
                 <input
@@ -360,7 +379,7 @@ const ProfessionalCMS = () => {
                       cta: { ...formData.cta, link: e.target.value },
                     })
                   }
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter button link"
                 />
               </div>
@@ -375,7 +394,7 @@ const ProfessionalCMS = () => {
                     updateFormData({ description: e.target.value })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter detailed description"
                 />
               </div>
@@ -387,7 +406,7 @@ const ProfessionalCMS = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Tagline
                   </label>
                   <input
@@ -396,27 +415,27 @@ const ProfessionalCMS = () => {
                     onChange={(e) =>
                       updateFormData({ tagline: e.target.value })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter tagline"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Title
                   </label>
                   <input
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -425,7 +444,7 @@ const ProfessionalCMS = () => {
                     updateFormData({ description: e.target.value })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter detailed description"
                 />
               </div>
@@ -443,7 +462,7 @@ const ProfessionalCMS = () => {
                         cta: { ...formData.cta, title: e.target.value },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter button text"
                   />
                 </div>
@@ -469,7 +488,7 @@ const ProfessionalCMS = () => {
                         },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   />
                 </div>
               </div>
@@ -480,14 +499,14 @@ const ProfessionalCMS = () => {
           return (
             <>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Title
                 </label>
                 <input
                   type="text"
                   value={formData.title || ""}
                   onChange={(e) => updateFormData({ title: e.target.value })}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter section title"
                 />
               </div>
@@ -502,7 +521,7 @@ const ProfessionalCMS = () => {
                     updateFormData({ description: e.target.value })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter detailed description with HTML if needed"
                 />
               </div>
@@ -520,7 +539,7 @@ const ProfessionalCMS = () => {
                   type="text"
                   value={formData.title || ""}
                   onChange={(e) => updateFormData({ title: e.target.value })}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter section title"
                 />
               </div>
@@ -535,7 +554,7 @@ const ProfessionalCMS = () => {
                     updateFormData({ description: e.target.value })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter detailed description"
                 />
               </div>
@@ -554,7 +573,7 @@ const ProfessionalCMS = () => {
                     })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter points, one per line"
                 />
               </div>
@@ -566,20 +585,20 @@ const ProfessionalCMS = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Title
                   </label>
                   <input
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Button Text
                   </label>
                   <input
@@ -590,14 +609,14 @@ const ProfessionalCMS = () => {
                         cta: { ...formData.cta, title: e.target.value },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter button text"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -606,23 +625,23 @@ const ProfessionalCMS = () => {
                     updateFormData({ description: e.target.value })
                   }
                   rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none"
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                   placeholder="Enter detailed description"
                 />
               </div>
 
               {/* Cards Section */}
               <div className="space-y-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Feature Cards
                 </label>
                 {formData.cards?.map((card, index) => (
                   <div
                     key={index}
-                    className="border border-gray-200 rounded-lg p-4 space-y-3"
+                    className="border border-gray-200 rounded-lg p-4 space-y-3 dark:border-gray-700 dark:bg-gray-800"
                   >
                     <div className="flex justify-between items-center">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-gray-900 dark:text-white">
                         Card {index + 1}
                       </h4>
                       <button
@@ -646,7 +665,7 @@ const ProfessionalCMS = () => {
                           updateFormData({ cards: newCards });
                         }}
                         placeholder="Tag (e.g., 01 FEATURE)"
-                        className="p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                       />
                       <input
                         type="text"
@@ -657,7 +676,7 @@ const ProfessionalCMS = () => {
                           updateFormData({ cards: newCards });
                         }}
                         placeholder="Card title"
-                        className="p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                       />
                       <textarea
                         value={card.description || ""}
@@ -671,7 +690,7 @@ const ProfessionalCMS = () => {
                         }}
                         placeholder="Card description"
                         rows={2}
-                        className="p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        className="p-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                       />
                     </div>
                   </div>
@@ -684,7 +703,7 @@ const ProfessionalCMS = () => {
                     ];
                     updateFormData({ cards: newCards });
                   }}
-                  className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
+                  className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:text-blue-300"
                 >
                   <Plus size={16} className="inline mr-2" />
                   Add New Card
@@ -698,14 +717,14 @@ const ProfessionalCMS = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Title
                   </label>
                   <input
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
@@ -733,21 +752,21 @@ const ProfessionalCMS = () => {
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                     Title
                   </label>
                   <input
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -775,14 +794,14 @@ const ProfessionalCMS = () => {
                     type="text"
                     value={formData.title || ""}
                     onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter section title"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -809,7 +828,7 @@ const ProfessionalCMS = () => {
                         cta: { ...formData.cta, title: e.target.value },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter button text"
                   />
                 </div>
@@ -852,7 +871,7 @@ const ProfessionalCMS = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -872,7 +891,7 @@ const ProfessionalCMS = () => {
           return (
             <>
               <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
                   Title
                 </label>
                 <input
@@ -904,15 +923,15 @@ const ProfessionalCMS = () => {
     };
 
     return (
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-lg">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-lg dark:from-blue-900 dark:to-indigo-900 dark:border-gray-700 dark:bg-gradient-to-br">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 rounded-t-xl dark:from-slate-900 dark:to-slate-800">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-xl font-bold flex items-center space-x-2">
                 <Edit3 size={24} />
                 <span>Edit {tabs.find((t) => t.id === sectionType)?.name}</span>
               </h3>
-              <p className="text-blue-100 mt-1">
+              <p className="text-blue-100 mt-1 dark:text-blue-50">
                 Make changes to your content below
               </p>
             </div>
@@ -934,7 +953,7 @@ const ProfessionalCMS = () => {
           {renderFieldsByType()}
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
               <Image size={16} />
               <span>Upload Image</span>
             </label>
@@ -942,7 +961,7 @@ const ProfessionalCMS = () => {
               type="file"
               accept="image/*"
               onChange={handleImageChange}
-              className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+              className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
             />
             {(formData.image || selectedImage) && (
               <div className="mt-2">
@@ -953,23 +972,23 @@ const ProfessionalCMS = () => {
                       : `${BASE_IMAGE_URL}${formData.image}`
                   }
                   alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg border"
+                  className="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                 />
               </div>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-6 border-t border-blue-200 bg-white/50 -mx-6 px-6 py-4 rounded-b-xl">
+          <div className="flex items-center justify-between pt-6 border-t border-blue-200 bg-white/50 -mx-6 px-6 py-4 rounded-b-xl dark:border-gray-700 dark:bg-gray-800/60">
             <div className="flex items-center space-x-2">
               {hasUnsavedChanges && (
-                <div className="flex items-center space-x-2 text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">
+                <div className="flex items-center space-x-2 text-orange-600 bg-orange-50 px-3 py-1 rounded-lg dark:text-orange-300 dark:bg-orange-900/20">
                   <AlertCircle size={16} />
                   <span className="text-sm font-medium">Unsaved changes</span>
                 </div>
               )}
               {error && (
-                <div className="flex items-center space-x-2 text-red-600 bg-red-50 px-3 py-1 rounded-lg">
+                <div className="flex items-center space-x-2 text-red-600 bg-red-50 px-3 py-1 rounded-lg dark:text-red-300 dark:bg-red-900/20">
                   <AlertCircle size={16} />
                   <span className="text-sm font-medium">{error}</span>
                 </div>
@@ -983,7 +1002,7 @@ const ProfessionalCMS = () => {
                   setFormData({});
                   setSelectedImage(null);
                 }}
-                className="px-5 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all font-medium shadow-sm"
+                className="px-5 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all font-medium shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
                 disabled={updateLoading}
               >
                 Cancel
@@ -995,7 +1014,7 @@ const ProfessionalCMS = () => {
                   updateLoading
                     ? "bg-blue-400 text-white cursor-not-allowed"
                     : hasUnsavedChanges
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 dark:from-blue-600 dark:to-indigo-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}
               >
@@ -1020,8 +1039,8 @@ const ProfessionalCMS = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-2">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-200">
           <Loader size={24} className="animate-spin" />
           <span>Loading content...</span>
         </div>
@@ -1030,11 +1049,11 @@ const ProfessionalCMS = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Success Popup Notification */}
       {saveStatus === "success" && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm">
+          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -1042,10 +1061,10 @@ const ProfessionalCMS = () => {
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-medium text-gray-900">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                   Changes Saved Successfully!
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                   Your {tabs.find((t) => t.id === activeTab)?.name} content has
                   been updated.
                 </p>
@@ -1064,7 +1083,7 @@ const ProfessionalCMS = () => {
       {/* Error Popup Notification */}
       {saveStatus === "error" && (
         <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
-          <div className="bg-white rounded-lg shadow-lg border border-red-200 p-4 max-w-sm">
+          <div className="bg-white rounded-lg shadow-lg border border-red-200 p-4 max-w-sm dark:bg-gray-800 dark:border-red-700">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -1072,10 +1091,10 @@ const ProfessionalCMS = () => {
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-medium text-gray-900">
+                <h3 className="text-sm font-medium text-gray-900 dark:text-white">
                   Save Failed
                 </h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                   {error ||
                     "There was an error saving your changes. Please try again."}
                 </p>
@@ -1092,19 +1111,19 @@ const ProfessionalCMS = () => {
       )}
 
       {/* Professional Header */}
-      <div className="bg-white border-b shadow-sm">
+      <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
         <div className="max-w-7xl mx-auto">
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   Content Management System
                 </h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 mt-1 dark:text-gray-300">
                   Manage your website content
                 </p>
                 {/* Debug info */}
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">
                   Available sections:{" "}
                   {Object.keys(sections).length > 0
                     ? Object.keys(sections).join(", ")
@@ -1115,8 +1134,44 @@ const ProfessionalCMS = () => {
           </div>
 
           {/* Top Tab Navigation */}
-          <div className="px-6 pb-0">
-            <nav className="flex space-x-1">
+          <div className="px-6 pb-0 relative">
+            {/* Left arrow (shows when there's hidden tabs to the left) */}
+            {showLeftArrow && (
+              <button
+                onClick={() =>
+                  tabsNavRef.current?.scrollBy({
+                    left: -240,
+                    behavior: "smooth",
+                  })
+                }
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-1 bg-white dark:bg-gray-700 rounded-full shadow flex items-center justify-center"
+                aria-label="scroll left"
+              >
+                <ChevronLeft className="dark:text-white" size={18} />
+              </button>
+            )}
+
+            {/* Right arrow (shows when there's hidden tabs to the right) */}
+            {showRightArrow && (
+              <button
+                onClick={() =>
+                  tabsNavRef.current?.scrollBy({
+                    left: 240,
+                    behavior: "smooth",
+                  })
+                }
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1 bg-white dark:bg-gray-700 rounded-full shadow flex items-center justify-center"
+                aria-label="scroll right"
+              >
+                <ChevronRight className="dark:text-white" size={18} />
+              </button>
+            )}
+
+            <nav
+              ref={tabsNavRef}
+              onScroll={updateTabArrows}
+              className="flex space-x-1 overflow-x-auto max-w-6xl px-2"
+            >
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -1134,10 +1189,10 @@ const ProfessionalCMS = () => {
                         setSelectedImage(null);
                       }
                     }}
-                    className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg font-medium text-sm transition-all relative ${
+                    className={`flex min-w-fit items-center space-x-2 px-4 py-3 rounded-t-lg font-medium text-sm transition-all relative ${
                       isActive
-                        ? "bg-white text-blue-600 shadow-sm border-t border-l border-r border-gray-200"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        ? "text-blue-600 shadow-sm border-t border-l border-r border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 dark:text-blue-400"
+                        : "text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:bg-gray-800 dark:hover:bg-gray-700"
                     }`}
                   >
                     <Icon size={16} />
@@ -1161,9 +1216,9 @@ const ProfessionalCMS = () => {
         </div>
       </div>
 
-      <div className="mx-auto p-6 mt-4 bg-white rounded-xl shadow-sm border">
+      <div className="mx-auto p-6 mt-4 bg-white rounded-xl shadow-sm border dark:bg-gray-900 dark:border-gray-700">
         <div className="mx-auto p-6 pb-0 ">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4 dark:text-white">
             Select home page layout
           </h2>
 
@@ -1187,11 +1242,11 @@ const ProfessionalCMS = () => {
                   disabled={layoutLoading}
                   className={`relative p-4 border rounded-lg text-left transition-colors text-sm ${
                     isSelected
-                      ? "border-blue-600 shadow-lg bg-blue-50"
-                      : "border-gray-200 hover:shadow-sm hover:bg-gray-50"
+                      ? "border-blue-600 shadow-lg bg-blue-50 dark:bg-blue-900/20"
+                      : "border-gray-200 hover:shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700 dark:bg-gray-800"
                   }`}
                 >
-                  <h2 className="text-lg">{layout}</h2>
+                  <h2 className="text-lg dark:text-white">{layout}</h2>
                   {layoutLoading && (
                     <div className="absolute top-2 right-2 text-xs text-gray-500">
                       Updating...
@@ -1205,20 +1260,20 @@ const ProfessionalCMS = () => {
       </div>
       {/* Main Content */}
       <div className="mx-auto p-6">
-        <div className="bg-white rounded-xl shadow-sm border">
+        <div className="bg-white rounded-xl shadow-sm border dark:bg-gray-900 dark:border-gray-700">
           {/* Section Header */}
-          <div className="border-b bg-gray-50/50 px-6 py-4 rounded-t-xl">
+          <div className="border-b bg-gray-50/50 dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 px-6 py-4 rounded-t-xl">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Edit {tabs.find((t) => t.id === activeTab)?.name}
                 </h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 mt-1 dark:text-gray-300">
                   Make changes to your content below
                 </p>
                 {/* Show current section info */}
                 {sections[activeTab]?.[0] && (
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">
                     Section ID: {sections[activeTab][0]._id} | Visible:{" "}
                     {sections[activeTab][0].isVisible ? "Yes" : "No"}
                   </p>

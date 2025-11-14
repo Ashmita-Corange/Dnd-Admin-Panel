@@ -14,11 +14,32 @@ import {
 } from "../../store/slices/pages";
 import { useParams } from "react-router";
 
-function formatTimeRange(range) {
-  const [start, end] = range?.split(" - ");
-  const cleanStart = start?.replace(/(am|pm)/i, "");
-  const cleanEnd = end?.replace(/(am|pm)/i, "");
-  return [cleanStart, cleanEnd];
+function formatTimeRange(range?: string): [string, string] {
+  if (!range || typeof range !== "string") return ["", ""];
+
+  const parsePart = (part?: string) => {
+    if (!part) return "";
+    const p = part.trim().toLowerCase();
+    // Match HH:MM and am/pm (with or without space)
+    const m = p.match(/(\d{1,2}:\d{2})\s*(am|pm)/i);
+    if (m) {
+      const [, time, meridiem] = m as string[];
+      const [hh, mm] = time.split(":");
+      let hour = parseInt(hh, 10);
+      if (meridiem === "pm" && hour !== 12) hour += 12;
+      if (meridiem === "am" && hour === 12) hour = 0;
+      const hh24 = hour.toString().padStart(2, "0");
+      return `${hh24}:${mm}`;
+    }
+
+    // Fallback: remove am/pm tokens and return trimmed value
+    return p.replace(/(?:am|pm)/gi, "").trim();
+  };
+
+  const parts = range.split(/\s*-\s*/);
+  const start = parsePart(parts[0]);
+  const end = parsePart(parts[1]);
+  return [start, end];
 }
 
 export default function EditPage() {

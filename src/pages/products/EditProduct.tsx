@@ -23,7 +23,7 @@ import { getSubcategoriesByCategory } from "../../store/slices/subCategory";
 import CustomEditor from "../../components/common/TextEditor";
 import { fetchAttributes } from "../../store/slices/attributeSlice";
 import PopupAlert from "../../components/popUpAlert";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
 import { updateFaq } from "../../store/slices/faq"; // <-- import updateFaq thunk
@@ -49,6 +49,8 @@ interface HowToUseStep {
 interface Image {
   file: File | string | null;
   alt: string;
+  _id?: string;
+  localId?: string;
 }
 
 interface Ingredient {
@@ -175,6 +177,7 @@ export default function EditProduct() {
 
   const params = useParams();
   const productId = params.id;
+  const navigate = useNavigate();
   const [subcategories, setSubcategories] = useState<Category[]>([]);
   // Add FAQ state to product
   const [faqList, setFaqList] = useState<QAItem[]>([]);
@@ -197,6 +200,7 @@ export default function EditProduct() {
       const filesArray = Array.from(e.target.files).map((file) => ({
         file,
         alt: "",
+        localId: Math.random().toString(36).slice(2),
       }));
       setProduct({
         ...product,
@@ -206,12 +210,12 @@ export default function EditProduct() {
   };
 
   const updateImageAlt = (
-    index: number,
+    localId: string,
     fieldName: "images" | "descriptionImages",
     value: string
   ) => {
-    const updatedImages = product[fieldName].map((img, i) =>
-      i === index ? { ...img, alt: value } : img
+    const updatedImages = product[fieldName].map((img) =>
+      img.localId === localId ? { ...img, alt: value } : img
     );
     setProduct({ ...product, [fieldName]: updatedImages });
   };
@@ -569,6 +573,14 @@ export default function EditProduct() {
           message: "Product updated successfully!",
           type: "success",
         });
+        toast.success("Product updated successfully!", {
+          duration: 4000,
+          position: "top-right",
+        });
+        // Give the toast a moment to appear then navigate back to product list
+        setTimeout(() => {
+          navigate("/product/list");
+        }, 900);
       } else {
         setPopup({
           isVisible: true,
@@ -608,6 +620,7 @@ export default function EditProduct() {
             file: img.url || img,
             alt: img.alt || "",
             _id: img._id || "",
+            localId: img._id || Math.random().toString(36).slice(2),
           })) || [],
         thumbnail: data.thumbnail
           ? {
@@ -623,6 +636,7 @@ export default function EditProduct() {
             file: img.url || img,
             alt: img.alt || "",
             _id: img._id || "",
+            localId: img._id || Math.random().toString(36).slice(2),
           })) || [],
         descriptionVideo: data.descriptionVideo || "",
         highlights: data.highlights || [""],
@@ -765,23 +779,62 @@ export default function EditProduct() {
   };
 
   const removeImage = (
-    index: number,
+    localId: string | undefined,
     fieldName: "images" | "descriptionImages"
   ) => {
-    const updatedImages = product[fieldName].filter((_, i) => i !== index);
+    if (!localId) return;
+    const updatedImages = product[fieldName].filter(
+      (img) => img.localId !== localId
+    );
     setProduct({ ...product, [fieldName]: updatedImages });
   };
 
-  const handleRemoveImage = async (image, index, fieldName) => {
+  const handleRemoveImage = async (
+    image: any,
+    fieldName: "images" | "descriptionImages"
+  ) => {
     try {
       console.log("Removing image:", image);
       if (image._id) {
-        const response = await axiosInstance.delete(
-          `/product/image/${image._id}`
-        );
-        console.log("Image removed successfully:", response);
+        await axiosInstance.delete(`/product/image/${image._id}`);
+        console.log("Image removed successfully from server");
+
+        // After server deletion, re-fetch the product images only to sync ids
+        try {
+          if (productId) {
+            const resp = await dispatch(fetchProductById(productId)).unwrap();
+            const latestImages =
+              resp.images?.map((img: any) => ({
+                file: img.url || img,
+                alt: img.alt || "",
+                _id: img._id || "",
+                localId: img._id || Math.random().toString(36).slice(2),
+              })) || [];
+            const latestDescriptionImages =
+              resp.descriptionImages?.map((img: any) => ({
+                file: img.url || img,
+                alt: img.alt || "",
+                _id: img._id || "",
+                localId: img._id || Math.random().toString(36).slice(2),
+              })) || [];
+
+            setProduct((prev) => ({
+              ...prev,
+              images: latestImages,
+              descriptionImages: latestDescriptionImages,
+            }));
+            return;
+          }
+        } catch (fetchErr) {
+          console.error("Failed to re-fetch images after delete:", fetchErr);
+          // fallback to removing locally
+          removeImage(image.localId, fieldName);
+          return;
+        }
       }
-      removeImage(index, fieldName);
+
+      // If image had no server id or re-fetch not performed, remove locally
+      removeImage(image.localId, fieldName);
     } catch (error) {
       console.error("Error removing image:", error);
       setPopup({
@@ -1068,9 +1121,11 @@ export default function EditProduct() {
                       />
                     ) : (
                       <video
-                        src={ typeof product?.storyVideoUrl === "string"
+                        src={
+                          typeof product?.storyVideoUrl === "string"
                             ? product?.storyVideoUrl
-                            : URL.createObjectURL(product?.storyVideoUrl)}
+                            : URL.createObjectURL(product?.storyVideoUrl)
+                        }
                         controls
                         className="w-full h-48 object-cover rounded-lg border shadow-sm"
                       />
@@ -1079,7 +1134,7 @@ export default function EditProduct() {
                     <input
                       type="text"
                       value={product.storyVideoUrl.name}
-                      onChange={( e) => handleStoryFileChange(e)}
+                      onChange={(e) => handleStoryFileChange(e)}
                       className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                     />
                     <button
@@ -1122,7 +1177,7 @@ export default function EditProduct() {
                 {product.images.length > 0 && (
                   <div className="grid grid-cols-2 gap-3">
                     {product.images.map((image, index) => (
-                      <div key={index} className="relative group">
+                      <div key={image.localId} className="relative group">
                         <img
                           src={getImageUrl(image.file)}
                           alt={image.alt || `Product ${index + 1}`}
@@ -1132,16 +1187,18 @@ export default function EditProduct() {
                           type="text"
                           value={image.alt}
                           onChange={(e) =>
-                            updateImageAlt(index, "images", e.target.value)
+                            updateImageAlt(
+                              image.localId || "",
+                              "images",
+                              e.target.value
+                            )
                           }
                           className="mt-2 w-full rounded-lg border border-gray-300 px-4 py-2 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:border-gray-700 dark:bg-gray-900 dark:text-white transition-all duration-200"
                           placeholder={`Alt text for image ${index + 1}`}
                         />
                         <button
                           type="button"
-                          onClick={() =>
-                            handleRemoveImage(image, index, "images")
-                          }
+                          onClick={() => handleRemoveImage(image, "images")}
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >
                           <Trash2 size={14} />
@@ -1313,7 +1370,7 @@ export default function EditProduct() {
                 {product.descriptionImages.length > 0 && (
                   <div className="grid grid-cols-2 gap-3">
                     {product.descriptionImages.map((image, index) => (
-                      <div key={index} className="relative group">
+                      <div key={image.localId} className="relative group">
                         <img
                           src={getImageUrl(image.file)}
                           alt={image.alt || `Description ${index + 1}`}
@@ -1324,7 +1381,7 @@ export default function EditProduct() {
                           value={image.alt}
                           onChange={(e) =>
                             updateImageAlt(
-                              index,
+                              image.localId || "",
                               "descriptionImages",
                               e.target.value
                             )
@@ -1337,7 +1394,7 @@ export default function EditProduct() {
                         <button
                           type="button"
                           onClick={() =>
-                            handleRemoveImage(image, index, "descriptionImages")
+                            handleRemoveImage(image, "descriptionImages")
                           }
                           className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
                         >

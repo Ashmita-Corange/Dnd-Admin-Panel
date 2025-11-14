@@ -572,8 +572,12 @@ const VariantList: React.FC = () => {
                       <td className="px-6 py-4">
                         {renderAttributes(variant.attributes)}
                       </td>
-                      <td className="px-6 py-4">{variant.price}</td>
-                      <td className="px-6 py-4">{variant.salePrice}</td>
+                      <td className="dark:text-white px-6 py-4">
+                        {variant.price}
+                      </td>
+                      <td className="dark:text-white px-6 py-4">
+                        {variant.salePrice}
+                      </td>
 
                       <td className="px-6 py-4">
                         <div

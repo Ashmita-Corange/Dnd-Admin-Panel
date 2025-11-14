@@ -7,7 +7,7 @@ import App from "./App.tsx";
 import { AppWrapper } from "./components/common/PageMeta.tsx";
 import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { Provider } from "react-redux";
-import { store } from "./store/index.ts"
+import { store } from "./store/index.ts";
 import { Toaster } from "react-hot-toast"; // <-- Add this import
 
 export function AppWithToaster() {
@@ -20,24 +20,25 @@ export function AppWithToaster() {
         containerClassName=""
         containerStyle={{}}
         toastOptions={{
-          className: '',
+          className: "",
           duration: 4000,
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
+            zIndex: 99999999,
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: '#10B981',
-              secondary: '#FFFAEE',
+              primary: "#10B981",
+              secondary: "#FFFAEE",
             },
           },
           error: {
             duration: 4000,
             iconTheme: {
-              primary: '#EF4444',
-              secondary: '#FFFAEE',
+              primary: "#EF4444",
+              secondary: "#FFFAEE",
             },
           },
         }}
@@ -57,5 +58,5 @@ createRoot(document.getElementById("root")!).render(
         </AppWrapper>
       </ThemeProvider>
     </Provider>
-  </StrictMode>,
+  </StrictMode>
 );

@@ -368,7 +368,7 @@ const AddLead: React.FC = () => {
                   <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4" />
-                      Phone
+                      Phone<span className="text-red-500">*</span>  
                     </div>
                   </label>
                   <input
