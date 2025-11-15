@@ -300,8 +300,8 @@ export default function App() {
 
               <Route path="/contents/list" element={<ContentList />} />
 
-              <Route path="/ivr/logs" element={<IvrLogs />} />
-              <Route path="/ivr/lead-list/:leadId" element={<IverLead />} />
+              <Route path="/ivrlogs/list" element={<IvrLogs />} />
+              <Route path="/ivrlogs/lead-list/:leadId" element={<IverLead />} />
 
               {/* Email Template Management Routes */}
 
