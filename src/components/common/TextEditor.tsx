@@ -48,6 +48,8 @@ import "ckeditor5/ckeditor5.css";
  */
 const LICENSE_KEY = "GPL"; // or <YOUR_LICENSE_KEY>.
 
+const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000/";
+
 export default function CustomEditor({ value, onChange }) {
   const editorContainerRef = useRef(null);
   const editorRef = useRef(null);
@@ -106,6 +108,84 @@ export default function CustomEditor({ value, onChange }) {
       isUserEditingRef.current = false;
     };
   }, []);
+
+  // Custom CKEditor Upload Adapter - uploads files to the server and
+  // returns a URL that CKEditor will insert into the content.
+  // The adapter expects the upload API at `/api/upload` which accepts
+  // a form field named `file` and returns JSON containing the file URL
+  // in one of the common keys (e.g. `url` or `path`).
+  function CustomUploadAdapterPlugin(editor: any) {
+    class MyUploadAdapter {
+      loader: any;
+      abortController: AbortController | null;
+
+      constructor(loader: any) {
+        this.loader = loader;
+        this.abortController = null;
+      }
+
+      upload() {
+        return this.loader.file.then((file: File) => {
+          const url = `${API_BASE_URL}/upload`;
+          this.abortController = new AbortController();
+          const form = new FormData();
+          form.append("file", file);
+
+          return fetch(url, {
+            method: "POST",
+            body: form,
+            signal: this.abortController.signal,
+          })
+            .then(async (resp) => {
+              if (!resp.ok) {
+                const text = await resp.text();
+                throw new Error(`Upload failed: ${resp.status} ${text}`);
+              }
+              const json = await resp.json().catch(() => ({}));
+
+              // Support a few common response shapes
+              const returnedUrl =
+                json.url ||
+                json.path ||
+                json.fileUrl ||
+                json.file_path ||
+                (json.data && json.data.url);
+
+              if (!returnedUrl) {
+                if (typeof json === "string") {
+                  const absolute = json.startsWith("http")
+                    ? json
+                    : window.location.origin + json;
+                  return { default: absolute };
+                }
+                throw new Error(
+                  "Upload succeeded but response did not contain a URL"
+                );
+              }
+
+              const finalUrl = returnedUrl.startsWith("http")
+                ? returnedUrl
+                : API_BASE_URL + returnedUrl;
+              return { default: finalUrl };
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        });
+      }
+
+      abort() {
+        if (this.abortController) this.abortController.abort();
+      }
+    }
+
+    // Register the factory for creating adapters
+    editor.plugins.get("FileRepository").createUploadAdapter = (
+      loader: any
+    ) => {
+      return new MyUploadAdapter(loader);
+    };
+  }
 
   const { editorConfig } = useMemo(() => {
     if (!isLayoutReady) {
@@ -256,6 +336,9 @@ export default function CustomEditor({ value, onChange }) {
           },
         },
 
+        // Register the custom upload adapter plugin so image uploads are handled
+        // by our backend `/api/upload` endpoint.
+        extraPlugins: [CustomUploadAdapterPlugin],
         placeholder: `Type or paste your content here! `,
         table: {
           contentToolbar: [

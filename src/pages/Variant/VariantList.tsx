@@ -190,12 +190,15 @@ const VariantList: React.FC = () => {
         if (!inTitle && !inSku) return false;
       }
 
-      // Stock filter
+      // Stock filter - align thresholds with displayed stock status
       if (localFilters.stock) {
         const val = localFilters.stock;
-        if (val === "in-stock" && v.stock <= 0) return false;
-        if (val === "low-stock" && !(v.stock > 0 && v.stock <= 20))
+        // "In Stock" should match the high-stock category (stock > 50)
+        if (val === "in-stock" && v.stock <= 50) return false;
+        // "Low Stock" covers any positive stock up to and including 50
+        if (val === "low-stock" && !(v.stock > 0 && v.stock <= 50))
           return false;
+        // "Out of Stock" when stock is 0 or less
         if (val === "out-of-stock" && v.stock > 0) return false;
       }
 
@@ -429,7 +432,7 @@ const VariantList: React.FC = () => {
             </div>
 
             {/* Default Filter */}
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <select
                 value={localFilters.isDefault || ""}
                 onChange={(e) =>
@@ -441,7 +444,7 @@ const VariantList: React.FC = () => {
                 <option value="true">Default Only</option>
                 <option value="false">Non-Default</option>
               </select>
-            </div>
+            </div> */}
 
             {/* Limit */}
             <div className="flex items-center gap-2">
@@ -507,10 +510,6 @@ const VariantList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Stock
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
-                  Status
-                </th>
-
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </th>
@@ -588,17 +587,10 @@ const VariantList: React.FC = () => {
                             <span
                               className={`text-xs font-medium ${stockStatus.color}`}
                             >
-                              {stockStatus.text}
+                              {stockStatus.text} ({variant.stock})
                             </span>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        {variant.stock === 0 ? (
-                          <XCircle className="text-red-500" />
-                        ) : (
-                          <CheckCircle className="text-green-500" />
-                        )}
                       </td>
 
                       <td className="px-6 py-4 text-right">

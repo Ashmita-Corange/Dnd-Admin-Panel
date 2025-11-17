@@ -78,16 +78,22 @@ export const fetchPages = createAsyncThunk<
       search = "",
       sortField = "createdAt",
       sortOrder = "desc",
+      filters = {},
     } = params;
 
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("searchFields", JSON.stringify({ title: search }));
+    if (search)
+      queryParams.append("searchFields", JSON.stringify({ title: search }));
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
+    if (filters) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
     const response = await axiosInstance.get(`/page?${queryParams.toString()}`);
+
     console.log("Fetch Pages Response:", response.data);
     const data = response.data.data;
 
@@ -181,14 +187,14 @@ const pageSlice = createSlice({
       .addCase(createPage.fulfilled, (state, action) => {
         state.pages.unshift(action.payload);
       })
-    //   .addCase(updatePage.fulfilled, (state, action) => {
-    //     const index = state.pages.findIndex(
-    //       (p) => p._id === action.payload._id
-    //     );
-    //     if (index !== -1) {
-    //       state.pages[index] = action.payload;
-    //     }
-    //   })
+      //   .addCase(updatePage.fulfilled, (state, action) => {
+      //     const index = state.pages.findIndex(
+      //       (p) => p._id === action.payload._id
+      //     );
+      //     if (index !== -1) {
+      //       state.pages[index] = action.payload;
+      //     }
+      //   })
       .addCase(deletePage.fulfilled, (state, action) => {
         state.pages = state.pages.filter((p) => p._id !== action.payload);
       })

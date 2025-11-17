@@ -28,7 +28,7 @@ interface Category {
   name: string;
   slug: string;
   status: "active" | "inactive";
-  isDeleted: boolean;
+  deletedAt: boolean;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -157,7 +157,7 @@ const ProductList: React.FC = () => {
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
+      deletedAt: null,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -185,7 +185,7 @@ const ProductList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            isDeleted: false,
+            deletedAt: null,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
           search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
@@ -201,7 +201,7 @@ const ProductList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          isDeleted: false,
+          deletedAt: null,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
         search: searchInput !== "" && { name: searchInput }, // Changed from searchFields to search
@@ -251,7 +251,7 @@ const ProductList: React.FC = () => {
 
         // Refresh the categories list
         const activeFilters = {
-          isDeleted: false,
+          deletedAt: null,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         };
 

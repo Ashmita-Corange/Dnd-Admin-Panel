@@ -62,6 +62,7 @@ export const fetchProducts = createAsyncThunk<
       search = "",
       sortField = "createdAt",
       sortOrder = "desc",
+      filters = {},
     } = params;
 
     const queryParams = new URLSearchParams();
@@ -71,6 +72,9 @@ export const fetchProducts = createAsyncThunk<
     if (sortField) queryParams.append("sortBy", JSON.stringify(sortField));
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
+    if (filters) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
     const response = await axiosInstance.get(
       `/product?${queryParams.toString()}`
     );

@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "start:tenant1": "cross-env PORT=3001 vite --host=tenant1.localhost",
     "start:bharat": "cross-env PORT=3001 vite --host=bharat.localhost",
+    "start:bharatadmin": "cross-env PORT=3001 vite --host=bharatadmin.localhost",
     "start:tenant2": "cross-env PORT=3002 vite --host=tenant2.localhost"
   },
   "dependencies": {

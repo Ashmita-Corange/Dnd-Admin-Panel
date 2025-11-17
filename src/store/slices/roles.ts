@@ -86,19 +86,21 @@ export const fetchRoles = createAsyncThunk<
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("searchFields", JSON.stringify(search));
+    if (search) queryParams.append("selectFields", JSON.stringify(search));
     // if (Object.keys(filters).length > 0) {
     //   queryParams.append("filters", JSON.stringify(filters));
     // }
     // queryParams.append("sortBy", sortField);
     // queryParams.append("sortOrder", sortOrder);
 
-    const response = await axiosInstance.get(`/role?${queryParams.toString()}`,
-  {
-    headers: {
-      "x-tenant": getTenantFromURL(),
-    },
-  });
+    const response = await axiosInstance.get(
+      `/role?${queryParams.toString()}`,
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      }
+    );
     console.log("Full response from API:", response.data?.body);
     const data = response.data?.body?.message || response.data;
 

@@ -24,7 +24,7 @@ interface Category {
   name: string;
   slug: string;
   status: "active" | "inactive";
-  isDeleted: boolean;
+  deleted: boolean;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -157,7 +157,7 @@ const PagesList: React.FC = () => {
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
+      deleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -179,7 +179,7 @@ const PagesList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            isDeleted: false,
+            deleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
           search: searchInput !== "" ? searchInput : undefined,
@@ -195,7 +195,7 @@ const PagesList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          isDeleted: false,
+          deleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
         search: searchInput !== "" ? searchInput : undefined,
@@ -229,7 +229,7 @@ const PagesList: React.FC = () => {
   const handleEditSuccess = () => {
     // Refresh the categories list after successful edit
     const activeFilters = {
-      isDeleted: false,
+      deleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -278,7 +278,7 @@ const PagesList: React.FC = () => {
 
         // Refresh the categories list
         const activeFilters = {
-          isDeleted: false,
+          deleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         };
 
@@ -361,8 +361,8 @@ const PagesList: React.FC = () => {
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
                 <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
               </select>
             </div>
 
