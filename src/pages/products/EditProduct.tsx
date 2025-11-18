@@ -22,7 +22,7 @@ import { fetchCategories } from "../../store/slices/categorySlice";
 import { getSubcategoriesByCategory } from "../../store/slices/subCategory";
 import CustomEditor from "../../components/common/TextEditor";
 import { fetchAttributes } from "../../store/slices/attributeSlice";
-import PopupAlert from "../../components/popUpAlert";
+import { showAlert } from "../../store/slices/alertSlice";
 import { useParams, useNavigate } from "react-router";
 import { useAppSelector } from "../../hooks/redux";
 import { fetchTemplates } from "../../store/slices/template";
@@ -161,11 +161,7 @@ export default function EditProduct() {
     { id: 11, name: "FAQ", icon: HelpCircle, color: "bg-gray-500" },
   ];
 
-  const [popup, setPopup] = useState({
-    isVisible: false,
-    message: "",
-    type: "",
-  });
+  // global alerts are dispatched via redux showAlert
 
   const dispatch = useDispatch();
   const { loading } = useSelector((state: any) => state.product);
@@ -567,33 +563,27 @@ export default function EditProduct() {
       const response = await dispatch(
         updateProduct({ id: productId, data: formData })
       );
-      if (updateProduct.fulfilled.match(response)) {
-        setPopup({
-          isVisible: true,
-          message: "Product updated successfully!",
-          type: "success",
-        });
-        toast.success("Product updated successfully!", {
-          duration: 4000,
-          position: "top-right",
-        });
+        if (updateProduct.fulfilled.match(response)) {
+          dispatch(
+            showAlert({ message: "Product updated successfully!", type: "success" })
+          );
+          toast.success("Product updated successfully!", {
+            duration: 4000,
+            position: "top-right",
+          });
         // Give the toast a moment to appear then navigate back to product list
         setTimeout(() => {
           navigate("/product/list");
         }, 900);
       } else {
-        setPopup({
-          isVisible: true,
-          message: "Failed to update product. Please try again.",
-          type: "error",
-        });
+        dispatch(
+          showAlert({ message: "Failed to update product. Please try again.", type: "error" })
+        );
       }
     } catch (err: any) {
-      setPopup({
-        isVisible: true,
-        message: "Failed to update product. Please try again.",
-        type: "error",
-      });
+      dispatch(
+        showAlert({ message: "Failed to update product. Please try again.", type: "error" })
+      );
     }
   };
 
@@ -674,11 +664,7 @@ export default function EditProduct() {
       });
     } catch (error) {
       console.error("Error fetching product data:", error);
-      setPopup({
-        isVisible: true,
-        message: "Failed to fetch product data.",
-        type: "error",
-      });
+      dispatch(showAlert({ message: "Failed to fetch product data.", type: "error" }));
     }
   };
 
@@ -692,11 +678,7 @@ export default function EditProduct() {
       console.log("Fetched subcategories:", res);
     } catch (error) {
       console.error("Error fetching subcategories:", error);
-      setPopup({
-        isVisible: true,
-        message: "Failed to fetch subcategories.",
-        type: "error",
-      });
+      dispatch(showAlert({ message: "Failed to fetch subcategories.", type: "error" }));
     }
   };
 
@@ -837,11 +819,7 @@ export default function EditProduct() {
       removeImage(image.localId, fieldName);
     } catch (error) {
       console.error("Error removing image:", error);
-      setPopup({
-        isVisible: true,
-        message: "Failed to remove image.",
-        type: "error",
-      });
+      dispatch(showAlert({ message: "Failed to remove image.", type: "error" }));
     }
   };
 
@@ -2121,13 +2099,7 @@ export default function EditProduct() {
           style: { background: "#363636", color: "#fff" },
         }}
       />
-      {popup.isVisible && (
-        <PopupAlert
-          message={popup.message}
-          type={popup.type}
-          onClose={() => setPopup({ ...popup, isVisible: false })}
-        />
-      )}
+      {/* Global alerts are rendered by AppLayout via Redux */}
     </div>
   );
 }

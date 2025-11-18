@@ -27,6 +27,7 @@ import faqReducer from "./slices/faq";
 import reviewSlice from "./slices/reviewSlice";
 import brandSlice from "./slices/brandSlice";
 import certificate from "./slices/certificateSlice";
+import alertReducer from "./slices/alertSlice";
 import shippingZoneReducer from "./slices/shippingZone";
 import calllogReducer from "./slices/calllog";
 import structureSlice from "./slices/structure";
@@ -59,6 +60,7 @@ export const store = configureStore({
     content: Content,
     emailTemplates: Email,
     faq: faqReducer,
+    alert: alertReducer,
     review: reviewSlice,
     brand: brandSlice,
     certificates: certificate,

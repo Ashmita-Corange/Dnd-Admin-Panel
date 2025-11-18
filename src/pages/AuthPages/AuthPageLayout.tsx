@@ -21,13 +21,13 @@ export default function AuthLayout({
                 <img
                   width={231}
                   height={48}
-                  src="/images/logo/auth-logo.svg"
-                  alt="Logo"
+                  src="/logo.webp"
+                  alt="Bharat Dashboard Logo"
                 />
               </Link>
-                <p className="text-center text-gray-400 dark:text-white/60">
-               Swarn Sidhhi  Dashboard 
-                </p>
+              <p className="text-center text-gray-400 dark:text-white/60">
+                Bharat Dashboard
+              </p>
             </div>
           </div>
         </div>

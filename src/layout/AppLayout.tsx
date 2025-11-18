@@ -3,6 +3,11 @@ import { Outlet, useLocation } from "react-router";
 import AppHeader from "./AppHeader";
 import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
+import PopupAlert from "../components/popUpAlert";
+import { useDispatch, useSelector } from "react-redux";
+import { hideAlert } from "../store/slices/alertSlice";
+
+import type { RootState } from "../store";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -33,13 +38,33 @@ const LayoutContent: React.FC = () => {
         <AppHeader />
         <div
           className={` mx-auto    ${
-            isCustomTemplePage ? "max-w-full p-2 pt-0" : "p-4 md:p-6 max-w-[--breakpoint-2xl]"
+            isCustomTemplePage
+              ? "max-w-full p-2 pt-0"
+              : "p-4 md:p-6 max-w-[--breakpoint-2xl]"
           }`}
         >
           <Outlet />
         </div>
+        {/* Global popup alert (connected to redux) */}
+        <AlertRenderer />
       </div>
     </div>
+  );
+};
+
+const AlertRenderer: React.FC = () => {
+  const dispatch = useDispatch();
+  const alert = useSelector((state: RootState) => state.alert);
+
+  if (!alert) return null;
+
+  return (
+    <PopupAlert
+      isVisible={alert.isVisible}
+      message={alert.message}
+      type={alert.type}
+      onClose={() => dispatch(hideAlert())}
+    />
   );
 };
 
