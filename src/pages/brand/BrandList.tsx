@@ -14,7 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
-import { setSearchQuery } from "../../store/slices/categorySlice";
+import { setSearchQuery } from "../../store/slices/brandSlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
@@ -26,7 +26,6 @@ interface Category {
   name: string;
   slug: string;
   status: "active" | "inactive";
-  isDeleted: boolean;
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -168,7 +167,6 @@ const BrandList: React.FC = () => {
   // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -177,8 +175,9 @@ const BrandList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
@@ -190,11 +189,11 @@ const BrandList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
-          search: searchQuery || "", // Changed from searchFields to search
-          sort: { createdAt: "desc" },
+          search: searchQuery || "",
+          sortField: "createdAt",
+          sortOrder: "desc",
         })
       );
     }
@@ -206,25 +205,24 @@ const BrandList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
-        search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
 
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: boolean | string) => {
     const updated = { ...localFilters, [key]: value };
     setLocalFilters(updated);
-    dispatch(setFilters(updated));
   };
 
   const handleResetFilters = () => {
     setSearchInput("");
     setLocalFilters({});
-    dispatch(resetFilters());
+    dispatch(setSearchQuery(""));
   };
 
   const openEditModal = (category: Category) => {
@@ -240,7 +238,6 @@ const BrandList: React.FC = () => {
   const handleEditSuccess = () => {
     // Refresh the categories list after successful edit
     const activeFilters = {
-      isDeleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
     };
 
@@ -254,8 +251,9 @@ const BrandList: React.FC = () => {
         page: pagination.page,
         limit: pagination.limit,
         filters: activeFilters,
-        search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
@@ -289,7 +287,6 @@ const BrandList: React.FC = () => {
 
         // Refresh the categories list
         const activeFilters = {
-          isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
         };
 
@@ -372,8 +369,8 @@ const BrandList: React.FC = () => {
                 className="border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
                 <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
+                <option value={true}>Active</option>
+                <option value={false}>Inactive</option>
               </select>
             </div>
 

@@ -21,6 +21,9 @@ interface FetchBrandParams {
   search?: string;
   sortField?: string;
   sortOrder?: "asc" | "desc";
+
+  // optional arbitrary filters that will be appended as query params
+  filters?: Record<string, string | number | boolean>;
 }
 
 interface Pagination {
@@ -78,6 +81,7 @@ export const fetchBrands = createAsyncThunk<
       search = "",
       sortField = "createdAt",
       sortOrder = "desc",
+      filters = {},
     } = params;
 
     const queryParams = new URLSearchParams();
@@ -86,6 +90,9 @@ export const fetchBrands = createAsyncThunk<
     if (search) queryParams.append("search", search);
     if (sortField) queryParams.append("sortBy", sortField);
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
+    if (filters && Object.keys(filters).length) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
 
     const response = await axiosInstance.get(
       `/brand?${queryParams.toString()}`
@@ -97,10 +104,11 @@ export const fetchBrands = createAsyncThunk<
     return {
       brands: data?.data || [],
       pagination: {
-        total: data?.totalCount || 0,
-        page: data?.page || 1,
-        limit: data?.pageSize,
-        totalPages: data?.totalPages || 0,
+        total: data?.totalCount ?? data?.total ?? 0,
+        page: data?.page ?? data?.currentPage ?? 1,
+        // keep the requested limit to avoid toggling between undefined and a number
+        limit: limit,
+        totalPages: data?.totalPages ?? 0,
       },
     };
   } catch (err: any) {

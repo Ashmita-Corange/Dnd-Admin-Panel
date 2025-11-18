@@ -80,13 +80,23 @@ export const fetchStaff = createAsyncThunk<
     const queryParams = new URLSearchParams();
     queryParams.append("page", page.toString());
     queryParams.append("limit", limit.toString());
-    if (search) queryParams.append("searchFields", JSON.stringify(search));
+    if (search)
+      queryParams.append(
+        "searchFields",
+        JSON.stringify({
+          name: search,
+          email: search,
+        })
+      );
 
-    const response = await axiosInstance.get(`/staff?${queryParams.toString()}`, {
-      headers: {
-        "x-tenant": getTenantFromURL(),
-      },
-    });
+    const response = await axiosInstance.get(
+      `/staff?${queryParams.toString()}`,
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      }
+    );
 
     console.log("Staff Full response from API:", response.data);
     const data = response.data;

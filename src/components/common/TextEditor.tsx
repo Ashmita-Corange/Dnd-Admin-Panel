@@ -49,6 +49,8 @@ import "ckeditor5/ckeditor5.css";
 const LICENSE_KEY = "GPL"; // or <YOUR_LICENSE_KEY>.
 
 const API_BASE_URL = import.meta.env.VITE_BASE_URL || "http://localhost:3000/";
+const Image_Base_URL =
+  import.meta.env.VITE_IMAGE_URL || "http://localhost:3000/";
 
 export default function CustomEditor({ value, onChange }) {
   const editorContainerRef = useRef(null);
@@ -155,7 +157,7 @@ export default function CustomEditor({ value, onChange }) {
                 if (typeof json === "string") {
                   const absolute = json.startsWith("http")
                     ? json
-                    : window.location.origin + json;
+                    : Image_Base_URL + json;
                   return { default: absolute };
                 }
                 throw new Error(
@@ -165,7 +167,7 @@ export default function CustomEditor({ value, onChange }) {
 
               const finalUrl = returnedUrl.startsWith("http")
                 ? returnedUrl
-                : API_BASE_URL + returnedUrl;
+                : Image_Base_URL + returnedUrl;
               return { default: finalUrl };
             })
             .catch((err) => {
