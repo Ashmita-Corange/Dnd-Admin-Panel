@@ -112,9 +112,18 @@ export const fetchOrders = createAsyncThunk<
     if (search) {
       queryParams.append("search", search);
     }
-    if (sortField) queryParams.append("sortBy", JSON.stringify({ [sortField]: sortOrder === "asc" ? 1 : -1 }));
+    if (sortField)
+      queryParams.append(
+        "sortBy",
+        JSON.stringify({ [sortField]: sortOrder === "asc" ? 1 : -1 })
+      );
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
-    if (status) queryParams.append("status", status);
+    const filters = {};
+    if (status) filters["status"] = status;
+    if (search) filters["_id"] = search;
+    if (Object.keys(filters).length > 0) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
     if (paymentStatus) queryParams.append("paymentStatus", paymentStatus);
 
     const response = await axiosInstance.get(
