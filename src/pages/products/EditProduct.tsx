@@ -567,10 +567,10 @@ export default function EditProduct() {
           dispatch(
             showAlert({ message: "Product updated successfully!", type: "success" })
           );
-          toast.success("Product updated successfully!", {
-            duration: 4000,
-            position: "top-right",
-          });
+          // toast.success("Product updated successfully!", {
+          //   duration: 4000,
+          //   position: "top-right",
+          // });
         // Give the toast a moment to appear then navigate back to product list
         setTimeout(() => {
           navigate("/product/list");
