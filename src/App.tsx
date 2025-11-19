@@ -101,6 +101,7 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 
 const AppLayout = lazy(() => import("./layout/AppLayout"));
 const Home = lazy(() => import("./pages/Dashboard/Home"));
+const TrackingList = lazy(() => import("./pages/trackinganalytics/TrackingList"));
 
 // Simple modal wrapper for SignIn
 function SignInModal({
@@ -341,6 +342,9 @@ export default function App() {
 
               {/* Settings Management Route */}
               <Route path="/settings/list" element={<SettingsList />} />
+
+              {/* Tracking Analytics */}
+              <Route path="/trackinganalytics/list" element={<TrackingList />} />
             </Route>
           </Route>
 
