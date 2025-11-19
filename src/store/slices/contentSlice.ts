@@ -110,9 +110,11 @@ export const fetchHomePageContent = createAsyncThunk<
 
 export const updateSectionContent = createAsyncThunk<
     Section,
-    { sectionId: string; content: SectionContent; image?: File },
+    { sectionId: string; content: SectionContent; image?: File; mobileImage?: File },
     { rejectValue: string }
->('content/updateSectionContent', async ({ sectionId, content, image }, { rejectWithValue }) => {
+>(
+  'content/updateSectionContent',
+  async ({ sectionId, content, image, mobileImage }, { rejectWithValue }) => {
     try {
         const formData = new FormData();
         
@@ -125,6 +127,9 @@ export const updateSectionContent = createAsyncThunk<
         
         if (image) {
             formData.append('image', image);
+        }
+        if (mobileImage) {
+            formData.append('mobileImage', mobileImage);
         }
 
         const response = await axiosInstance.put(

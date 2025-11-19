@@ -87,6 +87,7 @@ const ProfessionalCMS = () => {
   const [saveStatus, setSaveStatus] = useState(null);
   const [formData, setFormData] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedMobileImage, setSelectedMobileImage] = useState(null);
   const [homePageLayout, setHomePageLayout] = useState("");
   const [layoutLoading, setLayoutLoading] = useState(false);
   const tabsNavRef = useRef(null);
@@ -148,6 +149,9 @@ const ProfessionalCMS = () => {
       if (selectedImage) {
         apiFormData.append("image", selectedImage);
       }
+      if (selectedMobileImage) {
+        apiFormData.append("mobileImage", selectedMobileImage);
+      }
 
       // Use correct endpoint format with query parameter
       const response = await axiosInstance.put(
@@ -170,6 +174,7 @@ const ProfessionalCMS = () => {
         setSaveStatus("success");
         setFormData({});
         setSelectedImage(null);
+        setSelectedMobileImage(null);
 
         // Show success popup for longer duration
         setTimeout(() => setSaveStatus(null), 4000);
@@ -255,11 +260,27 @@ const ProfessionalCMS = () => {
     }
   };
 
+  const handleMobileImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedMobileImage(file);
+      handleFormChange();
+    }
+  };
+
   const renderEditForm = (sectionType, sectionData) => {
     const updateFormData = (updates) => {
       setFormData((prev) => ({ ...prev, ...updates }));
       handleFormChange();
     };
+
+    // Sections for which we should NOT show image / mobile image upload fields
+    const excludedImageSections = [
+      "genuineHeartStory",
+      "blogs",
+      "noConfusion",
+      "3V",
+    ];
 
     const renderFieldsByType = () => {
       switch (sectionType) {
@@ -844,7 +865,7 @@ const ProfessionalCMS = () => {
                         cta: { ...formData.cta, link: e.target.value },
                       })
                     }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm"
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                     placeholder="Enter button link"
                   />
                 </div>
@@ -941,6 +962,7 @@ const ProfessionalCMS = () => {
                 setHasUnsavedChanges(false);
                 setFormData({});
                 setSelectedImage(null);
+                setSelectedMobileImage(null);
               }}
               className="text-blue-100 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
             >
@@ -952,31 +974,60 @@ const ProfessionalCMS = () => {
         <div className="p-6 space-y-6">
           {renderFieldsByType()}
 
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
-              <Image size={16} />
-              <span>Upload Image</span>
-            </label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
-            />
-            {(formData.image || selectedImage) && (
+          {/* Only show image upload + previews when the section is NOT in excluded list */}
+          {!excludedImageSections.includes(sectionType) && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
+                <Image size={16} />
+                <span>Upload Image</span>
+              </label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+              />
               <div className="mt-2">
-                <img
-                  src={
-                    selectedImage
-                      ? URL.createObjectURL(selectedImage)
-                      : `${BASE_IMAGE_URL}${formData.image}`
-                  }
-                  alt="Preview"
-                  className="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                <label className="text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2 dark:text-gray-200">
+                  <Image size={16} />
+                  <span>Upload Mobile Image</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleMobileImageChange}
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
                 />
               </div>
-            )}
-          </div>
+              {(formData.image || selectedImage) && (
+                <div className="mt-2">
+                  <img
+                    src={
+                      selectedImage
+                        ? URL.createObjectURL(selectedImage)
+                        : `${BASE_IMAGE_URL}${formData.image}`
+                    }
+                    alt="Preview"
+                    className="w-32 h-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                  />
+                </div>
+              )}
+              {(formData.mobileImage || selectedMobileImage) && (
+                <div className="mt-2">
+                  <p className="text-xs text-gray-500 mb-1">Mobile preview</p>
+                  <img
+                    src={
+                      selectedMobileImage
+                        ? URL.createObjectURL(selectedMobileImage)
+                        : `${BASE_IMAGE_URL}${formData.mobileImage}`
+                    }
+                    alt="Mobile Preview"
+                    className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-6 border-t border-blue-200 bg-white/50 -mx-6 px-6 py-4 rounded-b-xl dark:border-gray-700 dark:bg-gray-800/60">
@@ -1001,6 +1052,7 @@ const ProfessionalCMS = () => {
                   setHasUnsavedChanges(false);
                   setFormData({});
                   setSelectedImage(null);
+                  setSelectedMobileImage(null);
                 }}
                 className="px-5 py-2.5 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all font-medium shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700"
                 disabled={updateLoading}
@@ -1129,6 +1181,20 @@ const ProfessionalCMS = () => {
                     ? Object.keys(sections).join(", ")
                     : "Loading..."}
                 </p>
+
+                {/* Initial mobile preview for the active section if available */}
+                {sections[activeTab]?.[0]?.content?.mobileImage && (
+                  <div className="mt-3 flex items-center gap-3">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Mobile preview:
+                    </div>
+                    <img
+                      src={`${BASE_IMAGE_URL}${sections[activeTab][0].content.mobileImage}`}
+                      alt="Mobile preview"
+                      className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1187,6 +1253,7 @@ const ProfessionalCMS = () => {
                         setEditingSection(tab.id);
                         setFormData({ ...sections[tab.id][0].content });
                         setSelectedImage(null);
+                        setSelectedMobileImage(null);
                       }
                     }}
                     className={`flex min-w-fit items-center space-x-2 px-4 py-3 rounded-t-lg font-medium text-sm transition-all relative ${
