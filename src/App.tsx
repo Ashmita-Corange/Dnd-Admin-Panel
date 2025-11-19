@@ -89,6 +89,7 @@ import EditOrder from "./pages/Orders/EditOrder";
 import ContactList from "./pages/pages/contact/ContactList";
 import EditContact from "./pages/pages/contact/EditContact";
 import ViewContact from "./pages/pages/contact/ViewContact";
+import Analytics from "./pages/Dashboard/analytics";
 
 // Lazy load pages
 
@@ -180,7 +181,8 @@ export default function App() {
           {/* Protected Routes - Only accessible when authenticated */}
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
-              <Route index path="/" element={<Home />} />
+              <Route index path="/" element={<Analytics />} />
+              {/* <Route index path="/analytics" element={<Analytics />} /> */}
               <Route path="/profile" element={<UserProfiles />} />
               <Route path="/calendar" element={<Calendar />} />
 
