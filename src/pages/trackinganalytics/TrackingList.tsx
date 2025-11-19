@@ -327,9 +327,12 @@ export default function TrackingList() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-3">User Information</h3>
                     <div className="bg-gray-50 p-4 rounded-lg">
-                      <pre className="text-sm text-gray-900 whitespace-pre-wrap font-mono overflow-x-auto">
-                        {JSON.stringify(selectedEvent.user || selectedEvent.userInfo, null, 2)}
-                      </pre>
+                      <p className="text-sm text-gray-900 font-medium">
+                        Name: {selectedEvent.user?.name || selectedEvent.userInfo?.name}
+                      </p>
+                                            <p className="text-sm text-gray-900 font-medium">
+                        Email: {selectedEvent.user?.email || selectedEvent.userInfo?.email}
+                      </p>
                     </div>
                   </div>
                 )}
