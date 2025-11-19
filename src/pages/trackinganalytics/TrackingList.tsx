@@ -7,26 +7,70 @@ import {
 } from "../../store/slices/trackingSlice";
 import type { AppDispatch, RootState } from "../../store";
 import { Eye, X } from "lucide-react";
+import { fetchProducts as fetchProductsAction, Product } from "../../store/slices/product";
+
+// common tracking event types for dropdown
+const EVENT_TYPES = [
+  "PRODUCT_VIEW",
+  "ADD_TO_CART",
+  "ADD_TO_WISHLIST",
+  // "REMOVE_FROM_WISHLIST",
+  // "ORDER_PLACED",
+  // "CHECKOUT_START",
+  // "CHECKOUT_ABANDONED",
+  // "SEARCH",
+];
 
 export default function TrackingList() {
   const dispatch = useDispatch<AppDispatch>();
   const { events, loading, error } = useSelector((state: RootState) =>
     selectTrackingState(state)
   );
+
+  // load products from product slice
+  const products = useSelector((state: RootState) => state.product?.products ?? []);
+  const productsLoading = useSelector((state: RootState) => state.product?.loading ?? false);
+
   const [selectedEvent, setSelectedEvent] = useState<TrackingEvent | null>(null);
 
+  // filters state
+  const [productId, setProductId] = useState<string | "">("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [since, setSince] = useState<string>(""); // ISO datetime string
+  const [limit, setLimit] = useState<number>(200);
+
+  // current applied filters (so refresh uses them)
+  const [appliedFilters, setAppliedFilters] = useState<any>({ limit: 200 });
+
   useEffect(() => {
-    dispatch(fetchTrackingEvents());
+    // initial products load (fetch many to populate dropdown)
+    dispatch(fetchProductsAction({ page: 1, limit: 1000 }));
+    // initial events load with default limit
+    dispatch(fetchTrackingEvents({ limit: 200 }));
+    setAppliedFilters({ limit: 200 });
   }, [dispatch]);
 
   const onRefresh = () => {
-    dispatch(fetchTrackingEvents());
+    dispatch(fetchTrackingEvents(appliedFilters));
   };
 
-  const eventsList = Array.isArray(events) 
-    ? events 
-    : events?.events 
-    ? events.events 
+  const applyFilters = () => {
+    const p: any = { limit };
+    if (productId) p.productId = productId;
+    if (typeFilter) p.type = typeFilter;
+    if (since) {
+      // ensure ISO string — if user picks date only, append time
+      const iso = new Date(since).toISOString();
+      p.since = iso;
+    }
+    setAppliedFilters(p);
+    dispatch(fetchTrackingEvents(p));
+  };
+
+  const eventsList = Array.isArray(events)
+    ? events
+    : events?.events
+    ? events.events
     : [];
 
   const openDetailsModal = (event: TrackingEvent) => {
@@ -40,15 +84,97 @@ export default function TrackingList() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold text-gray-900">Tracking Events</h1>
-          <button
-            onClick={onRefresh}
-            disabled={loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors shadow-sm"
-          >
-            {loading ? "Loading..." : "Refresh"}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onRefresh}
+              disabled={loading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors shadow-sm"
+            >
+              {loading ? "Loading..." : "Refresh"}
+            </button>
+          </div>
+        </div>
+
+        {/* Filters */}
+        <div className="mb-6 bg-white p-4 rounded shadow-sm">
+          <div className="flex flex-wrap gap-4 items-end">
+            <div className="flex-1 min-w-[220px]">
+              <label className="block text-sm font-medium text-gray-700">Product</label>
+              <select
+                value={productId}
+                onChange={(e) => setProductId(e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md"
+              >
+                <option value="">All products</option>
+                {products?.map((p: Product) => (
+                  <option key={p._id} value={p._id}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="min-w-[180px]">
+              <label className="block text-sm font-medium text-gray-700">Type</label>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md px-2 py-1"
+              >
+                <option value="">All types</option>
+                {EVENT_TYPES.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* <div className="min-w-[220px]">
+              <label className="block text-sm font-medium text-gray-700">Since (date/time)</label>
+              <input
+                type="datetime-local"
+                value={since}
+                onChange={(e) => setSince(e.target.value)}
+                className="mt-1 block w-full border-gray-300 rounded-md px-2 py-1"
+              />
+            </div> */}
+
+            <div className="min-w-[120px]">
+              <label className="block text-sm font-medium text-gray-700">Limit</label>
+              <input
+                type="number"
+                value={limit}
+                onChange={(e) => setLimit(Number(e.target.value))}
+                className="mt-1 block w-full border-gray-300 rounded-md px-2 py-1"
+                min={1}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={applyFilters}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Apply
+              </button>
+              <button
+                onClick={() => {
+                  setProductId("");
+                  setTypeFilter("");
+                  setSince("");
+                  setLimit(200);
+                  setAppliedFilters({ limit: 200 });
+                  dispatch(fetchTrackingEvents({ limit: 200 }));
+                }}
+                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -94,7 +220,7 @@ export default function TrackingList() {
                     return (
                       <tr key={ev._id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
-                          {ev._id.slice(0, 8)}...
+                          {ev._id?.slice?.(0, 8) ?? ev._id}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
@@ -113,7 +239,7 @@ export default function TrackingList() {
                           {ev.guestId ?? "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {ev.product?.name ?? "-"}
+                          {ev.product?.name ?? ev.productId ?? "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {ts}
