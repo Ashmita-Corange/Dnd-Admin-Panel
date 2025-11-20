@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap") layer(base);
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800;900&display=swap") layer(base);
 
 @import "tailwindcss";
 
@@ -200,7 +200,7 @@
   body {
     @apply relative font-normal z-1 bg-gray-50;
     /* apply Orbitron globally (fallback to sans-serif) */
-    font-family: var(--font-orbitron), system-ui, -apple-system, "Segoe UI",
+    font-family: var(--font-roboto), system-ui, -apple-system, "Segoe UI",
       Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
       "Segoe UI Emoji", "Segoe UI Symbol";
   }

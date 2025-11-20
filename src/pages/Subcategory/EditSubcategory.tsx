@@ -375,7 +375,7 @@ export default function EditSubcategory() {
                     </select>
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block mb-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
                       Sort Order
                     </label>
@@ -391,6 +391,20 @@ export default function EditSubcategory() {
                     <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                       Lower numbers appear first
                     </p>
+                  </div> */}
+                   <div>
+                    <label className="block mb-2.5 text-sm font-semibold text-gray-700 dark:text-gray-200">
+                      Category Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={category.name}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none dark:border-gray-700 dark:bg-gray-800/50 dark:text-white"
+                      placeholder="Enter category name"
+                      required
+                    />
                   </div>
 
                   <div className="flex items-start pt-8">
