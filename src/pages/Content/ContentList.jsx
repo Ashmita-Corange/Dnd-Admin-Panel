@@ -489,6 +489,23 @@ const ProfessionalCMS = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
+                    Button Link
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cta?.link || ""}
+                    onChange={(e) =>
+                      updateFormData({
+                        cta: { ...formData.cta, link: e.target.value },
+                      })
+                    }
+                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                    placeholder="Enter button link"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     Offer End Date
                   </label>

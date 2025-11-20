@@ -18,7 +18,9 @@ const EVENT_TYPES = [
   // "ORDER_PLACED",
   "CHECKOUT_START",
   "CHECKOUT_ABANDONED",
-  // "SEARCH",
+ "PAGE_VIEW",
+ "LOGIN",
+ "SIGNUP",
 ];
 
 export default function TrackingList() {

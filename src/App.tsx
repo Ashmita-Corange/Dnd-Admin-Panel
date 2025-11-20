@@ -89,7 +89,7 @@ import EditOrder from "./pages/Orders/EditOrder";
 import ContactList from "./pages/pages/contact/ContactList";
 import EditContact from "./pages/pages/contact/EditContact";
 import ViewContact from "./pages/pages/contact/ViewContact";
-import Analytics from "./pages/Dashboard/analytics";
+import Analytics from "./pages/Dashboard/Analytics";
 
 // Lazy load pages
 
@@ -101,7 +101,9 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 
 const AppLayout = lazy(() => import("./layout/AppLayout"));
 const Home = lazy(() => import("./pages/Dashboard/Home"));
-const TrackingList = lazy(() => import("./pages/trackinganalytics/TrackingList"));
+const TrackingList = lazy(
+  () => import("./pages/trackinganalytics/TrackingList")
+);
 
 // Simple modal wrapper for SignIn
 function SignInModal({
@@ -152,6 +154,7 @@ export default function App() {
 
   // Show popup if not authenticated and not on /signin or /signup
   // (You may want to refine this logic based on your routing needs)
+
   React.useEffect(() => {
     if (!isAuthenticated) {
       setShowSignIn(true);
@@ -344,7 +347,10 @@ export default function App() {
               <Route path="/settings/list" element={<SettingsList />} />
 
               {/* Tracking Analytics */}
-              <Route path="/trackinganalytics/list" element={<TrackingList />} />
+              <Route
+                path="/trackinganalytics/list"
+                element={<TrackingList />}
+              />
             </Route>
           </Route>
 
