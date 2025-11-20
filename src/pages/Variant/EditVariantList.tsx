@@ -11,7 +11,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
-import { ArrowLeft, Plus, X, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Upload, Trash2, Sparkles } from "lucide-react";
 import axiosInstance from "../../services/axiosConfig";
 
 const Image_URL = import.meta.env.VITE_IMAGE_URL || "http://localhost:3000";
@@ -314,370 +314,395 @@ const EditVariantList = () => {
         description="Edit product variant"
       />
 
-      {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleBackClick}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Back to Variants</span>
-          </button>
-          <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            Edit Variant
-          </h1>
+      {/* Outer gradient container like EditSubcategory */}
+      <div className="min-h-screen rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-gray-50/50 to-white dark:border-gray-800 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900 px-5 py-7 xl:px-10 xl:py-12 relative overflow-hidden">
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10"></div>
+
+        {/* Header */}
+        <div className="flex items-start gap-4 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              Edit Variant
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Update product variant
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="h-fit rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <div className="space-y-6">
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                Basic Information
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Update the basic details of your variant
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Product <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="productId"
-                  value={variant.productId}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+        {/* Inner white card (form lives here) */}
+        <div className="h-fit rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
+          <div className="mx-auto w-full">
+            {/* Back button / breadcrumb area kept — existing code */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleBackClick}
+                  className="flex items-center gap-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
                 >
-                  <option value="">Select Product</option>
-                  {products?.map((prod: any) => (
-                    <option key={prod._id} value={prod._id}>
-                      {prod.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Variant Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={variant.title}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
-                  placeholder="Enter variant title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  SKU <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="sku"
-                  value={variant.sku}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
-                  placeholder="Enter SKU"
-                />
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back to Variants</span>
+                </button>
+                <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
+                  Edit Variant
+                </h1>
               </div>
             </div>
-          </div>
 
-          {/* Pricing & Inventory */}
-          <div className="space-y-6">
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                Pricing & Inventory
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Set pricing and stock information
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Price <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    name="price"
-                    value={variant.price}
-                    onChange={handleChange}
-                    required
-                    className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
-                    min="0"
-                    step="0.01"
-                  />
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Basic Information */}
+              <div className="space-y-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    Basic Information
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Update the basic details of your variant
+                  </p>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Sale Price
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    ₹
-                  </span>
-                  <input
-                    type="number"
-                    name="salePrice"
-                    value={variant.salePrice}
-                    onChange={handleChange}
-                    className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Stock Quantity <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={variant.stock}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
-                  min="0"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Offer Tag
-                </label>
-                <input
-                  type="text"
-                  name="offerTag"
-                  value={variant.offerTag}
-                  onChange={handleChange}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
-                  placeholder="e.g., Best Seller, New Arrival"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Images */}
-          <div className="space-y-6">
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
-                <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                Images
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Add or update variant images
-              </p>
-            </div>
-
-            {/* Existing Images */}
-            {variant.existingImages.length > 0 && (
-              <div className="space-y-4">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Current Images
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {variant.existingImages.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
-                    >
-                      <img
-                        src={getImageUrl(img)}
-                        alt={`Existing ${idx + 1}`}
-                        className="w-full h-24 object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveImage(img, idx)}
-                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* New Images Upload */}
-            <div className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Upload New Images
-              </label>
-              <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-                <input
-                  type="file"
-                  name="images"
-                  multiple
-                  onChange={handleImageChange}
-                  accept="image/*"
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Click to upload images
-                </label>
-                <p className="text-xs text-gray-500 mt-1">
-                  PNG, JPG, GIF up to 10MB each
-                </p>
-              </div>
-
-              {/* New Images Preview */}
-              {variant.images.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {variant.images.map((img, idx) => (
-                    <div
-                      key={idx}
-                      className="relative group rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-600"
-                    >
-                      <img
-                        src={URL.createObjectURL(img)}
-                        alt={`New ${idx + 1}`}
-                        className="w-full h-24 object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeNewImage(idx)}
-                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Attributes */}
-          <div className="space-y-6">
-            <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                Attributes
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Define variant attributes like color, size, etc.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {variant.attributes.map((attr, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                >
-                  <div className="flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Product <span className="text-red-500">*</span>
+                    </label>
                     <select
-                      value={attr.attributeId}
-                      onChange={(e) =>
-                        handleAttributeChange(
-                          idx,
-                          "attributeId",
-                          e.target.value
-                        )
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 transition-colors"
+                      name="productId"
+                      value={variant.productId}
+                      onChange={handleChange}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
                     >
-                      <option value="">Select Attribute</option>
-                      {attributes.map((attribute) => (
-                        <option key={attribute._id} value={attribute._id}>
-                          {attribute.value}
+                      <option value="">Select Product</option>
+                      {products?.map((prod: any) => (
+                        <option key={prod._id} value={prod._id}>
+                          {prod.name}
                         </option>
                       ))}
                     </select>
                   </div>
-                  <div className="flex-1">
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Variant Title <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
-                      placeholder="Attribute value"
-                      value={attr.value}
-                      onChange={(e) =>
-                        handleAttributeChange(idx, "value", e.target.value)
-                      }
-                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 transition-colors"
+                      name="title"
+                      value={variant.title}
+                      onChange={handleChange}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                      placeholder="Enter variant title"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      SKU <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="sku"
+                      value={variant.sku}
+                      onChange={handleChange}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                      placeholder="Enter SKU"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing & Inventory */}
+              <div className="space-y-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    Pricing & Inventory
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Set pricing and stock information
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Price <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        name="price"
+                        value={variant.price}
+                        onChange={handleChange}
+                        required
+                        className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Sale Price
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        name="salePrice"
+                        value={variant.salePrice}
+                        onChange={handleChange}
+                        className="w-full rounded-lg border border-gray-300 pl-8 pr-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Stock Quantity <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={variant.stock}
+                      onChange={handleChange}
+                      required
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                      min="0"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Offer Tag
+                    </label>
+                    <input
+                      type="text"
+                      name="offerTag"
+                      value={variant.offerTag}
+                      onChange={handleChange}
+                      className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-400 transition-colors"
+                      placeholder="e.g., Best Seller, New Arrival"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Images */}
+              <div className="space-y-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    Images
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Add or update variant images
+                  </p>
+                </div>
+
+                {/* Existing Images */}
+                {variant.existingImages.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Current Images
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      {variant.existingImages.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group rounded-lg overflow-hidden border-2 border-gray-200 dark:border-gray-600"
+                        >
+                          <img
+                            src={getImageUrl(img)}
+                            alt={`Existing ${idx + 1}`}
+                            className="w-full h-24 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveImage(img, idx)}
+                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* New Images Upload */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Upload New Images
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                    <input
+                      type="file"
+                      name="images"
+                      multiple
+                      onChange={handleImageChange}
+                      accept="image/*"
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label
+                      htmlFor="image-upload"
+                      className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      Click to upload images
+                    </label>
+                    <p className="text-xs text-gray-500 mt-1">
+                      PNG, JPG, GIF up to 10MB each
+                    </p>
+                  </div>
+
+                  {/* New Images Preview */}
+                  {variant.images.length > 0 && (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      {variant.images.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group rounded-lg overflow-hidden border-2 border-blue-200 dark:border-blue-600"
+                        >
+                          <img
+                            src={URL.createObjectURL(img)}
+                            alt={`New ${idx + 1}`}
+                            className="w-full h-24 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeNewImage(idx)}
+                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Attributes */}
+              <div className="space-y-6">
+                <div className="border-b border-gray-200 dark:border-gray-700 pb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                    Attributes
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Define variant attributes like color, size, etc.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {variant.attributes.map((attr, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <select
+                          value={attr.attributeId}
+                          onChange={(e) =>
+                            handleAttributeChange(
+                              idx,
+                              "attributeId",
+                              e.target.value
+                            )
+                          }
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 transition-colors"
+                        >
+                          <option value="">Select Attribute</option>
+                          {attributes.map((attribute) => (
+                            <option key={attribute._id} value={attribute._id}>
+                              {attribute.value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Attribute value"
+                          value={attr.value}
+                          onChange={(e) =>
+                            handleAttributeChange(idx, "value", e.target.value)
+                          }
+                          className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400 transition-colors"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAttribute(idx)}
+                        disabled={variant.attributes.length === 1}
+                        className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Remove attribute"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+
                   <button
                     type="button"
-                    onClick={() => removeAttribute(idx)}
-                    disabled={variant.attributes.length === 1}
-                    className="flex items-center justify-center w-10 h-10 rounded-lg bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Remove attribute"
+                    onClick={addAttribute}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-medium transition-colors dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/40"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Plus className="w-4 h-4" />
+                    Add Attribute
                   </button>
                 </div>
-              ))}
+              </div>
 
-              <button
-                type="button"
-                onClick={addAttribute}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 font-medium transition-colors dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800 dark:hover:bg-blue-900/40"
-              >
-                <Plus className="w-4 h-4" />
-                Add Attribute
-              </button>
-            </div>
+              {/* Form Actions */}
+              <div className="flex items-center justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={handleBackClick}
+                  className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Variant"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
-
-          {/* Form Actions */}
-          <div className="flex items-center justify-between pt-8 border-t border-gray-200 dark:border-gray-700">
-            <button
-              type="button"
-              onClick={handleBackClick}
-              className="px-6 py-3 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Updating...
-                </>
-              ) : (
-                "Update Variant"
-              )}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
 
       <PopupAlert

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Sparkles } from "lucide-react";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
@@ -211,70 +212,88 @@ export default function EditBlog() {
   return (
     <div>
       <Toaster position="top-right" />
-      <PageMeta
-        title="Edit Blog | TailAdmin"
-        description="Edit an existing blog post page for TailAdmin"
-      />
-      <div className="h-fit rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        <div className="mx-auto w-full">
-          <PageBreadcrumb pageTitle="Edit Blog" />
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information Section */}
-            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Basic Information
-              </h3>
+      <PageMeta title="Edit Blog | TailAdmin" description="Edit an existing blog post page for TailAdmin" />
 
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Blog Title <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={blog.title}
-                  onChange={handleChange}
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  placeholder="Enter blog title"
-                  required
-                />
-              </div>
+      <div className="min-h-screen rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-gray-50/50 to-white dark:border-gray-800 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900 px-5 py-7 xl:px-10 xl:py-12 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10"></div>
 
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Slug <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="slug"
-                  value={blog.slug}
-                  onChange={handleChange}
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  placeholder="Enter blog slug"
-                  required
-                />
-              </div>
+        {/* Header */}
+        <div className="flex items-start gap-4 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+              Edit Blog
+            </h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Update an existing blog post
+            </p>
+          </div>
+        </div>
 
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Author <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="author"
-                  value={blog.author}
-                  onChange={handleChange}
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  placeholder="Enter author name"
-                  required
-                />
-              </div>
+        {/* Inner content card (form kept unchanged) */}
+        <div className="h-fit rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
+          <div className="mx-auto w-full">
+            <PageBreadcrumb pageTitle="Edit Blog" />
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information Section */}
+              <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  Basic Information
+                </h3>
 
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Content <span className="text-red-500">*</span>
-                </label>
-                {/* <textarea
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Blog Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={blog.title}
+                    onChange={handleChange}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    placeholder="Enter blog title"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Slug <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="slug"
+                    value={blog.slug}
+                    onChange={handleChange}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    placeholder="Enter blog slug"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Author <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="author"
+                    value={blog.author}
+                    onChange={handleChange}
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                    placeholder="Enter author name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Content <span className="text-red-500">*</span>
+                  </label>
+                  {/* <textarea
                   name="content"
                   value={blog.content}
                   onChange={handleChange}
@@ -283,168 +302,170 @@ export default function EditBlog() {
                   placeholder="Write your blog content here..."
                   required
                 /> */}
-                <CustomEditor
-                  value={blog.content}
-                  onChange={(value) => setBlog({ ...blog, content: value })}
-                />
-              </div>
-            </div>
-
-            {/* Tags Section */}
-            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Tags
-              </h3>
-
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Add Tags
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
-                    onKeyPress={handleTagKeyPress}
-                    className="flex-1 rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                    placeholder="Enter a tag and press Enter"
+                  <CustomEditor
+                    value={blog.content}
+                    onChange={(value) => setBlog({ ...blog, content: value })}
                   />
-                  <button
-                    type="button"
-                    onClick={addTag}
-                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition"
-                  >
-                    Add
-                  </button>
                 </div>
-
-                {blog.tags.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {blog.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
               </div>
-            </div>
 
-            {/* Images Section */}
-            <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-                Images
-              </h3>
+              {/* Tags Section */}
+              <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  Tags
+                </h3>
 
-              {/* Thumbnail */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Thumbnail Image
-                </label>
-                <input
-                  type="file"
-                  onChange={handleThumbnailChange}
-                  accept="image/*"
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                />
-                {blog.thumbnail && (
-                  <div className="mt-3 space-y-2">
-                    <img
-                      src={getImageUrl(blog.thumbnail)}
-                      alt="Thumbnail Preview"
-                      className="max-w-xs h-auto rounded border"
-                    />
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Add Tags
+                  </label>
+                  <div className="flex gap-2">
                     <input
                       type="text"
-                      name="thumbnailAlt"
-                      value={blog.thumbnailAlt}
-                      onChange={handleChange}
-                      className="w-full max-w-xs rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                      placeholder="Thumbnail alt text"
+                      value={currentTag}
+                      onChange={(e) => setCurrentTag(e.target.value)}
+                      onKeyPress={handleTagKeyPress}
+                      className="flex-1 rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                      placeholder="Enter a tag and press Enter"
                     />
+                    <button
+                      type="button"
+                      onClick={addTag}
+                      className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition"
+                    >
+                      Add
+                    </button>
                   </div>
-                )}
-              </div>
 
-              {/* Multiple Images */}
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Blog Images
-                </label>
-                <input
-                  type="file"
-                  onChange={handleImagesChange}
-                  accept="image/*"
-                  multiple
-                  className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                />
-
-                {images.length > 0 && (
-                  <div className="mt-4 space-y-4">
-                    {images.map((image, index) => (
-                      <div
-                        key={index}
-                        className="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded"
-                      >
-                        <img
-                          src={getImageUrl(image.file)}
-                          alt={`Preview ${index + 1}`}
-                          className="w-24 h-24 object-cover rounded"
-                        />
-                        <div className="flex-1 space-y-2">
-                          <input
-                            type="text"
-                            value={image.alt}
-                            onChange={(e) =>
-                              updateImageAlt(index, e.target.value)
-                            }
-                            className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                            placeholder="Alt text for this image"
-                          />
+                  {blog.tags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {blog.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                        >
+                          {tag}
                           <button
                             type="button"
-                            onClick={() => removeImage(index)}
-                            className="text-red-600 hover:text-red-800 text-sm"
+                            onClick={() => removeTag(tag)}
+                            className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                           >
-                            Remove Image
+                            ×
                           </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {/* Submit Button */}
-            <div className="pt-6">
-              <button
-                type="submit"
-                className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loading}
-              >
-                {loading ? "Updating Blog..." : "Update Blog"}
-              </button>
-            </div>
-          </form>
+              {/* Images Section */}
+              <div className="space-y-6 border-b border-gray-200 dark:border-gray-700 pb-6">
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+                  Images
+                </h3>
+
+                {/* Thumbnail */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Thumbnail Image
+                  </label>
+                  <input
+                    type="file"
+                    onChange={handleThumbnailChange}
+                    accept="image/*"
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  />
+                  {blog.thumbnail && (
+                    <div className="mt-3 space-y-2">
+                      <img
+                        src={getImageUrl(blog.thumbnail)}
+                        alt="Thumbnail Preview"
+                        className="max-w-xs h-auto rounded border"
+                      />
+                      <input
+                        type="text"
+                        name="thumbnailAlt"
+                        value={blog.thumbnailAlt}
+                        onChange={handleChange}
+                        className="w-full max-w-xs rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                        placeholder="Thumbnail alt text"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Multiple Images */}
+                <div>
+                  <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Blog Images
+                  </label>
+                  <input
+                    type="file"
+                    onChange={handleImagesChange}
+                    accept="image/*"
+                    multiple
+                    className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                  />
+
+                  {images.length > 0 && (
+                    <div className="mt-4 space-y-4">
+                      {images.map((image, index) => (
+                        <div
+                          key={index}
+                          className="flex gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded"
+                        >
+                          <img
+                            src={getImageUrl(image.file)}
+                            alt={`Preview ${index + 1}`}
+                            className="w-24 h-24 object-cover rounded"
+                          />
+                          <div className="flex-1 space-y-2">
+                            <input
+                              type="text"
+                              value={image.alt}
+                              onChange={(e) =>
+                                updateImageAlt(index, e.target.value)
+                              }
+                              className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                              placeholder="Alt text for this image"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Remove Image
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-6">
+                <button
+                  type="submit"
+                  className="rounded bg-blue-600 px-6 py-3 text-white font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {loading ? "Updating Blog..." : "Update Blog"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
+
+        <PopupAlert
+          message={popup.message}
+          type={popup.type}
+          isVisible={popup.isVisible}
+          onClose={() => setPopup({ ...popup, isVisible: false })}
+        />
       </div>
-      <PopupAlert
-        message={popup.message}
-        type={popup.type}
-        isVisible={popup.isVisible}
-        onClose={() => setPopup({ ...popup, isVisible: false })}
-      />
     </div>
   );
 }
