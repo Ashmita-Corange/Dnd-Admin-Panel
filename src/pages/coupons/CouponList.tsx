@@ -18,17 +18,31 @@ import {
 } from "lucide-react";
 import PopupAlert from "../../components/popUpAlert";
 import PageMeta from "../../components/common/PageMeta";
-import { Link } from "react-router";
+import { Link } from "react-router-dom"; // changed to react-router-dom
+
+// Local Coupon type (match slice)
+interface Coupon {
+  _id?: string;
+  code: string;
+  type: string;
+  value: number;
+  isActive: boolean;
+  expiresAt: string;
+  usageLimit: number;
+  usedCount: number;
+  minCartValue: number;
+  [key: string]: any;
+}
 
 // Delete Confirmation Modal Component
 const DeleteModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  category: Category | null;
+  coupon: Coupon | null;
   isDeleting: boolean;
-}> = ({ isOpen, onClose, onConfirm, category, isDeleting }) => {
-  if (!isOpen || !category) return null;
+}> = ({ isOpen, onClose, onConfirm, coupon, isDeleting }) => {
+  if (!isOpen || !coupon) return null;
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -64,7 +78,7 @@ const DeleteModal: React.FC<{
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Are you sure you want to delete the Coupon{" "}
               <strong className="text-gray-900 dark:text-white">
-                "{category.code}"
+                "{coupon.code}"
               </strong>
               ?
             </p>
@@ -117,9 +131,7 @@ const CouponList: React.FC = () => {
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(
-    null
-  );
+  const [couponToDelete, setCouponToDelete] = useState<Coupon | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -131,7 +143,7 @@ const CouponList: React.FC = () => {
   });
 
   const closeDeleteModal = () => {
-    setCategoryToDelete(null);
+    setCouponToDelete(null);
     setDeleteModalOpen(false);
     setIsDeleting(false);
   };
@@ -183,14 +195,14 @@ const CouponList: React.FC = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (categoryToDelete) {
+    if (couponToDelete && couponToDelete._id) {
       setIsDeleting(true);
       try {
         // Dispatch the delete action
-        await dispatch(deleteCoupon(categoryToDelete._id)).unwrap();
+        await dispatch(deleteCoupon(couponToDelete._id)).unwrap();
 
         setPopup({
-          message: `Coupon "${categoryToDelete.code}" deleted successfully`,
+          message: `Coupon "${couponToDelete.code}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -198,28 +210,14 @@ const CouponList: React.FC = () => {
         // Close modal and reset state
         closeDeleteModal();
 
-        // // Refresh the categories list
-        // const activeFilters = {
-        //   isDeleted: false,
-        //   ...(localFilters.status ? { status: localFilters.status } : {}),
-        // };
+        // Refresh the coupons list
+        dispatch(fetchCoupons());
 
-        dispatch(
-          fetchCoupons({
-            // page: pagination?.page,
-            // limit: pagination.limit,
-            // filters: activeFilters,
-            // search: searchQuery || "", // Changed from searchFields to search
-            // sort: { createdAt: "desc" },
-          })
-        );
-
-        // Optional: Show success message
-        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Coupon "${couponToDelete.code}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete coupon:", error);
         setPopup({
-          message: "Failed to delete category. Please try again.",
+          message: "Failed to delete coupon. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -227,8 +225,8 @@ const CouponList: React.FC = () => {
       }
     }
   };
-  const openDeleteModal = (category: Category) => {
-    setCategoryToDelete(category);
+  const openDeleteModal = (coupon: Coupon) => {
+    setCouponToDelete(coupon);
     setDeleteModalOpen(true);
   };
   return (
@@ -363,7 +361,7 @@ const CouponList: React.FC = () => {
                 ) : (
                   paginatedCoupons.map((coupon, idx) => (
                     <tr
-                      key={coupon.code}
+                      key={coupon._id || coupon.code}
                       className="hover:bg-gray-50 dark:hover:bg-gray-800"
                     >
                       <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
@@ -467,7 +465,7 @@ const CouponList: React.FC = () => {
         isOpen={deleteModalOpen}
         onClose={closeDeleteModal}
         onConfirm={handleDeleteConfirm}
-        category={categoryToDelete}
+        coupon={couponToDelete}
         isDeleting={isDeleting}
       />
     </div>
