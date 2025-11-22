@@ -22,13 +22,17 @@ type TrackingResponse = {
   eventTotals: Record<string, number>;
 };
 
+
+const VITE_BASE_URL = import.meta.env.VITE_BASE_URL || "https://bharat.nexprism.in/api";
+
+
 export const fetchTrackingEvents = createAsyncThunk<
   TrackingResponse,
   FetchParams | undefined,
   { rejectValue: string }
 >("tracking/fetchEvents", async (params = {}, { rejectWithValue }) => {
   try {
-    const base = "http://localhost:3000/api/track";
+    const base = `${VITE_BASE_URL}/track`;
     const qp = new URLSearchParams();
 
     // defaults
