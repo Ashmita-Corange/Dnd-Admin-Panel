@@ -195,7 +195,8 @@ export default function TrackingList() {
         {/* Filters */}
         <div className="mb-6 bg-white p-4 rounded shadow-sm">
           <div className="flex flex-wrap gap-4 items-end">
-            <div className="flex-1 min-w-[220px]">
+            {/* Product filter */}
+            <div className="flex-1 min-w-[180px]">
               <label className="block text-sm font-medium text-gray-700">Product</label>
               <select
                 value={productId}
@@ -211,7 +212,8 @@ export default function TrackingList() {
               </select>
             </div>
 
-            <div className="min-w-[180px]">
+            {/* Type filter */}
+            <div className="min-w-[140px]">
               <label className="block text-sm font-medium text-gray-700">Type</label>
               <select
                 value={typeFilter}
@@ -227,27 +229,8 @@ export default function TrackingList() {
               </select>
             </div>
 
-            <div className="min-w-[160px]">
-              <label className="block text-sm font-medium text-gray-700">From</label>
-              <input
-                type="date"
-                value={from}
-                onChange={(e) => setFrom(e.target.value)}
-                className="mt-1 block w-full border-gray-300 rounded-md px-2 py-1"
-              />
-            </div>
-
-            <div className="min-w-[160px]">
-              <label className="block text-sm font-medium text-gray-700">To</label>
-              <input
-                type="date"
-                value={to}
-                onChange={(e) => setTo(e.target.value)}
-                className="mt-1 block w-full border-gray-300 rounded-md px-2 py-1"
-              />
-            </div>
-
-            <div className="min-w-[120px]">
+            {/* Limit filter */}
+            <div className="min-w-[100px]">
               <label className="block text-sm font-medium text-gray-700">Limit</label>
               <input
                 type="number"
@@ -258,6 +241,29 @@ export default function TrackingList() {
               />
             </div>
 
+            {/* Date pickers section - right side */}
+            <div className="flex flex-col gap-2 min-w-[220px] items-end ml-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+              <div className="flex gap-2 bg-gray-100 rounded px-2 py-2">
+                <input
+                  type="date"
+                  value={from}
+                  onChange={(e) => setFrom(e.target.value)}
+                  className="border-gray-300 rounded px-2 py-1 w-[120px] bg-white"
+                  placeholder="From"
+                />
+                <span className="px-2 py-1 text-gray-500">to</span>
+                <input
+                  type="date"
+                  value={to}
+                  onChange={(e) => setTo(e.target.value)}
+                  className="border-gray-300 rounded px-2 py-1 w-[120px] bg-white"
+                  placeholder="To"
+                />
+              </div>
+            </div>
+
+            {/* Action buttons */}
             <div className="flex gap-2">
               <button
                 onClick={applyFilters}

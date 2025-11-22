@@ -23,10 +23,17 @@ import axiosInstance from "../../services/axiosConfig";
 function Analytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const getData = async () => {
     try {
-      const response = await axiosInstance("analytics");
+      let url = "analytics";
+      const params: string[] = [];
+      if (startDate) params.push(`startDate=${startDate}`);
+      if (endDate) params.push(`endDate=${endDate}`);
+      if (params.length) url += `?${params.join("&")}`;
+      const response = await axiosInstance(url);
       setData(response.data.data);
       setLoading(false);
     } catch (error) {
@@ -37,7 +44,8 @@ function Analytics() {
 
   useEffect(() => {
     getData();
-  }, []);
+    // eslint-disable-next-line
+  }, [startDate, endDate]);
 
   if (loading) {
     return (
@@ -119,6 +127,24 @@ function Analytics() {
       darkIcon: "dark:text-rose-300",
       Icon: Ticket,
     },
+    {
+      title: "Returning Customers",
+      value: data.returningCustomerCount,
+      bgColor: "bg-cyan-50",
+      darkBg: "dark:bg-cyan-900",
+      iconColor: "text-cyan-600",
+      darkIcon: "dark:text-cyan-300",
+      Icon: Users,
+    },
+    {
+      title: "Total Revenue",
+      value: `₹${data.totalRevenue?.toLocaleString("en-IN")}`,
+      bgColor: "bg-yellow-50",
+      darkBg: "dark:bg-yellow-900",
+      iconColor: "text-yellow-600",
+      darkIcon: "dark:text-yellow-300",
+      Icon: ShoppingCart,
+    },
   ];
 
   // Prepare data for Orders Radar Chart
@@ -150,6 +176,46 @@ function Analytics() {
         <p className="text-gray-600 mt-1 dark:text-gray-300">
           Overview of your e-commerce platform
         </p>
+        {/* Date Range Filters */}
+        <div className="flex gap-4 mt-4 flex-wrap justify-end">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Start Date
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              End Date
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border-gray-300 rounded px-2 py-1"
+            />
+          </div>
+          <button
+            onClick={() => getData()}
+            className="self-end px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Apply
+          </button>
+          <button
+            onClick={() => {
+              setStartDate("");
+              setEndDate("");
+            }}
+            className="self-end px-3 py-2 bg-gray-200 rounded hover:bg-gray-300"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       {/* Stats Grid */}
