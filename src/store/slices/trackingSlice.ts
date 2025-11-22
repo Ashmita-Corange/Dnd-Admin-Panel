@@ -1,16 +1,29 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 
-export type TrackingEvent = any; // keep generic; refine types if needed
+export type TrackingEvent = any;
 
 type FetchParams = {
   productId?: string;
   type?: string;
   since?: string;
+  from?: string;
+  to?: string;
   limit?: number;
 };
 
+// Updated response type to match API
+type TrackingResponse = {
+  success: boolean;
+  count: number;
+  events: TrackingEvent[];
+  user: any;
+  addresses: any[];
+  addressesByUser: Record<string, any>;
+  eventTotals: Record<string, number>;
+};
+
 export const fetchTrackingEvents = createAsyncThunk<
-  TrackingEvent[],
+  TrackingResponse,
   FetchParams | undefined,
   { rejectValue: string }
 >("tracking/fetchEvents", async (params = {}, { rejectWithValue }) => {
@@ -25,6 +38,8 @@ export const fetchTrackingEvents = createAsyncThunk<
     if (params.productId) qp.append("productId", params.productId);
     if (params.type) qp.append("type", params.type);
     if (params.since) qp.append("since", params.since);
+    if (params.from) qp.append("from", params.from);
+    if (params.to) qp.append("to", params.to);
 
     const url = `${base}?${qp.toString()}`;
     const res = await fetch(url);
@@ -33,22 +48,21 @@ export const fetchTrackingEvents = createAsyncThunk<
       return rejectWithValue(text || "Failed to fetch tracking events");
     }
     const json = await res.json();
-    // prefer events array; fall back to raw payload if necessary
-    const events = json?.events ?? json;
-    return Array.isArray(events) ? events : [];
+    // Return the full response object
+    return json;
   } catch (err: any) {
     return rejectWithValue(err?.message ?? "Network error");
   }
 });
 
 type TrackingState = {
-  events: TrackingEvent[];
+  data: TrackingResponse | null;
   loading: boolean;
   error: string | null;
 };
 
 const initialState: TrackingState = {
-  events: [],
+  data: null,
   loading: false,
   error: null,
 };
@@ -57,9 +71,8 @@ const trackingSlice = createSlice({
   name: "tracking",
   initialState,
   reducers: {
-    // add any sync reducers if needed later
     clearTrackingState(state) {
-      state.events = [];
+      state.data = null;
       state.loading = false;
       state.error = null;
     },
@@ -72,8 +85,8 @@ const trackingSlice = createSlice({
       })
       .addCase(
         fetchTrackingEvents.fulfilled,
-        (state, action: PayloadAction<TrackingEvent[]>) => {
-          state.events = action.payload;
+        (state, action: PayloadAction<TrackingResponse>) => {
+          state.data = action.payload;
           state.loading = false;
         }
       )
