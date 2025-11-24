@@ -465,7 +465,7 @@ const RoleList: React.FC = () => {
             : "-"}
         </td>
         <td className="px-6 py-4 text-right space-x-2">
-          <Link to={`/role/edit/${cat?._id}`}>
+          <Link to={`/roles/edit/${cat?._id}`}>
             <button className="text-blue-500 hover:text-blue-700 transition-colors">
               <Pencil className="h-5 w-5" />
             </button>

@@ -16,6 +16,7 @@ import {
   Star,
   Eye,
   Tag,
+  Sparkles,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
@@ -171,7 +172,6 @@ const VariantList: React.FC = () => {
 
   // Fetch variants on mount
   useEffect(() => {
-    // You may need to get tenant from context, props, or URL
     const tenant = "default"; // Replace with actual tenant logic
     dispatch(fetchVariants({ tenant }));
   }, [dispatch]);
@@ -284,7 +284,7 @@ const VariantList: React.FC = () => {
   };
 
   const generatePageNumbers = () => {
-    const pages = [];
+    const pages: Array<number | string> = [];
     const totalPages = pagination.totalPages;
     const current = pagination.page;
     const maxPages = 5;
@@ -306,32 +306,34 @@ const VariantList: React.FC = () => {
       minimumFractionDigits: 0,
     }).format(price);
   };
+
+  // return consistent fields used by the UI
   const getStockStatus = (stock: number) => {
     if (stock > 50)
       return {
         color: "text-green-600",
         borderColor: "border-green-200",
-        bgColor: "bg-green-50",
+        bgColor: "bg-green-50 dark:bg-green-900/20",
         text: "In Stock",
       };
     if (stock > 20)
       return {
         color: "text-yellow-600",
         borderColor: "border-yellow-200",
-        bgColor: "bg-yellow-50",
+        bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
         text: "Low Stock",
       };
     if (stock > 0)
       return {
         color: "text-red-600",
         borderColor: "border-red-200",
-        bgColor: "bg-red-50",
+        bgColor: "bg-red-50 dark:bg-red-900/20",
         text: "Low Stock",
       };
     return {
       color: "text-red-600",
       borderColor: "border-red-200",
-      bgColor: "bg-red-100",
+      bgColor: "bg-red-50 dark:bg-red-900/20",
       text: "Out of Stock",
     };
   };
@@ -392,37 +394,58 @@ const VariantList: React.FC = () => {
         title="Variant List | TailAdmin"
         description="List of all product variants in TailAdmin"
       />
-      <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
-            Product Variants
-          </h1>
-          <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {variants.length}
-          </span>
+      <div className="min-h-screen rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-gray-50/50 to-white dark:border-gray-800 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900 px-5 py-7 xl:px-10 xl:py-12 relative overflow-hidden">
+        {/* Decorative Elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -z-10"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl -z-10"></div>
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                Product Variants
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Manage product variant listings
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="px-4 py-2 bg-white dark:bg-gray-800 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm border border-gray-200 dark:border-gray-700">
+              Total: <span className="text-indigo-600 dark:text-indigo-400 font-bold">{variants.length}</span>
+            </span>
+            <div className="flex items-center gap-1 bg-white dark:bg-gray-800 rounded-xl p-1 shadow-sm border border-gray-200 dark:border-gray-700">
+              <button onClick={handleResetFilters} className="p-2 rounded-lg transition-all text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Search & Filter */}
-        <div className="bg-white shadow p-4 rounded-md mb-6 dark:bg-gray-900">
+        {/* Search & Filter (styled like EditSubcategory) */}
+        <div className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-md border border-gray-200/50 dark:border-gray-700/50 p-6 rounded-2xl mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <div className="flex-1 relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-indigo-500" />
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search by title, SKU..."
-                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-900/50 dark:text-white transition-all shadow-sm hover:shadow-md"
               />
             </div>
 
-            {/* Stock Filter */}
-            <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-gray-400" />
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl border border-gray-200 dark:border-gray-700">
+              <Filter className="h-5 w-5 text-indigo-500" />
               <select
                 value={localFilters.stock || ""}
                 onChange={(e) => handleFilterChange("stock", e.target.value)}
-                className="border border-gray-300 rounded-md px-3 py-2 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium"
               >
                 <option value="">All Stock</option>
                 <option value="in-stock">In Stock</option>
@@ -446,13 +469,12 @@ const VariantList: React.FC = () => {
               </select>
             </div> */}
 
-            {/* Limit */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm dark:text-gray-300">Show:</span>
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl border border-gray-200 dark:border-gray-700">
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Show:</span>
               <select
                 value={pagination.limit}
                 onChange={(e) => handleLimitChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -462,7 +484,7 @@ const VariantList: React.FC = () => {
 
             <button
               onClick={handleResetFilters}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
+              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all shadow-sm hover:shadow-md font-medium text-gray-700 dark:text-white"
             >
               <RotateCcw className="h-4 w-4" />
               Reset
@@ -485,8 +507,9 @@ const VariantList: React.FC = () => {
         )}
 
         {/* Table */}
-        <div className="bg-white shadow rounded-lg overflow-x-auto dark:bg-gray-900">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
@@ -515,7 +538,7 @@ const VariantList: React.FC = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-100 dark:bg-gray-900 dark:divide-gray-800">
+            <tbody className="bg-white/50 dark:bg-gray-900/30 divide-y divide-gray-100 dark:divide-gray-800">
               {/** Use paginated, filtered variants for rendering */}
               {filteredVariants
                 .slice(
@@ -534,25 +557,22 @@ const VariantList: React.FC = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="relative">
-                          <img
-                            src={
-                              variant.images && variant.images[0]
-                                ? `${import.meta.env.VITE_IMAGE_URL}/${
-                                    variant.images[0]
-                                  }`
-                                : "https://www.redecredauto.com.br/portal/assets/images/default.jpg"
-                            }
-                            onError={(e) => {
-                              e.currentTarget.onerror = null;
-                              e.currentTarget.src =
-                                "https://www.redecredauto.com.br/portal/assets/images/default.jpg";
-                            }}
-                            alt={variant.title}
-                            className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 dark:border-gray-700"
-                            onClick={() => {
-                              console.log("Variant image clicked:", variant);
-                            }}
-                          />
+                        <img
+                           src={
+                             variant.images && variant.images[0]
+                               ? `${import.meta.env.VITE_IMAGE_URL}/${variant.images[0]}`
+                               : "https://www.redecredauto.com.br/portal/assets/images/default.jpg"
+                           }
+                           onError={(e) => {
+                             e.currentTarget.onerror = null;
+                             e.currentTarget.src = "https://www.redecredauto.com.br/portal/assets/images/default.jpg";
+                           }}
+                           alt={variant.title}
+                           className="w-14 h-14 rounded-xl object-cover border-2 border-gray-100 dark:border-gray-700"
+                           onClick={() => {
+                             console.log("Variant image clicked:", variant);
+                           }}
+                         />
 
                           {variant.isDefault && (
                             <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
@@ -613,6 +633,7 @@ const VariantList: React.FC = () => {
                 })}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Pagination */}
@@ -620,7 +641,7 @@ const VariantList: React.FC = () => {
           <button
             onClick={() => handlePageChange(pagination.page - 1)}
             disabled={pagination.page === 1}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all shadow-sm bg-white dark:bg-gray-800"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -629,11 +650,7 @@ const VariantList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-2 rounded-lg transition-colors ${
-                  pagination.page === page
-                    ? "bg-indigo-500 text-white shadow-md"
-                    : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                className={`px-3 py-2 rounded-lg transition-all ${pagination.page === page ? "bg-indigo-500 text-white shadow-md" : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"}`}
               >
                 {page}
               </button>
@@ -649,7 +666,7 @@ const VariantList: React.FC = () => {
           <button
             onClick={() => handlePageChange(pagination.page + 1)}
             disabled={pagination.page === pagination.totalPages}
-            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all shadow-sm bg-white dark:bg-gray-800"
           >
             <ChevronRight className="w-5 h-5" />
           </button>

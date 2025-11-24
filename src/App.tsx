@@ -216,9 +216,9 @@ export default function App() {
               <Route path="/product/edit/:id" element={<EditProduct />} />
 
               {/* Role Management Routes */}
-              <Route path="/role/add" element={<AddRole />} />
-              <Route path="/role/list" element={<RoleList />} />
-              <Route path="/role/edit/:id" element={<EditRole />} />
+              <Route path="/roles/add" element={<AddRole />} />
+              <Route path="/roles/list" element={<RoleList />} />
+              <Route path="/roles/edit/:id" element={<EditRole />} />
 
               {/* Attribute Management Routes */}
               <Route path="/attribute/list" element={<AttributeList />} />

@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
 interface Coupon {
+  _id?: string;
   code: string;
   type: string;
   value: number;
@@ -10,6 +11,8 @@ interface Coupon {
   usageLimit: number;
   usedCount: number;
   minCartValue: number;
+  // allow extra fields returned by backend
+  [key: string]: any;
 }
 
 interface CouponState {
@@ -31,7 +34,8 @@ export const createCoupon = createAsyncThunk<
 >("coupon/createCoupon", async (couponData, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.post("/coupon", couponData);
-    return response.data;
+    const data = response.data?.coupon || response.data;
+    return data;
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to create coupon"
@@ -46,8 +50,14 @@ export const fetchCoupons = createAsyncThunk<
 >("coupon/fetchCoupons", async (_, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.get("/coupon");
-    console.log("Fetched coupons:", response.data?.coupons?.data);
-    return response.data?.coupons?.data || [];
+    // support different shapes
+    return (
+      response.data?.coupons?.data ||
+      response.data?.data ||
+      response.data?.coupons ||
+      response.data ||
+      []
+    );
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to fetch coupons"
@@ -56,13 +66,13 @@ export const fetchCoupons = createAsyncThunk<
 });
 
 export const deleteCoupon = createAsyncThunk<
-  void,
+  { id: string },
   string,
   { rejectValue: string }
 >("coupon/deleteCoupon", async (couponId, { rejectWithValue }) => {
   try {
     await axiosInstance.delete(`/coupon/${couponId}`);
-    return;
+    return { id: couponId };
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to delete coupon"
@@ -77,7 +87,7 @@ export const getCouponById = createAsyncThunk<
 >("coupon/getCouponById", async (couponId, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.get(`/coupon/${couponId}`);
-    return response.data;
+    return response.data?.coupon || response.data;
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to fetch coupon"
@@ -91,8 +101,8 @@ export const updateCoupon = createAsyncThunk<
   { rejectValue: string }
 >("coupon/updateCoupon", async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.patch(`/coupon/${id}`, data);
-    return response.data;
+    const response = await axiosInstance.put(`/coupon/${id}`, data);
+    return response.data?.coupon || response.data;
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to update coupon"
@@ -112,7 +122,6 @@ const couponSlice = createSlice({
       })
       .addCase(createCoupon.fulfilled, (state, action) => {
         state.loading = false;
-        // Optionally, add the new coupon to the list
         state.coupons.unshift(action.payload);
       })
       .addCase(createCoupon.rejected, (state, action) => {
@@ -130,6 +139,14 @@ const couponSlice = createSlice({
       .addCase(fetchCoupons.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Unknown error";
+      })
+      .addCase(deleteCoupon.fulfilled, (state, action) => {
+        state.coupons = state.coupons.filter((c) => c._id !== action.payload.id);
+      })
+      .addCase(updateCoupon.fulfilled, (state, action) => {
+        const idx = state.coupons.findIndex((c) => c._id === action.payload._id);
+        if (idx !== -1)
+          state.coupons[idx] = { ...state.coupons[idx], ...action.payload };
       });
   },
 });
