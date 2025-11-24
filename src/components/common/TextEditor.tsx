@@ -42,6 +42,7 @@ import {
 } from "ckeditor5";
 
 import "ckeditor5/ckeditor5.css";
+import "./TextEditor.css";
 
 /**
  * Create a free account with a trial: https://portal.ckeditor.com/checkout?plan=free
