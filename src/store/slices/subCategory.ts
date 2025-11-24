@@ -129,7 +129,7 @@ export const updateSubcategory = createAsyncThunk<
   { id: string; data: Partial<Subcategory> }
 >("subcategories/update", async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.put(`/subcategory/${id}`, data, {
+    const response = await axiosInstance.patch(`/subcategory/${id}`, data, {
       headers: {
         "Content-Type": "multipart/form-data",
       },

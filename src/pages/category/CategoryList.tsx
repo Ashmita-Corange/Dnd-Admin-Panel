@@ -469,7 +469,7 @@ const CategoryList: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white/50 dark:bg-gray-900/30 divide-y divide-gray-100 dark:divide-gray-800">
-                  {categories.map((cat, idx) => (
+                  {((Array.isArray(categories) ? categories : [])).filter(Boolean).map((cat, idx) => (
                     <tr
                       key={cat._id}
                       className="hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-all group"
@@ -542,7 +542,7 @@ const CategoryList: React.FC = () => {
         {/* Grid View */}
         {viewMode === 'grid' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {categories.map((cat, idx) => (
+            {((Array.isArray(categories) ? categories : [])).filter(Boolean).map((cat, idx) => (
               <div
                 key={cat._id}
                 className="bg-white/80 dark:bg-gray-800/50 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
@@ -607,9 +607,9 @@ const CategoryList: React.FC = () => {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Showing <span className="font-semibold text-gray-900 dark:text-white">{(pagination.page - 1) * pagination.limit + 1}</span> to{' '}
-            <span className="font-semibold text-gray-900 dark:text-white">{Math.min(pagination.page * pagination.limit, pagination.totalDocuments)}</span> of{' '}
-            <span className="font-semibold text-gray-900 dark:text-white">{pagination.totalDocuments}</span> results
+            Showing <span className="font-semibold text-gray-900 dark:text-white">{((pagination?.page ?? 1) - 1) * (pagination?.limit ?? 1) + 1}</span> to{' '}
+            <span className="font-semibold text-gray-900 dark:text-white">{Math.min((pagination?.page ?? 1) * (pagination?.limit ?? 1), pagination?.totalDocuments ?? 0)}</span> of{' '}
+            <span className="font-semibold text-gray-900 dark:text-white">{pagination?.totalDocuments ?? 0}</span> results
           </p>
           <div className="flex gap-2">
             <button

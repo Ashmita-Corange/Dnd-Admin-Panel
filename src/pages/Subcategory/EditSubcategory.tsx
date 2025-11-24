@@ -50,6 +50,8 @@ export default function EditSubcategory() {
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.category.loading);
 
+  const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_URL || "";
+
   const fetchCategories = async () => {
     const queryParams = new URLSearchParams();
     queryParams.append("page", "1");
@@ -230,7 +232,8 @@ export default function EditSubcategory() {
 
   const getFileUrl = (file) => {
     if (typeof file === "string") {
-      return file;
+      // Use base URL for string paths
+      return `${IMAGE_BASE_URL}/${file}`;
     }
     return file ? URL.createObjectURL(file) : "";
   };
