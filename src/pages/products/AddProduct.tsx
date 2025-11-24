@@ -1947,25 +1947,36 @@ export default function AddProduct() {
           onClose={() => setPopup({ ...popup, isVisible: false })}
         />
       )}
+{variantPopup && (
+  <div className="fixed inset-0 flex justify-center items-center bg-black/40 backdrop-blur-sm z-[9999]">
+    <div className="bg-white rounded-2xl p-7 max-w-sm w-full shadow-[0_8px_30px_rgba(0,0,0,0.15)] mx-4 animate-fadeIn">
+      
+      {/* Icon */}
+      <div className="flex items-center justify-center w-12 h-12 rounded-full bg-yellow-100 mx-auto mb-3">
+        <span className="text-yellow-600 text-2xl">⚠️</span>
+      </div>
 
-      {variantPopup && (
-        <div className="h-screen w-full flex justify-center items-center fixed top-0 left-0 bg-black/20   z-[9999]">
-          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Variants
-            </h3>
-            <p className="text-sm text-gray-600">
-              Add variants to the product by filling out the form below.
-            </p>
+      {/* Title */}
+      <h3 className="text-xl font-bold text-gray-900 text-center">
+        Variant Needed to Publish Product
+      </h3>
 
-            <Link to={`/variant/add?product=${productId}`}>
-              <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                Add Variant
-              </button>
-            </Link>
-          </div>
-        </div>
-      )}
+      {/* Message */}
+      <p className="text-sm text-gray-600 text-center mt-2 leading-relaxed">
+        This product cannot be displayed on your website until at least one
+        variant is added. Please create a variant to continue.
+      </p>
+
+      {/* Button */}
+      <Link to={`/variant/add?product=${productId}`}>
+        <button className="mt-6 w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 shadow-sm">
+          Add Variant
+        </button>
+      </Link>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

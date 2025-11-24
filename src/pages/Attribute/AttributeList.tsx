@@ -19,6 +19,83 @@ import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 import { fetchAttributes, deleteAttribute } from "../../store/slices/attribute";
 
+// Delete Confirmation Modal Component
+const DeleteModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  attribute: any | null;
+  isDeleting: boolean;
+}> = ({ isOpen, onClose, onConfirm, attribute, isDeleting }) => {
+  if (!isOpen || !attribute) return null;
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div
+        className="fixed inset-0 bg-transparent backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      ></div>
+      <div className="flex min-h-full items-center justify-center p-4">
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="flex-shrink-0 w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Delete Attribute
+              </h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+          <div className="p-6">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Are you sure you want to delete the attribute{" "}
+              <strong className="text-gray-900 dark:text-white">
+                "{attribute.name}"
+              </strong>
+              ?
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={onClose}
+              disabled={isDeleting}
+              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isDeleting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AttributeList: React.FC = () => {
   const dispatch = useAppDispatch();
   const {
@@ -38,6 +115,9 @@ const AttributeList: React.FC = () => {
     type: "success",
     isVisible: false,
   });
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [attributeToDelete, setAttributeToDelete] = useState<any | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Debounce search input
   useEffect(() => {
@@ -88,6 +168,48 @@ const AttributeList: React.FC = () => {
         type: "error",
         isVisible: true,
       });
+    }
+  };
+
+  const openDeleteModal = (attribute: any) => {
+    setAttributeToDelete(attribute);
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setAttributeToDelete(null);
+    setDeleteModalOpen(false);
+    setIsDeleting(false);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (attributeToDelete) {
+      setIsDeleting(true);
+      try {
+        await dispatch(deleteAttribute(attributeToDelete._id)).unwrap();
+        setPopup({
+          message: `Attribute "${attributeToDelete.name}" deleted successfully!`,
+          type: "success",
+          isVisible: true,
+        });
+        closeDeleteModal();
+        dispatch(
+          fetchAttributes({
+            page: pagination.page,
+            limit: pagination.limit,
+            filters: localFilters,
+            search: searchInput || "",
+            sort: { createdAt: "desc" },
+          })
+        );
+      } catch (err: any) {
+        setPopup({
+          message: err || "Failed to delete attribute.",
+          type: "error",
+          isVisible: true,
+        });
+        setIsDeleting(false);
+      }
     }
   };
 
@@ -314,7 +436,7 @@ const AttributeList: React.FC = () => {
                         </Link>
                         <button
                           className="p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-all"
-                          onClick={() => handleDelete(attr._id)}
+                          onClick={() => openDeleteModal(attr)}
                           disabled={loading}
                         >
                           <Trash2 className="h-5 w-5" />
@@ -369,6 +491,14 @@ const AttributeList: React.FC = () => {
           type={popup.type}
           isVisible={popup.isVisible}
           onClose={() => setPopup({ ...popup, isVisible: false })}
+        />
+        {/* Delete Modal */}
+        <DeleteModal
+          isOpen={deleteModalOpen}
+          onClose={closeDeleteModal}
+          onConfirm={handleDeleteConfirm}
+          attribute={attributeToDelete}
+          isDeleting={isDeleting}
         />
       </div>
     </div>
