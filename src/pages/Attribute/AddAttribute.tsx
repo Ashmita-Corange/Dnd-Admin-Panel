@@ -91,11 +91,16 @@ const AddAttribute = () => {
         values: [""],
         status: "active",
       });
-    } catch (err) {
-      console.log("Error creating attribute:", err);
+    } catch (err: any) {
+      // Show API error message if available
+      const errorMsg =
+      err||
+        err?.message ||
+        err?.response?.data?.message ||
+        "Failed to create attribute. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create attribute. Please try again.",
+        message: errorMsg,
         type: "error",
       });
     }
