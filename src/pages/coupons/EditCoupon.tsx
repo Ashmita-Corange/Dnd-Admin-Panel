@@ -8,7 +8,7 @@ import {
 import { RootState, AppDispatch } from "../../store";
 import PopupAlert from "../../components/popUpAlert";
 import { Toaster } from "react-hot-toast";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 const initialCoupon = {
   code: "",
@@ -30,6 +30,7 @@ const EditCoupon: React.FC = () => {
   });
   const params = useParams();
   const couponId = params.id;
+  const navigate = useNavigate();
 
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.coupon.loading);
@@ -70,14 +71,15 @@ const EditCoupon: React.FC = () => {
       await dispatch(updateCoupon({ id: couponId, data: coupon })).unwrap();
       setPopup({
         isVisible: true,
-        message: "Coupon created successfully!",
+        message: "Coupon updated successfully!",
         type: "success",
       });
       setCoupon(initialCoupon);
+      // navigate("/coupon&promo/list");
     } catch {
       setPopup({
         isVisible: true,
-        message: "Failed to create coupon. Please try again.",
+        message: "Failed to update coupon. Please try again.",
         type: "error",
       });
     }
@@ -249,7 +251,12 @@ const EditCoupon: React.FC = () => {
         message={popup.message}
         type={popup.type}
         isVisible={popup.isVisible}
-        onClose={() => setPopup({ ...popup, isVisible: false })}
+        onClose={() => {
+          setPopup({ ...popup, isVisible: false });
+          if (popup.type === "success") {
+            navigate("/coupon&promo/list");
+          }
+        }}
       />
     </div>
   );

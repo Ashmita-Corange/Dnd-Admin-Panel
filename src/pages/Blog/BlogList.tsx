@@ -234,7 +234,7 @@ const BlogList: React.FC = () => {
     };
 
     setPopup({
-      message: "Category updated successfully",
+      message: "Blog updated successfully",
       type: "success",
       isVisible: true,
     });
@@ -268,7 +268,7 @@ const BlogList: React.FC = () => {
         await dispatch(deleteBlog(categoryToDelete._id)).unwrap();
 
         setPopup({
-          message: `Category "${categoryToDelete.name}" deleted successfully`,
+          message: `Blog "${categoryToDelete.title}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -292,12 +292,13 @@ const BlogList: React.FC = () => {
           })
         );
 
+
         // Optional: Show success message
-        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Blog "${categoryToDelete.title}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete blog:", error);
         setPopup({
-          message: "Failed to delete category. Please try again.",
+          message: "Failed to delete blog. Please try again.",
           type: "error",
           isVisible: true,
         });

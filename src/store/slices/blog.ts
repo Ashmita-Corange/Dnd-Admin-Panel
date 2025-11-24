@@ -100,7 +100,7 @@ export const fetchBlogs = createAsyncThunk<
       blogs: data?.data || [],
       pagination: {
         total: data?.totalDocuments || 0,
-        page: data?.page || 1,
+        page: data?.page || page || 1,
         limit,
         totalPages: data?.totalPages || 0,
       },
