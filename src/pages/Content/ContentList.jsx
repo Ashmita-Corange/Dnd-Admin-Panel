@@ -34,7 +34,7 @@ const ProfessionalCMS = () => {
   const { sections, loading, updateLoading, error } = useSelector(
     (state) => state.content
   );
-  console?.log("Content sections:", sections);
+  console?.log("Content sections:", Object.keys(sections), sections);
   const BASE_IMAGE_URL =
     import.meta.env.VITE_IMAGE_URL || "http://localhost:3000/";
 
@@ -45,6 +45,12 @@ const ProfessionalCMS = () => {
       name: "Product Picker",
       icon: Package,
       color: "purple",
+    },
+    {
+      id: "secondaryBanner",
+      name: "Secondary Banner",
+      icon: Image,
+      color: "teal",
     },
     { id: "offerBanner", name: "Special Offers", icon: Star, color: "orange" },
     { id: "productSlider", name: "Product Slider", icon: Plus, color: "green" },
@@ -88,6 +94,8 @@ const ProfessionalCMS = () => {
   const [formData, setFormData] = useState({});
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedMobileImage, setSelectedMobileImage] = useState(null);
+  const [editingHeroIndex, setEditingHeroIndex] = useState(null); // index in sections.hero
+  const [isNewHero, setIsNewHero] = useState(false);
   const [homePageLayout, setHomePageLayout] = useState("");
   const [layoutLoading, setLayoutLoading] = useState(false);
   const tabsNavRef = useRef(null);
@@ -98,11 +106,19 @@ const ProfessionalCMS = () => {
     dispatch(fetchHomePageContent());
   }, [dispatch]);
 
-  // Auto-start editing when content loads
+  // Auto-start editing when content loads (but don't auto-edit hero list)
   useEffect(() => {
-    if (sections[activeTab]?.[0] && !editingSection) {
+    if (activeTab !== "hero" && sections[activeTab]?.[0] && !editingSection) {
       setEditingSection(activeTab);
       setFormData({ ...sections[activeTab][0].content });
+    }
+    // ensure hero editing index resets when sections change
+    if (activeTab === "hero") {
+      setEditingHeroIndex(null);
+      setIsNewHero(false);
+      setFormData({});
+      setSelectedImage(null);
+      setSelectedMobileImage(null);
     }
   }, [sections, activeTab, editingSection]);
 
@@ -131,8 +147,17 @@ const ProfessionalCMS = () => {
   }, [sections]);
 
   const handleSave = async (sectionType) => {
-    const currentSection = sections[sectionType]?.[0];
-    if (!currentSection) return;
+    console.log("submit function called : ", sectionType);
+    let currentSection = null;
+    let creating = false;
+    if (sectionType === "hero") {
+      if (editingHeroIndex === null) return;
+      currentSection = sections.hero?.[editingHeroIndex];
+      creating = !currentSection || !currentSection._id || isNewHero;
+    } else {
+      currentSection = sections[sectionType]?.[0];
+      if (!currentSection) return;
+    }
 
     try {
       // Create FormData to match your API expectations
@@ -141,10 +166,7 @@ const ProfessionalCMS = () => {
       // Add content as JSON string - this is what your API expects
       apiFormData.append("content", JSON.stringify(formData));
 
-      // Add optional section metadata
-      apiFormData.append("sectionType", currentSection.sectionType);
-      apiFormData.append("order", currentSection.order.toString());
-      apiFormData.append("isVisible", currentSection.isVisible.toString());
+      // Add optional section metadata only when available; for new items we'll set below
 
       if (selectedImage) {
         apiFormData.append("image", selectedImage);
@@ -153,16 +175,48 @@ const ProfessionalCMS = () => {
         apiFormData.append("mobileImage", selectedMobileImage);
       }
 
-      // Use correct endpoint format with query parameter
-      const response = await axiosInstance.put(
-        `/content?id=${currentSection._id}`,
-        apiFormData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+      let response;
+      if (creating) {
+        // Create new section entry
+        apiFormData.append("sectionType", sectionType);
+        // set order to end by default
+        apiFormData.append(
+          "order",
+          ((sections[sectionType]?.length || 0) + 1).toString()
+        );
+        apiFormData.append("isVisible", "true");
+        response = await axiosInstance.post(`/content`, apiFormData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        // Update existing - include metadata from currentSection when available
+        if (currentSection) {
+          apiFormData.append("sectionType", currentSection.sectionType);
+          apiFormData.append(
+            "order",
+            (currentSection.order !== undefined
+              ? currentSection.order
+              : 1
+            ).toString()
+          );
+          apiFormData.append(
+            "isVisible",
+            typeof currentSection.isVisible !== "undefined"
+              ? currentSection.isVisible.toString()
+              : "true"
+          );
         }
-      );
+
+        response = await axiosInstance.put(
+          `/content?id=${currentSection._id}`,
+          apiFormData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      }
 
       // Handle successful response
       if (response.data.success || response.data.data) {
@@ -170,6 +224,10 @@ const ProfessionalCMS = () => {
         dispatch(fetchHomePageContent());
 
         setEditingSection(null);
+        if (sectionType === "hero") {
+          setEditingHeroIndex(null);
+          setIsNewHero(false);
+        }
         setHasUnsavedChanges(false);
         setSaveStatus("success");
         setFormData({});
@@ -268,6 +326,60 @@ const ProfessionalCMS = () => {
     }
   };
 
+  // Hero management: add / edit / delete handlers for multiple hero items
+  const handleAddHero = () => {
+    const nextIndex = sections.hero ? sections.hero.length : 0;
+    setEditingHeroIndex(nextIndex);
+    setIsNewHero(true);
+    setFormData({ title: "", description: "", cta: { title: "", link: "" } });
+    setSelectedImage(null);
+    setSelectedMobileImage(null);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleEditHero = (index) => {
+    const hero = sections.hero?.[index];
+    if (!hero) return;
+    setEditingHeroIndex(index);
+    setIsNewHero(false);
+    setFormData({ ...hero.content });
+    setSelectedImage(null);
+    setSelectedMobileImage(null);
+    setHasUnsavedChanges(false);
+    setEditingSection("hero");
+  };
+
+  const handleDeleteHero = async (index) => {
+    const hero = sections.hero?.[index];
+    if (!hero || !hero._id) {
+      // If it's an unsaved/new draft just reset
+      if (editingHeroIndex === index) {
+        setEditingHeroIndex(null);
+        setIsNewHero(false);
+        setFormData({});
+        setSelectedImage(null);
+        setSelectedMobileImage(null);
+        setHasUnsavedChanges(false);
+      }
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to delete this hero item?"))
+      return;
+    try {
+      const res = await axiosInstance.delete(`/content?id=${hero._id}`);
+      if (res?.data) {
+        dispatch(fetchHomePageContent());
+        setSaveStatus("success");
+        setTimeout(() => setSaveStatus(null), 3000);
+      }
+    } catch (err) {
+      console.error("Failed to delete hero:", err);
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 4000);
+    }
+  };
+
   const renderEditForm = (sectionType, sectionData) => {
     const updateFormData = (updates) => {
       setFormData((prev) => ({ ...prev, ...updates }));
@@ -285,70 +397,152 @@ const ProfessionalCMS = () => {
     const renderFieldsByType = () => {
       switch (sectionType) {
         case "hero":
+          const heroItems = sections.hero || [];
           return (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title || ""}
-                    onChange={(e) => updateFormData({ title: e.target.value })}
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
-                    placeholder="Enter section title"
-                  />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-lg font-medium dark:text-white">
+                    Manage Hero Slides
+                  </h4>
+                  <div>
+                    <button
+                      onClick={handleAddHero}
+                      className="inline-flex items-center space-x-2 px-3 py-2 rounded-md bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/20 dark:text-green-300"
+                    >
+                      <Plus size={14} />
+                      <span className="text-sm">Add New Hero</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
-                    Button Text
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.cta?.title || ""}
-                    onChange={(e) =>
-                      updateFormData({
-                        cta: { ...formData.cta, title: e.target.value },
-                      })
-                    }
-                    className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
-                    placeholder="Enter button text"
-                  />
-                </div>
-              </div>
+                {heroItems.length === 0 && (
+                  <div className="text-sm text-gray-500">
+                    No hero slides yet. Click "Add New Hero" to create one.
+                  </div>
+                )}
 
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
-                  Button Link
-                </label>
-                <input
-                  type="text"
-                  value={formData.cta?.link || ""}
-                  onChange={(e) =>
-                    updateFormData({
-                      cta: { ...formData.cta, link: e.target.value },
-                    })
-                  }
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
-                  placeholder="Enter button link"
-                />
-              </div>
+                {heroItems.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {heroItems.map((h, idx) => (
+                      <div
+                        key={h._id || idx}
+                        className="border p-3 rounded-lg flex flex-col"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={
+                                h.content?.image
+                                  ? `${BASE_IMAGE_URL}${h.content.image}`
+                                  : ""
+                              }
+                              alt={h.content?.title || `Hero ${idx + 1}`}
+                              className="w-20 h-12 object-cover rounded-md border mr-2"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">
+                                {h.content?.title || `Hero ${idx + 1}`}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {h.content?.description?.slice?.(0, 80)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleEditHero(idx)}
+                              className="p-2 rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100"
+                            >
+                              <Edit3 size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteHero(idx)}
+                              className="p-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-              <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description || ""}
-                  onChange={(e) =>
-                    updateFormData({ description: e.target.value })
-                  }
-                  rows={4}
-                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
-                  placeholder="Enter detailed description"
-                />
+                {/* If a hero is selected for editing, show the hero fields */}
+                {editingHeroIndex !== null ? (
+                  <div className="mt-4 space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.title || ""}
+                          onChange={(e) =>
+                            updateFormData({ title: e.target.value })
+                          }
+                          className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                          placeholder="Enter hero title"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
+                          Button Text
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.cta?.title || ""}
+                          onChange={(e) =>
+                            updateFormData({
+                              cta: { ...formData.cta, title: e.target.value },
+                            })
+                          }
+                          className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                          placeholder="Enter button text"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
+                        Button Link
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.cta?.link || ""}
+                        onChange={(e) =>
+                          updateFormData({
+                            cta: { ...formData.cta, link: e.target.value },
+                          })
+                        }
+                        className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                        placeholder="Enter button link"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
+                        Description
+                      </label>
+                      <textarea
+                        value={formData.description || ""}
+                        onChange={(e) =>
+                          updateFormData({ description: e.target.value })
+                        }
+                        rows={4}
+                        className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm resize-none dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                        placeholder="Enter detailed description"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">
+                    Select a hero slide to edit or click "Add New Hero".
+                  </div>
+                )}
               </div>
             </>
           );
@@ -925,6 +1119,32 @@ const ProfessionalCMS = () => {
             </>
           );
 
+        case "secondaryBanner":
+          // For secondary banner we only need image, mobile image uploads,
+          // and a single link field. The shared image upload UI (below)
+          // will still render because this id is not in
+          // `excludedImageSections`.
+          return (
+            <>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2 dark:text-gray-200">
+                  Link
+                </label>
+                <input
+                  type="text"
+                  value={formData.cta?.link || ""}
+                  onChange={(e) =>
+                    updateFormData({
+                      cta: { ...formData.cta, link: e.target.value },
+                    })
+                  }
+                  className="w-full p-4 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:border-blue-400"
+                  placeholder="Enter link (e.g., https://example.com)"
+                />
+              </div>
+            </>
+          );
+
         default:
           return (
             <>
@@ -980,6 +1200,10 @@ const ProfessionalCMS = () => {
                 setFormData({});
                 setSelectedImage(null);
                 setSelectedMobileImage(null);
+                if (sectionType === "hero") {
+                  setEditingHeroIndex(null);
+                  setIsNewHero(false);
+                }
               }}
               className="text-blue-100 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
             >
