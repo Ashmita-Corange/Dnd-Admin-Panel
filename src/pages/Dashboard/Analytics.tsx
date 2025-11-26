@@ -25,6 +25,7 @@ function Analytics() {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
 
   const getData = async () => {
     try {
@@ -63,109 +64,140 @@ function Analytics() {
     );
   }
 
-  const statCards = [
+  // Sales Dashboard cards
+  const sales = data.salesDashboard || {};
+  const salesCards = [
     {
       title: "Total Users",
-      value: data.totalUsers,
-      bgColor: "bg-blue-50",
-      darkBg: "dark:bg-blue-900",
-      iconColor: "text-blue-600",
-      darkIcon: "dark:text-blue-300",
-      Icon: Users,
+      value: sales.totalUsers ?? 0,
+      description: "Total registered users.",
     },
     {
-      title: "Total Products",
-      value: data.totalProducts,
-      bgColor: "bg-green-50",
-      darkBg: "dark:bg-green-900",
-      iconColor: "text-green-600",
-      darkIcon: "dark:text-green-300",
-      Icon: Package,
+      title: "Total Buyers",
+      value: sales.totalBuyers ?? 0,
+      description: "Users who have made at least one purchase.",
     },
     {
-      title: "Total Categories",
-      value: data.totalCategories,
-      bgColor: "bg-purple-50",
-      darkBg: "dark:bg-purple-900",
-      iconColor: "text-purple-600",
-      darkIcon: "dark:text-purple-300",
-      Icon: FolderTree,
-    },
-    {
-      title: "Total Variants",
-      value: data.totalVariants,
-      bgColor: "bg-orange-50",
-      darkBg: "dark:bg-orange-900",
-      iconColor: "text-orange-600",
-      darkIcon: "dark:text-orange-300",
-      Icon: Tags,
-    },
-    {
-      title: "Total Orders",
-      value: data.totalOrders,
-      bgColor: "bg-indigo-50",
-      darkBg: "dark:bg-indigo-900",
-      iconColor: "text-indigo-600",
-      darkIcon: "dark:text-indigo-300",
-      Icon: ShoppingCart,
-    },
-    {
-      title: "Pending Orders",
-      value: data.totalPendingOrders,
-      bgColor: "bg-amber-50",
-      darkBg: "dark:bg-amber-900",
-      iconColor: "text-amber-600",
-      darkIcon: "dark:text-amber-300",
-      Icon: Clock,
-    },
-    {
-      title: "Pending Tickets",
-      value: data.totalPendingTickets,
-      bgColor: "bg-rose-50",
-      darkBg: "dark:bg-rose-900",
-      iconColor: "text-rose-600",
-      darkIcon: "dark:text-rose-300",
-      Icon: Ticket,
-    },
-    {
-      title: "Returning Customers",
-      value: data.returningCustomerCount,
-      bgColor: "bg-cyan-50",
-      darkBg: "dark:bg-cyan-900",
-      iconColor: "text-cyan-600",
-      darkIcon: "dark:text-cyan-300",
-      Icon: Users,
+      title: "Non-Buying Users",
+      value: sales.nonBuyingUsers ?? 0,
+      description: "Users who have not made any purchase.",
     },
     {
       title: "Total Revenue",
-      value: `₹${data.totalRevenue?.toLocaleString("en-IN")}`,
-      bgColor: "bg-yellow-50",
-      darkBg: "dark:bg-yellow-900",
-      iconColor: "text-yellow-600",
-      darkIcon: "dark:text-yellow-300",
-      Icon: ShoppingCart,
+      value: `₹${sales.totalRevenue?.toLocaleString("en-IN") ?? 0}`,
+      description: "Total revenue generated.",
+    },
+    {
+      title: "Successful Orders",
+      value: sales.totalSuccessfulOrders ?? 0,
+      description: "Total successful orders.",
+    },
+    {
+      title: "Average Order Value",
+      value: `₹${sales.aov ?? 0}`,
+      description: "Average value of all orders placed.",
+    },
+    {
+      title: "Customer Lifetime Value",
+      value: `₹${sales.ltv ?? 0}`,
+      description: "Average lifetime value per customer.",
+    },
+    {
+      title: "ROC",
+      value: sales.roc ?? 0,
+      description: "Rate of change (ROC) metric.",
+    },
+    {
+      title: "New Customers",
+      value: sales.newCustomers ?? 0,
+      description: "Number of new customers.",
+    },
+    {
+      title: "Repeat Customers",
+      value: sales.repeatCustomers ?? 0,
+      description: "Number of repeat customers.",
+    },
+    {
+      title: "Repeat Customer Ratio",
+      value: `${sales.repeatCustomerRatio ?? 0}%`,
+      description: "Percentage of repeat customers.",
+    },
+    {
+      title: "COD/Prepaid Ratio",
+      value: sales.codPrepaidRatio ?? "0",
+      description: "Ratio of Cash on Delivery to Prepaid orders.",
+    },
+    {
+      title: "COD Orders",
+      value: sales.codCount ?? 0,
+      description: "Number of Cash on Delivery orders.",
+    },
+    {
+      title: "Prepaid Orders",
+      value: sales.prepaidCount ?? 0,
+      description: "Number of prepaid orders.",
+    },
+    {
+      title: "Total Discount",
+      value: `₹${sales.totalDiscount ?? 0}`,
+      description: "Total discount given.",
+    },
+    {
+      title: "Total Coupons Used",
+      value: sales.totalCoupons ?? 0,
+      description: "Number of coupons used.",
+    },
+  ];
+
+  // Operations Dashboard cards
+  const ops = data.operationsDashboard || {};
+  const opsCards = [
+    {
+      title: "Total Orders",
+      value: ops.totalOrders ?? 0,
+      description: "Total orders placed.",
+    },
+    {
+      title: "Pending Orders",
+      value: ops.pendingOrders ?? 0,
+      description: "Orders pending fulfillment.",
+    },
+    {
+      title: "Shipped Orders",
+      value: ops.shippedOrders ?? 0,
+      description: "Orders shipped to customers.",
+    },
+    {
+      title: "Cancelled Orders",
+      value: ops.cancelledOrders ?? 0,
+      description: "Orders that were cancelled.",
+    },
+    {
+      title: "Pending Tickets",
+      value: ops.totalPendingTickets ?? 0,
+      description: "Support tickets pending resolution.",
     },
   ];
 
   // Prepare data for Orders Radar Chart
-  const ordersRadarData = Object.entries(data.ordersByStatus).map(
-    ([status, count]) => ({
-      status: status.charAt(0).toUpperCase() + status.slice(1),
-      value: count,
-    })
-  );
+  const ordersRadarData = ops.ordersByStatus
+    ? Object.entries(ops.ordersByStatus).map(([status, count]) => ({
+        status: status.charAt(0).toUpperCase() + status.slice(1),
+        value: count,
+      }))
+    : [];
 
   // Prepare data for Tickets Radar Chart
-  const ticketsRadarData = Object.entries(data.ticketsByStatus).map(
-    ([status, count]) => ({
-      status: status
-        .replace("_", " ")
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" "),
-      value: count,
-    })
-  );
+  const ticketsRadarData = ops.ticketsByStatus
+    ? Object.entries(ops.ticketsByStatus).map(([status, count]) => ({
+        status: status
+          .replace("_", " ")
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" "),
+        value: count,
+      }))
+    : [];
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -218,38 +250,99 @@ function Analytics() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {statCards.map((stat, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800"
-          >
-            <div className="flex items-center justify-between">
+      {/* Sales Dashboard */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          Sales Dashboard
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {salesCards.map((card, idx) => (
+            <button
+              key={card.title}
+              type="button"
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none"
+              onClick={() => setSelectedMetric(card.title)}
+              tabIndex={0}
+            >
               <div>
                 <p className="text-gray-500 text-sm font-medium dark:text-gray-300">
-                  {stat.title}
+                  {card.title}
                 </p>
                 <p className="text-3xl font-bold text-gray-900 mt-2 dark:text-gray-100">
-                  {stat.value}
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-400 mt-2 dark:text-gray-400">
+                  {card.description}
                 </p>
               </div>
-              <div
-                className={`${stat.bgColor} ${
-                  stat.darkBg || ""
-                } w-14 h-14 rounded-lg flex items-center justify-center`}
-              >
-                <stat.Icon
-                  className={`w-7 h-7 ${stat.iconColor} ${stat.darkIcon || ""}`}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
 
+      {/* Operations Dashboard */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          Operations Dashboard
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {opsCards.map((card, idx) => (
+            <button
+              key={card.title}
+              type="button"
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none"
+              onClick={() => setSelectedMetric(card.title)}
+              tabIndex={0}
+            >
+              <div>
+                <p className="text-gray-500 text-sm font-medium dark:text-gray-300">
+                  {card.title}
+                </p>
+                <p className="text-3xl font-bold text-gray-900 mt-2 dark:text-gray-100">
+                  {card.value}
+                </p>
+                <p className="text-xs text-gray-400 mt-2 dark:text-gray-400">
+                  {card.description}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Metric Details Modal (custom, not headlessui) */}
+      {selectedMetric && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 max-w-md mx-auto z-50 relative">
+            <div className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+              {selectedMetric}
+            </div>
+            <div className="text-gray-700 dark:text-gray-300 mb-4">
+              {(() => {
+                const card =
+                  salesCards.find((c) => c.title === selectedMetric) ||
+                  opsCards.find((c) => c.title === selectedMetric);
+                if (!card) return null;
+                return (
+                  <>
+                    <div className="text-3xl font-bold mb-2">{card.value}</div>
+                    <div className="text-sm">{card.description || ""}</div>
+                  </>
+                );
+              })()}
+            </div>
+            <button
+              onClick={() => setSelectedMetric(null)}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Orders by Status - Radar Chart */}
         <div className="bg-white rounded-xl shadow-sm p-6 dark:bg-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 mb-6 dark:text-gray-100">
             Orders by Status
@@ -280,8 +373,6 @@ function Analytics() {
             </RadarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Tickets by Status - Radar Chart */}
         <div className="bg-white rounded-xl shadow-sm p-6 dark:bg-gray-800">
           <h2 className="text-lg font-semibold text-gray-900 mb-6 dark:text-gray-100">
             Tickets by Status
@@ -339,12 +430,15 @@ function Analytics() {
                   Status
                 </th>
                 <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                  Payment Mode
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                   Date
                 </th>
               </tr>
             </thead>
             <tbody>
-              {data.recentOrders.map((order) => (
+              {(ops.recentOrders ?? []).map((order) => (
                 <tr
                   key={order._id}
                   className="border-b border-gray-50 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-700"
@@ -387,6 +481,9 @@ function Analytics() {
                     </span>
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-300">
+                    {order.paymentMode || "-"}
+                  </td>
+                  <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-300">
                     {new Date(order.placedAt).toLocaleDateString()}
                   </td>
                 </tr>
@@ -426,7 +523,7 @@ function Analytics() {
               </tr>
             </thead>
             <tbody>
-              {data.recentTickets.map((ticket) => (
+              {(ops.recentTickets ?? []).map((ticket) => (
                 <tr
                   key={ticket._id}
                   className="border-b border-gray-50 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-700"

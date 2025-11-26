@@ -16,7 +16,10 @@ import {
   Shield,
   Calendar,
   Building,
+  Download,
 } from "lucide-react";
+import axiosInstance from "../../services/axiosConfig";
+import { getTenantFromURL } from "../../utils/getTenantFromURL";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import {
   fetchCustomers,
@@ -47,6 +50,8 @@ const CustomersList: React.FC = () => {
     isOpen: boolean;
     customer: Customer | null;
   }>({ isOpen: false, customer: null });
+  const [exportLoading, setExportLoading] = useState(false);
+  const [exportSingleLoadingId, setExportSingleLoadingId] = useState<string | null>(null);
 
   // Fetch roles on component mount
   useEffect(() => {
@@ -145,6 +150,72 @@ const CustomersList: React.FC = () => {
     return pages;
   };
 
+  const getFileNameFromDisposition = (disposition?: string, fallback = "export.xlsx") => {
+    if (!disposition) return fallback;
+    const match = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+    if (match) {
+      return match[1].replace(/['"]/g, "");
+    }
+    return fallback;
+  };
+
+  const exportAllUsers = async () => {
+    try {
+      setExportLoading(true);
+      const tenant = getTenantFromURL();
+      const response = await axiosInstance.get("/export-user-data", {
+        headers: { "x-tenant": tenant },
+        responseType: "blob",
+      });
+
+      const filename = getFileNameFromDisposition(
+        response.headers["content-disposition"],
+        "all_users_data.xlsx"
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export all users:", err);
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const exportSingleUser = async (userId: string) => {
+    try {
+      setExportSingleLoadingId(userId);
+      const tenant = getTenantFromURL();
+      const response = await axiosInstance.get("/export-user-data", {
+        headers: { "x-tenant": tenant },
+        params: { userId },
+        responseType: "blob",
+      });
+
+      const filename = getFileNameFromDisposition(
+        response.headers["content-disposition"],
+        `user_${userId}_data.xlsx`
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to export user:", err);
+    } finally {
+      setExportSingleLoadingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
       <div className="flex justify-between items-center mb-6">
@@ -184,6 +255,18 @@ const CustomersList: React.FC = () => {
                 </option>
               ))}
             </select>
+          </div>
+
+          {/* Export All */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportAllUsers}
+              disabled={exportLoading}
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
+            >
+              <Download className="h-4 w-4" />
+              {exportLoading ? "Exporting..." : "Export All"}
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -297,6 +380,17 @@ const CustomersList: React.FC = () => {
                           className="text-blue-500 hover:text-blue-700 transition-colors"
                         >
                           <Pencil className="h-5 w-5" />
+                        </button>
+                        <button
+                          onClick={() => exportSingleUser(customer._id)}
+                          className="text-indigo-500 hover:text-indigo-700 transition-colors flex items-center"
+                          disabled={!!exportSingleLoadingId}
+                        >
+                          {exportSingleLoadingId === customer._id ? (
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ) : (
+                            <Download className="h-5 w-5" />
+                          )}
                         </button>
                         <button
                           onClick={() => handleDeleteCustomer(customer)}
