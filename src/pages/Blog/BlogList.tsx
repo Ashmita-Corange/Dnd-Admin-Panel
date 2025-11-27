@@ -19,7 +19,6 @@ import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 import { deleteBlog, fetchBlogs } from "../../store/slices/blog";
-
 interface Category {
   _id: string;
   name: string;
@@ -235,7 +234,7 @@ const BlogList: React.FC = () => {
     };
 
     setPopup({
-      message: "Category updated successfully",
+      message: "Blog updated successfully",
       type: "success",
       isVisible: true,
     });
@@ -269,7 +268,7 @@ const BlogList: React.FC = () => {
         await dispatch(deleteBlog(categoryToDelete._id)).unwrap();
 
         setPopup({
-          message: `Category "${categoryToDelete.name}" deleted successfully`,
+          message: `Blog "${categoryToDelete.title}" deleted successfully`,
           type: "success",
           isVisible: true,
         });
@@ -294,11 +293,11 @@ const BlogList: React.FC = () => {
         );
 
         // Optional: Show success message
-        console.log(`Category "${categoryToDelete.name}" deleted successfully`);
+        console.log(`Blog "${categoryToDelete.title}" deleted successfully`);
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete blog:", error);
         setPopup({
-          message: "Failed to delete category. Please try again.",
+          message: "Failed to delete blog. Please try again.",
           type: "error",
           isVisible: true,
         });
@@ -325,7 +324,10 @@ const BlogList: React.FC = () => {
 
   return (
     <div>
-      <PageMeta title="Blog List | TailAdmin" description="List of all blog posts in TailAdmin" />
+      <PageMeta
+        title="Blog List | TailAdmin"
+        description="List of all blog posts in TailAdmin"
+      />
 
       <div className="min-h-screen rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-gray-50/50 to-white dark:border-gray-800 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-900/95 dark:to-gray-900 px-5 py-7 xl:px-10 xl:py-12 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl -z-10"></div>

@@ -56,6 +56,7 @@ const EditCoupon: React.FC = () => {
   });
   const params = useParams<{ id?: string }>();
   const couponId = params.id;
+  const navigate = useNavigate();
 
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.coupon.loading);
@@ -671,7 +672,12 @@ const EditCoupon: React.FC = () => {
         message={popup.message}
         type={popup.type}
         isVisible={popup.isVisible}
-        onClose={() => setPopup({ ...popup, isVisible: false })}
+        onClose={() => {
+          setPopup({ ...popup, isVisible: false });
+          if (popup.type === "success") {
+            navigate("/coupon&promo/list");
+          }
+        }}
       />
     </div>
   );

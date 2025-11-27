@@ -118,10 +118,16 @@ export const fetchCustomers = createAsyncThunk<
 
   try {
     const params: any = {
-      search: state.customers.searchQuery || undefined,
       page: state.customers.page,
       limit: state.customers.limit,
     };
+
+    if (state.customers.searchQuery) {
+      params.searchFields = JSON.stringify({
+        name: state.customers.searchQuery,
+        email: state.customers.searchQuery,
+      });
+    }
 
     // Add role filter if it exists
     if (state.customers.filters.role) {
@@ -159,8 +165,6 @@ export const fetchCustomers = createAsyncThunk<
     return rejectWithValue(error?.message || "Something went wrong");
   }
 });
-
-
 
 // ✅ Create Customer
 export const createCustomer = createAsyncThunk<
@@ -203,7 +207,6 @@ export const updateCustomer = createAsyncThunk<
         "x-tenant": getTenantFromURL(),
         "Content-Type": "application/json",
       },
-     
     });
 
     const { success, user } = response.data;
@@ -291,7 +294,9 @@ const customersSlice = createSlice({
       .addCase(fetchCustomerById.fulfilled, (state, action) => {
         state.loading = false;
         // Update the customer in the list if it exists, otherwise add it
-        const existingIndex = state.customers.findIndex(c => c._id === action.payload._id);
+        const existingIndex = state.customers.findIndex(
+          (c) => c._id === action.payload._id
+        );
         if (existingIndex >= 0) {
           state.customers[existingIndex] = action.payload;
         } else {
@@ -322,12 +327,11 @@ const customersSlice = createSlice({
       })
       .addCase(updateCustomer.fulfilled, (state, action) => {
         state.loading = false;
-       if (action.payload && action.payload._id) {
-  state.customers = state.customers.map((customer) =>
-    customer._id === action.payload._id ? action.payload : customer
-  );
-}
-
+        if (action.payload && action.payload._id) {
+          state.customers = state.customers.map((customer) =>
+            customer._id === action.payload._id ? action.payload : customer
+          );
+        }
       })
       .addCase(updateCustomer.rejected, (state, action) => {
         state.loading = false;

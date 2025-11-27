@@ -1,0 +1,46 @@
+/* Styles for CKEditor content inside our editor container */
+.editor-container_classic-editor .ck-content,
+.editor-container_classic-editor .ck-editor__editable_inline {
+  font-family: inherit;
+  color: inherit;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* Ensure lists show bullets/numbers and have sensible spacing */
+.editor-container_classic-editor .ck-content ul,
+.editor-container_classic-editor .ck-content ol {
+  margin: 0 0 1rem 1.5rem;
+  padding-left: 1.25rem;
+}
+
+.editor-container_classic-editor .ck-content ul {
+  list-style-type: disc;
+}
+
+.editor-container_classic-editor .ck-content ul ul {
+  list-style-type: circle;
+}
+
+.editor-container_classic-editor .ck-content ol {
+  list-style-type: decimal;
+}
+
+.editor-container_classic-editor .ck-content ol ol {
+  list-style-type: lower-alpha;
+}
+
+/* Improve visibility of todo (checkbox) list items */
+.editor-container_classic-editor .ck-content li {
+  /* keep a little gap between checkbox and text */
+  display: list-item;
+}
+
+/* Make sure nested paragraphs inside list items don't collapse spacing */
+.editor-container_classic-editor .ck-content li > p {
+  display: inline;
+}
+
+/* If your app has a global reset that removes list markers,
+   you may need to increase specificity above or add !important.
+   The above selectors target the editor area only so they are safe. */
