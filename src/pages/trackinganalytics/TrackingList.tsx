@@ -16,7 +16,9 @@ const EVENT_TYPES = [
   "PRODUCT_VIEW",
   "ADD_TO_CART",
   "ADD_TO_WISHLIST",
+  "REMOVE_FROM_WISHLIST",
   "CHECKOUT_START",
+
   "CHECKOUT_ABANDONED",
   "PAGE_VIEW",
   "LOGIN",
@@ -68,6 +70,8 @@ export default function TrackingList() {
     dispatch(fetchTrackingEvents(p));
   };
 
+  const count = data ?? 0;
+
   // Extract events array from data
   const eventsList = data?.events ?? [];
 
@@ -75,14 +79,14 @@ export default function TrackingList() {
   const eventTotals = data?.eventTotals ?? {};
 
   // Sum up all variations of the same event type
-  const productViews = eventTotals.PRODUCT_VIEW ?? 0;
-  const addToCart = eventTotals.ADD_TO_CART ?? 0;
-  const checkoutStart = eventTotals.CHECKOUT_STARTED ?? 0;
-  const pageViews = eventTotals.PAGE_VIEW ?? 0;
-  const addToWishlist = eventTotals.ADD_TO_WISHLIST ?? 0;
-  const checkoutAbandoned = eventTotals.CHECKOUT_ABANDONED ?? 0;
-  const logins = eventTotals.LOGIN ?? 0;
-
+  const productViews = (eventTotals.PRODUCT_VIEW   ?? 0);
+  const addToCart = (eventTotals.ADD_TO_CART  ?? 0);
+  const checkoutStart = (eventTotals.CHECKOUT_STARTED ?? 0);
+  const pageViews = (eventTotals.PAGE_VIEW  ?? 0);
+  const addToWishlist = (count?.currentWishlisted ?? 0);
+  const checkoutAbandoned = (eventTotals.CHECKOUT_ABANDONED ?? 0);
+  const logins = (eventTotals.LOGIN ?? 0);
+  
   // Calculate total events
   const totalEvents = Object.values(eventTotals).reduce(
     (sum, val) => sum + (val ?? 0),
