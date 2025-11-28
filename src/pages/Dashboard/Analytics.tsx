@@ -181,7 +181,7 @@ function Analytics() {
 
   // Prepare data for Orders Radar Chart
   const ordersRadarData = ops.ordersByStatus
-    ? Object.entries(ops.ordersByStatus).map(([status, count]) => ({
+    ? Object.entries(ops.ordersByStatus || {}).map(([status, count]) => ({
         status: status.charAt(0).toUpperCase() + status.slice(1),
         value: count,
       }))
@@ -189,7 +189,7 @@ function Analytics() {
 
   // Prepare data for Tickets Radar Chart
   const ticketsRadarData = ops.ticketsByStatus
-    ? Object.entries(ops.ticketsByStatus).map(([status, count]) => ({
+    ? Object.entries(ops.ticketsByStatus || {}).map(([status, count]) => ({
         status: status
           .replace("_", " ")
           .split(" ")
