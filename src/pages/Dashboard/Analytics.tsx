@@ -129,7 +129,7 @@ function Analytics() {
     },
     {
       title: "Returning Customers",
-      value: data.returningCustomerCount,
+      value: data?.returningCustomerCount,
       bgColor: "bg-cyan-50",
       darkBg: "dark:bg-cyan-900",
       iconColor: "text-cyan-600",
@@ -138,7 +138,7 @@ function Analytics() {
     },
     {
       title: "Total Revenue",
-      value: `₹${data.totalRevenue?.toLocaleString("en-IN")}`,
+      value: `₹${data?.totalRevenue?.toLocaleString("en-IN")}`,
       bgColor: "bg-yellow-50",
       darkBg: "dark:bg-yellow-900",
       iconColor: "text-yellow-600",
@@ -148,7 +148,7 @@ function Analytics() {
   ];
 
   // Prepare data for Orders Radar Chart
-  const ordersRadarData = Object.entries(data.ordersByStatus).map(
+  const ordersRadarData = Object.entries(data?.ordersByStatus || {}).map(
     ([status, count]) => ({
       status: status.charAt(0).toUpperCase() + status.slice(1),
       value: count,
@@ -156,7 +156,7 @@ function Analytics() {
   );
 
   // Prepare data for Tickets Radar Chart
-  const ticketsRadarData = Object.entries(data.ticketsByStatus).map(
+  const ticketsRadarData = Object.entries(data?.ticketsByStatus || {}).map(
     ([status, count]) => ({
       status: status
         .replace("_", " ")
