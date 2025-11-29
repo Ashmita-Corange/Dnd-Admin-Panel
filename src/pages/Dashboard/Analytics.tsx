@@ -19,12 +19,23 @@ import {
   Tooltip,
 } from "recharts";
 import axiosInstance from "../../services/axiosConfig";
+import DatePicker from "../../components/form/date-picker";
 
 function Analytics() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
+
+  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+  const today = new Date();
+  const defaultEnd = formatDate(today);
+  const defaultStart = (() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - 1);
+    return formatDate(d);
+  })();
+
+  const [startDate, setStartDate] = useState<string>(defaultStart);
+  const [endDate, setEndDate] = useState<string>(defaultEnd);
   const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
 
   const getData = async () => {
@@ -181,7 +192,7 @@ function Analytics() {
 
   // Prepare data for Orders Radar Chart
   const ordersRadarData = ops.ordersByStatus
-    ? Object.entries(ops.ordersByStatus).map(([status, count]) => ({
+    ? Object.entries(ops.ordersByStatus || {}).map(([status, count]) => ({
       status: status.charAt(0).toUpperCase() + status.slice(1),
       value: count,
     }))
@@ -189,7 +200,7 @@ function Analytics() {
 
   // Prepare data for Tickets Radar Chart
   const ticketsRadarData = ops.ticketsByStatus
-    ? Object.entries(ops.ticketsByStatus).map(([status, count]) => ({
+    ? Object.entries(ops.ticketsByStatus || {}).map(([status, count]) => ({
       status: status
         .replace("_", " ")
         .split(" ")
@@ -210,26 +221,24 @@ function Analytics() {
         </p>
         {/* Date Range Filters */}
         <div className="flex gap-4 mt-4 flex-wrap justify-end">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Start Date
-            </label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border-gray-300 rounded px-2 py-1"
+          <div className="w-48">
+            <DatePicker
+              id="analytics-start-date"
+              label="Start Date"
+              defaultDate={startDate || undefined}
+              onChange={(_selectedDates: Date[], dateStr: string) =>
+                setStartDate(dateStr)
+              }
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              End Date
-            </label>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border-gray-300 rounded px-2 py-1"
+          <div className="w-48">
+            <DatePicker
+              id="analytics-end-date"
+              label="End Date"
+              defaultDate={endDate || undefined}
+              onChange={(_selectedDates: Date[], dateStr: string) =>
+                setEndDate(dateStr)
+              }
             />
           </div>
           <button
@@ -256,7 +265,7 @@ function Analytics() {
           Sales Dashboard
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {salesCards.map((card, idx) => (
+          {salesCards.map((card) => (
             <button
               key={card.title}
               type="button"
@@ -286,7 +295,7 @@ function Analytics() {
           Operations Dashboard
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {opsCards.map((card, idx) => (
+          {opsCards.map((card) => (
             <button
               key={card.title}
               type="button"
