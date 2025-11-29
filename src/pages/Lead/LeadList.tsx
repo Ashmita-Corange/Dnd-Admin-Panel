@@ -358,6 +358,18 @@ const LeadList: React.FC = () => {
     (state) => state.staff
   );
 
+  // Get user info from localStorage
+  const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
+  const userRoleId = userInfo?.role || "";
+  const userId = userInfo?._id || "";
+  const isSuperAdmin = userInfo?.isSuperAdmin || false;
+
+  // Staff role ID
+  const STAFF_ROLE_ID = "6892f49e5e1bb25c871bdd3c";
+
+  // User is staff if their role matches the staff role ID
+  const isStaff = userRoleId === STAFF_ROLE_ID && !isSuperAdmin;
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -397,6 +409,8 @@ const LeadList: React.FC = () => {
     const activeFilters = {
       isDeleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
+      // If user is staff, automatically filter by their assigned leads
+      ...(isStaff && userId ? { assignedTo: userId } : {}),
     };
 
     dispatch(
@@ -408,7 +422,7 @@ const LeadList: React.FC = () => {
         sort: { createdAt: "desc" },
       })
     );
-  }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters]);
+  }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters, isStaff, userId]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -419,6 +433,7 @@ const LeadList: React.FC = () => {
           filters: {
             isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
+            ...(isStaff && userId ? { assignedTo: userId } : {}),
           },
           search: searchInput !== "" ? searchInput : undefined,
           sort: { createdAt: "desc" },
@@ -435,6 +450,7 @@ const LeadList: React.FC = () => {
         filters: {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
+          ...(isStaff && userId ? { assignedTo: userId } : {}),
         },
         search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
@@ -493,6 +509,7 @@ const LeadList: React.FC = () => {
         const activeFilters = {
           isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
+          ...(isStaff && userId ? { assignedTo: userId } : {}),
         };
 
         dispatch(
@@ -628,6 +645,7 @@ const LeadList: React.FC = () => {
       const activeFilters = {
         isDeleted: false,
         ...(localFilters.status ? { status: localFilters.status } : {}),
+        ...(isStaff && userId ? { assignedTo: userId } : {}),
       };
 
       dispatch(
@@ -705,11 +723,10 @@ const LeadList: React.FC = () => {
             {assignableLeads.length > 0 && (
               <button
                 onClick={toggleAssignMode}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isAssignMode
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${isAssignMode
                     ? "bg-red-500 text-white hover:bg-red-600"
                     : "bg-indigo-500 text-white hover:bg-indigo-600"
-                }`}
+                  }`}
               >
                 {isAssignMode ? (
                   <>
@@ -1037,11 +1054,10 @@ const LeadList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
+                className={`px-3 py-1 rounded ${pagination.page === page
                     ? "bg-indigo-500 text-white"
                     : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                  }`}
               >
                 {page}
               </button>

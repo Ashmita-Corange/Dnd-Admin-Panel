@@ -182,21 +182,21 @@ function Analytics() {
   // Prepare data for Orders Radar Chart
   const ordersRadarData = ops.ordersByStatus
     ? Object.entries(ops.ordersByStatus).map(([status, count]) => ({
-        status: status.charAt(0).toUpperCase() + status.slice(1),
-        value: count,
-      }))
+      status: status.charAt(0).toUpperCase() + status.slice(1),
+      value: count,
+    }))
     : [];
 
   // Prepare data for Tickets Radar Chart
   const ticketsRadarData = ops.ticketsByStatus
     ? Object.entries(ops.ticketsByStatus).map(([status, count]) => ({
-        status: status
-          .replace("_", " ")
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" "),
-        value: count,
-      }))
+      status: status
+        .replace("_", " ")
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" "),
+      value: count,
+    }))
     : [];
 
   return (
@@ -465,17 +465,16 @@ function Analytics() {
                   </td>
                   <td className="py-4 px-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                        order.status === "pending"
-                          ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-                          : order.status === "paid"
+                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${order.status === "pending"
+                        ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                        : order.status === "paid"
                           ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                           : order.status === "shipped"
-                          ? "bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
-                          : order.status === "completed"
-                          ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
-                          : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-300"
-                      }`}
+                            ? "bg-purple-50 text-purple-700 dark:bg-purple-900 dark:text-purple-300"
+                            : order.status === "completed"
+                              ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
+                              : "bg-red-50 text-red-700 dark:bg-red-900 dark:text-red-300"
+                        }`}
                     >
                       {order.status}
                     </span>
@@ -523,7 +522,7 @@ function Analytics() {
               </tr>
             </thead>
             <tbody>
-              {(ops.recentTickets ?? []).map((ticket) => (
+              {(ops?.recentTickets ?? [])?.map((ticket) => (
                 <tr
                   key={ticket._id}
                   className="border-b border-gray-50 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-700"
@@ -537,43 +536,41 @@ function Analytics() {
                   <td className="py-4 px-4">
                     <div className="text-sm">
                       <div className="font-medium text-gray-900 dark:text-gray-100">
-                        {ticket.customer.name}
+                        {ticket?.customer?.name}
                       </div>
                       <div className="text-gray-500 dark:text-gray-300">
-                        {ticket.customer.email || ticket.customer.phone}
+                        {ticket?.customer?.email || ticket?.customer?.phone}
                       </div>
                     </div>
                   </td>
                   <td className="py-4 px-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                        ticket.priority === "low"
-                          ? "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                          : ticket.priority === "medium"
+                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${ticket?.priority === "low"
+                        ? "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                        : ticket?.priority === "medium"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                           : "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
-                      }`}
+                        }`}
                     >
-                      {ticket.priority}
+                      {ticket?.priority}
                     </span>
                   </td>
                   <td className="py-4 px-4">
                     <span
-                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${
-                        ticket.status === "open"
-                          ? "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
-                          : ticket.status === "in_progress"
+                      className={`inline-flex px-3 py-1 text-xs font-medium rounded-full ${ticket.status === "open"
+                        ? "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
+                        : ticket?.status === "in_progress"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
-                          : ticket.status === "resolved"
-                          ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
-                          : "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
-                      }`}
+                          : ticket?.status === "resolved"
+                            ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
+                            : "bg-gray-50 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                        }`}
                     >
-                      {ticket.status.replace("_", " ")}
+                      {ticket?.status?.replace("_", " ")}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-600 dark:text-gray-300">
-                    {new Date(ticket.createdAt).toLocaleDateString()}
+                    {new Date(ticket?.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
               ))}
