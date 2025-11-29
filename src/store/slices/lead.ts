@@ -2,26 +2,54 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 import { getTenantFromURL } from "../../utils/getTenantFromURL";
 
+// Staff interface for populated assignedTo field
+export interface AssignedStaff {
+  _id: string;
+  name: string;
+  email: string;
+  passwordHash?: string;
+  isVerified: boolean;
+  role: string;
+  tenant: string | null;
+  isSuperAdmin: boolean;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string;
+  __v?: number;
+}
+
 // Interfaces
 export interface Lead {
   _id: string;
+  firstName?: string;
+  lastName?: string;
   fullName: string;
   email: string;
   phone: string;
-  company?: string;
-  status: "new" | "contacted" | "qualified" | "converted" | "lost";
-  source?: "website" | "newsletter" | "popup" | "referral" | "manual" | "other";
+  source?: "website" | "newsletter" | "popup" | "referral" | "manual" | "other" | "IVR" | "facebook_lead_ads";
+  status: "new" | "contacted" | "assigned" | "qualified" | "converted" | "lost";
+  description?: string;
+  category?: string;
+  department?: string;
+  expectedPrice?: number;
+  media?: string;
+  products?: string[];
+  lastRemark?: string;
+  tags?: string[];
   notes?: Array<{
     _id?: string;
     note: string;
     createdAt: string | Date;
     createdBy?: string;
   }>;
-  assignedTo?: string; // This will now store the staff ID instead of name
+  assignedTo?: string | AssignedStaff; // Can be either ID (string) or populated staff object
   assignedToName?: string; // Optional: Add this if you want to store the name separately for display
-  convertedTo?: string;
+  convertedTo?: string | null;
   converted?: boolean;
-  nextFollowUpAt?: string; // Add this field for follow-up scheduling
+  lastContactedAt?: string;
+  nextFollowUpAt?: string;
+  lastCallStatus?: string;
+  followUpCount?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -77,9 +105,9 @@ export const createLead = createAsyncThunk<Lead, Partial<Lead>>(
           "Content-Type": "application/json",
         },
       });
-      
+
       const { success, data: leadData } = response.data;
-      
+
       if (success) {
         return leadData;
       } else {
@@ -128,30 +156,31 @@ export const fetchLeads = createAsyncThunk<
         "x-tenant": getTenantFromURL(),
       },
     });
-    
+
     const data = response.data;
     console.log("Fetched Leads - Full Response:", data);
     console.log("Fetched Leads - Data Structure:", data?.data);
-    
-    const { success } = data;
-    
+
+    const success = data;
+    console.log("Fetched Leads - Success:", success);
+
     if (success) {
       // Extract leads from the actual API response structure
-      const leadsData = data?.data?.result || [];
-      const currentPage = data?.data?.currentPage || 1;
-      
+      const leadsData = data?.leads || [];
+      const currentPage = data?.currentPage || 1;
+
       console.log("Extracted Leads Data:", leadsData);
       console.log("Current Page:", currentPage);
       console.log("Total Documents:", data?.data?.totalDocuments || data?.totalDocuments || leadsData.length);
       console.log("Total Pages:", data?.data?.totalPages || data?.totalPages || Math.ceil(leadsData.length / limit));
-      
+
       return {
         leads: leadsData,
         pagination: {
-          total: data?.data?.totalDocuments || data?.totalDocuments || leadsData.length,
+          total: data?.totalDocuments || data?.totalDocuments || leadsData.length,
           page: currentPage,
           limit,
-          totalPages: data?.data?.totalPages || data?.totalPages || Math.ceil(leadsData.length / limit),
+          totalPages: data?.totalPages || data?.totalPages || Math.ceil(leadsData.length / limit),
         },
       };
     } else {
@@ -175,10 +204,12 @@ export const fetchLeadById = createAsyncThunk<Lead, string>(
           "x-tenant": getTenantFromURL(),
         },
       });
-      
-      const { success, data: leadData } = response.data;
-      
-      if (success) {
+      console?.log("lead by Id1", response.data)
+
+      const leadData = response.data;
+      console?.log("lead by Id d", leadData)
+
+      if (leadData) {
         return leadData;
       } else {
         return rejectWithValue("Failed to fetch lead.");
@@ -204,9 +235,9 @@ export const updateLead = createAsyncThunk<
         "Content-Type": "application/json",
       },
     });
-    
+
     const { success, data: leadData } = response.data;
-    
+
     if (success) {
       return leadData;
     } else {
@@ -230,9 +261,9 @@ export const deleteLead = createAsyncThunk<string, string>(
           "x-tenant": getTenantFromURL(),
         },
       });
-      
+
       const { success } = response.data;
-      
+
       if (success) {
         return id;
       } else {
@@ -274,7 +305,7 @@ export const addLeadNote = createAsyncThunk<
     );
 
     const { success, data: leadData } = response.data;
-    
+
     if (success) {
       return leadData;
     } else {
@@ -312,7 +343,7 @@ export const addMultipleLeadNotes = createAsyncThunk<
     );
 
     const { success, data } = response.data;
-    
+
     if (success) {
       return { updatedLeads: data };
     } else {
@@ -548,7 +579,7 @@ const leadSlice = createSlice({
         state.error = action.payload as string;
       }
       );
-      
+
 
   },
 });
