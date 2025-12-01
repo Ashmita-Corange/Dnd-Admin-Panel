@@ -26,7 +26,15 @@ export interface Lead {
   fullName: string;
   email: string;
   phone: string;
-  source?: "website" | "newsletter" | "popup" | "referral" | "manual" | "other" | "IVR" | "facebook_lead_ads";
+  source?:
+    | "website"
+    | "newsletter"
+    | "popup"
+    | "referral"
+    | "manual"
+    | "other"
+    | "IVR"
+    | "facebook_lead_ads";
   status: "new" | "contacted" | "assigned" | "qualified" | "converted" | "lost";
   description?: string;
   category?: string;
@@ -116,7 +124,9 @@ export const createLead = createAsyncThunk<Lead, Partial<Lead>>(
     } catch (error: any) {
       console.error("❌ createLead error:", error);
       return rejectWithValue(
-        error?.response?.data?.message || error?.message || "Something went wrong"
+        error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong"
       );
     }
   }
@@ -145,17 +155,18 @@ export const fetchLeads = createAsyncThunk<
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
 
     // Add filters to query params
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined && value !== "") {
-        queryParams.append(key, value.toString());
-      }
-    });
+    if (filters && Object.keys(filters).length > 0) {
+      queryParams.append("filters", JSON.stringify(filters));
+    }
 
-    const response = await axiosInstance.get(`/crm/leads?${queryParams.toString()}`, {
-      headers: {
-        "x-tenant": getTenantFromURL(),
-      },
-    });
+    const response = await axiosInstance.get(
+      `/crm/leads?${queryParams.toString()}`,
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+        },
+      }
+    );
 
     const data = response.data;
     console.log("Fetched Leads - Full Response:", data);
@@ -171,16 +182,28 @@ export const fetchLeads = createAsyncThunk<
 
       console.log("Extracted Leads Data:", leadsData);
       console.log("Current Page:", currentPage);
-      console.log("Total Documents:", data?.data?.totalDocuments || data?.totalDocuments || leadsData.length);
-      console.log("Total Pages:", data?.data?.totalPages || data?.totalPages || Math.ceil(leadsData.length / limit));
+      console.log(
+        "Total Documents:",
+        data?.data?.totalDocuments || data?.totalDocuments || leadsData.length
+      );
+      console.log(
+        "Total Pages:",
+        data?.data?.totalPages ||
+          data?.totalPages ||
+          Math.ceil(leadsData.length / limit)
+      );
 
       return {
         leads: leadsData,
         pagination: {
-          total: data?.totalDocuments || data?.totalDocuments || leadsData.length,
+          total:
+            data?.totalDocuments || data?.totalDocuments || leadsData.length,
           page: currentPage,
           limit,
-          totalPages: data?.totalPages || data?.totalPages || Math.ceil(leadsData.length / limit),
+          totalPages:
+            data?.totalPages ||
+            data?.totalPages ||
+            Math.ceil(leadsData.length / limit),
         },
       };
     } else {
@@ -204,10 +227,10 @@ export const fetchLeadById = createAsyncThunk<Lead, string>(
           "x-tenant": getTenantFromURL(),
         },
       });
-      console?.log("lead by Id1", response.data)
+      console?.log("lead by Id1", response.data);
 
       const leadData = response.data;
-      console?.log("lead by Id d", leadData)
+      console?.log("lead by Id d", leadData);
 
       if (leadData) {
         return leadData;
@@ -217,7 +240,9 @@ export const fetchLeadById = createAsyncThunk<Lead, string>(
     } catch (error: any) {
       console.error("❌ fetchLeadById error:", error);
       return rejectWithValue(
-        error?.response?.data?.message || error?.message || "Something went wrong"
+        error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong"
       );
     }
   }
@@ -236,7 +261,7 @@ export const updateLead = createAsyncThunk<
       },
     });
 
-    console.log("response", response.data)
+    console.log("response", response.data);
 
     const leadData = response.data;
 
@@ -274,14 +299,13 @@ export const deleteLead = createAsyncThunk<string, string>(
     } catch (error: any) {
       console.error("❌ deleteLead error:", error);
       return rejectWithValue(
-        error?.response?.data?.message || error?.message || "Something went wrong"
+        error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong"
       );
     }
   }
 );
-
-
-
 
 // Add note to lead
 export const addLeadNote = createAsyncThunk<
@@ -331,44 +355,13 @@ export const addMultipleLeadNotes = createAsyncThunk<
       nextFollowUpAt?: string;
     };
   }
->("leads/addMultipleNotes", async ({ leadIds, noteData }, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.post(
-      `/crm/leads/bulk-notes`,
-      { leadIds, noteData },
-      {
-        headers: {
-          "x-tenant": getTenantFromURL(),
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const { success, data } = response.data;
-
-    if (success) {
-      return { updatedLeads: data };
-    } else {
-      return rejectWithValue("Failed to add notes to leads.");
-    }
-  } catch (error: any) {
-    console.error("❌ addMultipleLeadNotes error:", error);
-    return rejectWithValue(
-      error?.response?.data?.message || error?.message || "Something went wrong"
-    );
-  }
-});
-
-export const assignLeads = createAsyncThunk<
-  { updatedLeads: Lead[] },
-  { leadIds: string[]; assignedTo: string } // assignedTo is now the staff ID
 >(
-  "leads/assign",
-  async ({ leadIds, assignedTo }, { rejectWithValue }) => {
+  "leads/addMultipleNotes",
+  async ({ leadIds, noteData }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.put(
-        "/crm/leads/assign",
-        { leadIds, assignedTo }, // Send staff ID to backend
+      const response = await axiosInstance.post(
+        `/crm/leads/bulk-notes`,
+        { leadIds, noteData },
         {
           headers: {
             "x-tenant": getTenantFromURL(),
@@ -376,20 +369,53 @@ export const assignLeads = createAsyncThunk<
           },
         }
       );
+
       const { success, data } = response.data;
+
       if (success) {
         return { updatedLeads: data };
       } else {
-        return rejectWithValue("Failed to assign leads.");
+        return rejectWithValue("Failed to add notes to leads.");
       }
     } catch (error: any) {
-      console.error("❌ assignLeads error:", error);
+      console.error("❌ addMultipleLeadNotes error:", error);
       return rejectWithValue(
-        error?.response?.data?.message || error?.message || "Something went wrong"
+        error?.response?.data?.message ||
+          error?.message ||
+          "Something went wrong"
       );
     }
   }
 );
+
+export const assignLeads = createAsyncThunk<
+  { updatedLeads: Lead[] },
+  { leadIds: string[]; assignedTo: string } // assignedTo is now the staff ID
+>("leads/assign", async ({ leadIds, assignedTo }, { rejectWithValue }) => {
+  try {
+    const response = await axiosInstance.put(
+      "/crm/leads/assign",
+      { leadIds, assignedTo }, // Send staff ID to backend
+      {
+        headers: {
+          "x-tenant": getTenantFromURL(),
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const { success, data } = response.data;
+    if (success) {
+      return { updatedLeads: data };
+    } else {
+      return rejectWithValue("Failed to assign leads.");
+    }
+  } catch (error: any) {
+    console.error("❌ assignLeads error:", error);
+    return rejectWithValue(
+      error?.response?.data?.message || error?.message || "Something went wrong"
+    );
+  }
+});
 
 // Slice
 const leadSlice = createSlice({
@@ -425,7 +451,9 @@ const leadSlice = createSlice({
       })
       .addCase(fetchLeads.fulfilled, (state, action) => {
         state.loading = false;
-        state.leads = Array.isArray(action.payload.leads) ? action.payload.leads : [];
+        state.leads = Array.isArray(action.payload.leads)
+          ? action.payload.leads
+          : [];
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchLeads.rejected, (state, action) => {
@@ -551,8 +579,7 @@ const leadSlice = createSlice({
       .addCase(assignLeads.pending, (state) => {
         state.loading = true;
         state.error = null;
-      }
-      )
+      })
       .addCase(assignLeads.fulfilled, (state, action) => {
         state.loading = false;
         if (Array.isArray(state.leads)) {
@@ -574,18 +601,20 @@ const leadSlice = createSlice({
             ? action.payload.updatedLeads
             : [action.payload.updatedLeads];
         }
-      }
-      )
+      })
       .addCase(assignLeads.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-      }
-      );
-
-
+      });
   },
 });
 
-export const { setSearchQuery, setPagination, setFilters, resetFilters, clearError } = leadSlice.actions;
+export const {
+  setSearchQuery,
+  setPagination,
+  setFilters,
+  resetFilters,
+  clearError,
+} = leadSlice.actions;
 
 export default leadSlice.reducer;
