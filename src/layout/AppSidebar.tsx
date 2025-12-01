@@ -28,22 +28,32 @@ import {
 } from "lucide-react";
 import axiosInstance from "../services/axiosConfig";
 
-type NavSubItem = { 
-  name: string; 
-  path: string; 
-  pro?: boolean; 
-  new?: boolean; 
-  subItems?: NavSubItem[] 
+type NavSubItem = {
+  name: string;
+  path: string;
+  pro?: boolean;
+  new?: boolean;
+  subItems?: NavSubItem[]
 };
 
-type NavItem = { 
-  name: string; 
-  icon: React.ReactNode; 
-  path?: string; 
-  subItems?: NavSubItem[] 
+type NavItem = {
+  name: string;
+  icon: React.ReactNode;
+  path?: string;
+  subItems?: NavSubItem[]
 };
 
 const staticItems: NavItem[] = [
+  {
+    icon: <HomeIcon className="w-5 h-5" />,
+    name: "Dashboard",
+    path: "/",
+  },
+  {
+    icon: <UserPlus className="w-5 h-5" />,
+    name: "Lead Dashboard",
+    path: "/lead/analytics",
+  },
   {
     icon: <UsersIcon className="w-5 h-5" />,
     name: "Roles",
@@ -62,6 +72,24 @@ const AppSidebar: React.FC = () => {
   const [openSubmenu, setOpenSubmenu] = useState<string[]>([]);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Get user role from localStorage
+  const getUserRole = () => {
+    try {
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user?.role || null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      return null;
+    }
+  };
+
+  const userRole = getUserRole();
+  const ADMIN_ROLE = "6888d1dd50261784a38dd087";
 
   /* ---------- Helper Functions ---------- */
   const isActive = useCallback(
@@ -226,6 +254,20 @@ const AppSidebar: React.FC = () => {
     fetchModules();
   }, []);
 
+  /* ---------- Filter Menu Items Based on Role ---------- */
+  const getFilteredMenuItems = (items: NavItem[]): NavItem[] => {
+    // If user is admin, show all items
+    if (userRole == ADMIN_ROLE) {
+      return items;
+    }
+
+    // For non-admin users, filter out the "Roles" menu item
+    return items.filter((item) => {
+      const itemName = normalizeName(item.name);
+      return itemName !== "role" && itemName !== "dashboard";
+    });
+  };
+
   /* ---------- Renderers ---------- */
   // Recursive function to render subitems with modern styling
   const renderSubItems = (
@@ -325,72 +367,38 @@ const AppSidebar: React.FC = () => {
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
-    <ul className="space-y-2">
-      {items.map((nav, index) => {
-        const menuKey = `${menuType}-${index}`;
-        const isOpen = openSubmenu.includes(menuKey);
-        const isSubActive = nav.subItems ? hasActiveSubItem(nav.subItems) : false;
-        const isCurrentActive = nav.path && isActive(nav.path);
+  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => {
+    // Filter items based on role before rendering
+    const filteredItems = getFilteredMenuItems(items);
 
-        return (
-          <li key={nav.name} className="group">
-            {nav.subItems ? (
-              <button
-                onClick={() => handleSubmenuToggle(menuKey)}
-                className={`
-                  w-full flex items-center gap-4 px-5 py-2 rounded-md text-sm font-medium transition-all duration-300
-                  backdrop-blur-xl relative overflow-hidden
-                  ${isOpen || isSubActive
-                    ? "bg-gradient-to-r from-violet-600/30   to-purple-600/30 text-violet-300 shadow-xl shadow-violet-600/20"
-                    : "text-gray-300 hover:bg-gray-800/50 !px-2.5 hover:text-black"
-                  }
-                `}
-              >
-                <span
-                  className={`
-                    p-2.5 rounded-sm transition-all duration-300
-                    ${isOpen || isSubActive
-                      ? "bg-gradient-to-br from-violet-500 to-purple-500 text-white shadow-lg"
-                      : "bg-gray-800/70 text-gray-400 group-hover:bg-white group-hover:text-black"
-                    }
-                  `}
-                >
-                  {nav.icon}
-                </span>
+    return (
+      <ul className="space-y-2">
+        {filteredItems.map((nav, index) => {
+          const menuKey = `${menuType}-${index}`;
+          const isOpen = openSubmenu.includes(menuKey);
+          const isSubActive = nav.subItems ? hasActiveSubItem(nav.subItems) : false;
+          const isCurrentActive = nav.path && isActive(nav.path);
 
-                {(isExpanded || isHovered || isMobileOpen) && (
-                  <>
-                    <span className="flex-1 text-left truncate capitalize">{nav.name}</span>
-                    <ChevronDownIcon
-                      className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180 text-violet-400" : ""}`}
-                    />
-                  </>
-                )}
-                {(isOpen || isSubActive) && (
-                  <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-purple-600/10 -z-10" />
-                )}
-                <div className="absolute inset-0 bg-violet-400 opacity-0 group-hover:opacity-100 transition-opacity -z-10 rounded-md" />
-              </button>
-            ) : (
-              nav.path && (
-                <Link
-                  to={nav.path}
+          return (
+            <li key={nav.name} className="group">
+              {nav.subItems ? (
+                <button
+                  onClick={() => handleSubmenuToggle(menuKey)}
                   className={`
-                    w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300
+                    w-full flex items-center gap-4 px-5 py-2 rounded-md text-sm font-medium transition-all duration-300
                     backdrop-blur-xl relative overflow-hidden
-                    ${isCurrentActive
-                      ? "bg-gradient-to-r from-violet-600/40 to-purple-600/40 text-violet-300 shadow-xl shadow-violet-600/30"
-                      : "text-gray-300 hover:bg-gray-800/50 hover:text-gray-100"
+                    ${isOpen || isSubActive
+                      ? "bg-gradient-to-r from-violet-600/30   to-purple-600/30 text-violet-300 shadow-xl shadow-violet-600/20"
+                      : "text-gray-300 hover:bg-gray-800/50 !px-2.5 hover:text-black"
                     }
                   `}
                 >
                   <span
                     className={`
-                      p-2.5 rounded-xl transition-all duration-300
-                      ${isCurrentActive
+                      p-2.5 rounded-sm transition-all duration-300
+                      ${isOpen || isSubActive
                         ? "bg-gradient-to-br from-violet-500 to-purple-500 text-white shadow-lg"
-                        : "bg-gray-800/70 text-gray-400 group-hover:bg-gray-700/80"
+                        : "bg-gray-800/70 text-gray-400 group-hover:bg-white group-hover:text-black"
                       }
                     `}
                   >
@@ -398,38 +406,77 @@ const AppSidebar: React.FC = () => {
                   </span>
 
                   {(isExpanded || isHovered || isMobileOpen) && (
-                    <span className="flex-1 text-left truncate capitalize">{nav.name}</span>
+                    <>
+                      <span className="flex-1 text-left truncate capitalize">{nav.name}</span>
+                      <ChevronDownIcon
+                        className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180 text-violet-400" : ""}`}
+                      />
+                    </>
                   )}
-
-                  {isCurrentActive && (
-                    <span className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 to-purple-500 rounded-r-full" />
+                  {(isOpen || isSubActive) && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600/10 to-purple-600/10 -z-10" />
                   )}
-                  <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity -z-10 rounded-2xl" />
-                </Link>
-              )
-            )}
+                  <div className="absolute inset-0 bg-violet-400 opacity-0 group-hover:opacity-100 transition-opacity -z-10 rounded-md" />
+                </button>
+              ) : (
+                nav.path && (
+                  <Link
+                    to={nav.path}
+                    className={`
+                      w-full flex items-center gap-4 px-5 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300
+                      backdrop-blur-xl relative overflow-hidden
+                      ${isCurrentActive
+                        ? "bg-gradient-to-r from-violet-600/40 to-purple-600/40 text-violet-300 shadow-xl shadow-violet-600/30"
+                        : "text-gray-300 hover:bg-gray-800/50 hover:text-gray-100"
+                      }
+                    `}
+                  >
+                    <span
+                      className={`
+                        p-2.5 rounded-xl transition-all duration-300
+                        ${isCurrentActive
+                          ? "bg-gradient-to-br from-violet-500 to-purple-500 text-white shadow-lg"
+                          : "bg-gray-800/70 text-gray-400 group-hover:bg-gray-700/80"
+                        }
+                      `}
+                    >
+                      {nav.icon}
+                    </span>
 
-            {/* Submenu */}
-            {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-              <div
-                ref={(el) => {
-                  subMenuRefs.current[menuKey] = el;
-                }}
-                className="overflow-hidden capitalize transition-all duration-300"
-                style={{
-                  height: isOpen ? `${subMenuHeight[menuKey]}px` : "0px",
-                }}
-              >
-                <ul className="mt-2 ml-9 space-y-1">
-                  {renderSubItems(nav.subItems, menuKey)}
-                </ul>
-              </div>
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );  
+                    {(isExpanded || isHovered || isMobileOpen) && (
+                      <span className="flex-1 text-left truncate capitalize">{nav.name}</span>
+                    )}
+
+                    {isCurrentActive && (
+                      <span className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 to-purple-500 rounded-r-full" />
+                    )}
+                    <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity -z-10 rounded-2xl" />
+                  </Link>
+                )
+              )}
+
+              {/* Submenu */}
+              {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
+                <div
+                  ref={(el) => {
+                    subMenuRefs.current[menuKey] = el;
+                  }}
+                  className="overflow-hidden capitalize transition-all duration-300"
+                  style={{
+                    height: isOpen ? `${subMenuHeight[menuKey]}px` : "0px",
+                  }}
+                >
+                  <ul className="mt-2 ml-9 space-y-1">
+                    {renderSubItems(nav.subItems, menuKey)}
+                  </ul>
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
 
   /* ---------- Hide Sidebar Condition ---------- */
   if (
@@ -457,9 +504,8 @@ const AppSidebar: React.FC = () => {
           <img
             src="/logo.webp"
             alt="Logo"
-            className={`object-contain transition-all duration-300 ${
-              isExpanded || isHovered || isMobileOpen ? "h-11 w-11" : "h-9 w-9"
-            }`}
+            className={`object-contain transition-all duration-300 ${isExpanded || isHovered || isMobileOpen ? "h-11 w-11" : "h-9 w-9"
+              }`}
           />
         </Link>
       </div>
