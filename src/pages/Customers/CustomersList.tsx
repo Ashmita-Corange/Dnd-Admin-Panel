@@ -163,7 +163,7 @@ const CustomersList: React.FC = () => {
     try {
       setExportLoading(true);
       const tenant = getTenantFromURL();
-      const response = await axiosInstance.get("/export-user-data", {
+      const response = await axiosInstance.get("/api/export-user-data", {
         headers: { "x-tenant": tenant },
         responseType: "blob",
       });
@@ -191,7 +191,7 @@ const CustomersList: React.FC = () => {
     try {
       setExportSingleLoadingId(userId);
       const tenant = getTenantFromURL();
-      const response = await axiosInstance.get("/export-user-data", {
+      const response = await axiosInstance.get("/api/export-user-data", {
         headers: { "x-tenant": tenant },
         params: { userId },
         responseType: "blob",

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Search,
   Filter,
@@ -9,6 +9,7 @@ import {
   Clock,
   CheckCircle,
   XCircle,
+  Upload,
 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
@@ -24,6 +25,8 @@ const OrderList: React.FC = () => {
 
   const [searchInput, setSearchInput] = useState(searchQuery);
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [popup, setPopup] = useState<{
     message: string;
@@ -95,6 +98,82 @@ const OrderList: React.FC = () => {
     setSearchInput("");
     setStatusFilter("");
     dispatch(setSearchQuery(""));
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = [".csv", ".xlsx", ".xls"];
+    const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!validTypes.includes(fileExtension)) {
+      setPopup({
+        message: "Please upload a valid CSV or Excel file",
+        type: "error",
+        isVisible: true,
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
+    await handleCsvUpload(file);
+  };
+
+  const handleCsvUpload = async (file: File) => {
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("excelFile", file);
+
+    try {
+      const response = await fetch("http://localhost:3000/api/orders/upload-manual", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setPopup({
+          message: data.message || "CSV uploaded successfully!",
+          type: "success",
+          isVisible: true,
+        });
+
+        // Refresh the orders list
+        dispatch(
+          fetchOrders({
+            page: pagination.page,
+            limit: pagination.limit,
+            search: searchQuery || "",
+            sortField: "createdAt",
+            sortOrder: "desc",
+            ...(statusFilter && { status: statusFilter }),
+          })
+        );
+      } else {
+        setPopup({
+          message: data.message || "Failed to upload CSV",
+          type: "error",
+          isVisible: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading CSV:", error);
+      setPopup({
+        message: "An error occurred while uploading the CSV file",
+        type: "error",
+        isVisible: true,
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
   };
 
   const generatePageNumbers = () => {
@@ -170,9 +249,27 @@ const OrderList: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
             Orders
           </h1>
-          <span className="text-gray-500 text-sm dark:text-gray-400">
-            Total: {pagination.totalDocuments ?? pagination.total}
-          </span>
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500 text-sm dark:text-gray-400">
+              Total: {pagination.totalDocuments ?? pagination.total}
+            </span>
+            {/* Upload CSV Button */}
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Upload className="h-4 w-4" />
+              {uploading ? "Uploading..." : "Upload CSV"}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,.xlsx,.xls"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
         </div>
 
         {/* Search & Filter */}
@@ -289,7 +386,7 @@ const OrderList: React.FC = () => {
                     {order.items?.length || 0} items
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    ₹{order.total?.toFixed(2) || "0.00"}
+                    ₹{order?.total?.toFixed(2) || "0.00"}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center">
@@ -342,11 +439,10 @@ const OrderList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${
-                  pagination.page === page
-                    ? "bg-indigo-500 text-white"
-                    : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
+                className={`px-3 py-1 rounded ${pagination.page === page
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
               >
                 {page}
               </button>
