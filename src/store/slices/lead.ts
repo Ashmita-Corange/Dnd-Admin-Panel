@@ -236,9 +236,11 @@ export const updateLead = createAsyncThunk<
       },
     });
 
-    const { success, data: leadData } = response.data;
+    console.log("response", response.data)
 
-    if (success) {
+    const leadData = response.data;
+
+    if (leadData) {
       return leadData;
     } else {
       return rejectWithValue("Failed to update lead.");

@@ -434,7 +434,7 @@ const EditLead: React.FC = () => {
           navigate("/lead/list");
         }, 2000);
       } else {
-        throw new Error(result.payload as string || "Failed to update lead");
+        throw new Error(result.payload as string || "Failed to update lead 123");
       }
     } catch (error) {
       setPopup({
