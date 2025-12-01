@@ -336,7 +336,7 @@ const ProfessionalCMS = () => {
     setSelectedMobileImage(null);
     setHasUnsavedChanges(true);
   };
-
+ 
   const handleEditHero = (index) => {
     const hero = sections.hero?.[index];
     if (!hero) return;
@@ -349,36 +349,7 @@ const ProfessionalCMS = () => {
     setEditingSection("hero");
   };
 
-  const handleDeleteHero = async (index) => {
-    const hero = sections.hero?.[index];
-    if (!hero || !hero._id) {
-      // If it's an unsaved/new draft just reset
-      if (editingHeroIndex === index) {
-        setEditingHeroIndex(null);
-        setIsNewHero(false);
-        setFormData({});
-        setSelectedImage(null);
-        setSelectedMobileImage(null);
-        setHasUnsavedChanges(false);
-      }
-      return;
-    }
 
-    if (!window.confirm("Are you sure you want to delete this hero item?"))
-      return;
-    try {
-      const res = await axiosInstance.delete(`/content?id=${hero._id}`);
-      if (res?.data) {
-        dispatch(fetchHomePageContent());
-        setSaveStatus("success");
-        setTimeout(() => setSaveStatus(null), 3000);
-      }
-    } catch (err) {
-      console.error("Failed to delete hero:", err);
-      setSaveStatus("error");
-      setTimeout(() => setSaveStatus(null), 4000);
-    }
-  };
 
   const renderEditForm = (sectionType, sectionData) => {
     const updateFormData = (updates) => {
@@ -444,9 +415,9 @@ const ProfessionalCMS = () => {
                               <div className="font-medium text-gray-900 dark:text-white">
                                 {h.content?.title || `Hero ${idx + 1}`}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              {/* <div className="text-xs text-gray-500">
                                 {h.content?.description?.slice?.(0, 80)}
-                              </div>
+                              </div> */}
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -456,12 +427,7 @@ const ProfessionalCMS = () => {
                             >
                               <Edit3 size={14} />
                             </button>
-                            <button
-                              onClick={() => handleDeleteHero(idx)}
-                              className="p-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100"
-                            >
-                              <X size={14} />
-                            </button>
+                          
                           </div>
                         </div>
                       </div>
