@@ -16,6 +16,7 @@ import templateSlice from "./slices/template";
 import couponSlice from "./slices/coupon";
 import blogSlice from "./slices/blog";
 import leadSlice from "./slices/lead";
+import leadAnalyticsSlice from "./slices/leadAnalytics";
 import supportTicketSlice from "./slices/supportticket";
 import pagesSlice from "./slices/pages";
 import shippingSlice from "./slices/shippingSlice";
@@ -54,6 +55,7 @@ export const store = configureStore({
     coupon: couponSlice,
     blog: blogSlice,
     lead: leadSlice,
+    leadAnalytics: leadAnalyticsSlice,
     tickets: supportTicketSlice,
     shipping: shippingSlice,
     customers: customersReducer,

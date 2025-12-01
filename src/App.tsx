@@ -90,6 +90,7 @@ import ContactList from "./pages/pages/contact/ContactList";
 import EditContact from "./pages/pages/contact/EditContact";
 import ViewContact from "./pages/pages/contact/ViewContact";
 import Analytics from "./pages/Dashboard/Analytics";
+import LeadAnalytics from "./pages/Lead/LeadAnalytics";
 
 // Lazy load pages
 
@@ -242,7 +243,7 @@ export default function App() {
               <Route path="/customers/add" element={<AddCustomers />} />
               <Route path="/customers/list" element={<CustomersList />} />
               <Route path="/customers/edit/:id" element={<EditCustomer />} />
-
+              <Route path="/lead/analytics" element={<LeadAnalytics />} />
               {/* Plan Management Routes */}
               <Route
                 path="/custom-temple/add"
