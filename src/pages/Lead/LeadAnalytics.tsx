@@ -9,6 +9,8 @@ import { RootState, AppDispatch } from "../../store";
 import { fetchLeadAnalytics } from "../../store/slices/leadAnalytics";
 import { fetchStaff } from "../../store/slices/staff";
 
+import DatePicker from "../../components/form/date-picker";
+
 const LeadAnalytics: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const { analytics, loading, error } = useSelector((state: RootState) => state.leadAnalytics);
@@ -114,6 +116,50 @@ const LeadAnalytics: React.FC = () => {
                 </div>
             </div>
 
+            {/* Date Filters */}
+            <div className="flex gap-4 mt-4 flex-wrap justify-end mb-8">
+                <div className="w-48">
+                    <DatePicker
+                        id="lead-analytics-start-date"
+                        label="Start Date"
+                        defaultDate={startDate || undefined}
+                        onChange={(_selectedDates: Date[], dateStr: string) =>
+                            setStartDate(dateStr)
+                        }
+                    />
+                </div>
+                <div className="w-48">
+                    <DatePicker
+                        id="lead-analytics-end-date"
+                        label="End Date"
+                        defaultDate={endDate || undefined}
+                        onChange={(_selectedDates: Date[], dateStr: string) =>
+                            setEndDate(dateStr)
+                        }
+                    />
+                </div>
+                <button onClick={() => {
+                    const params: any = {};
+                    if (startDate) params.startDate = startDate;
+                    if (endDate) params.endDate = endDate;
+                    if (!isAdmin) params.assignedTo = userId;
+                    else if (selectedStaff) params.assignedTo = selectedStaff;
+                    dispatch(fetchLeadAnalytics(params));
+                }}
+                    className="self-end px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                    Apply
+                </button>
+                <button onClick={() => {
+                    const now = new Date();
+                    const formatDate = (d: Date) => d.toISOString().split("T")[0];
+                    setStartDate(formatDate(new Date(now.getFullYear(), now.getMonth(), 1)));
+                    setEndDate(formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0)));
+                }}
+                    className="self-end px-3 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                    Reset Dates
+                </button>
+            </div>
+
             {/* Filters */}
             <div className="backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 rounded-3xl border border-gray-200/50 dark:border-gray-700/50 shadow-xl p-6 mb-8">
                 <div className="flex items-center gap-3 mb-6">
@@ -124,24 +170,6 @@ const LeadAnalytics: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            <Calendar className="w-4 h-4 text-blue-600" />
-                            Start Date
-                        </label>
-                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
-                            className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-700 px-4 py-3 bg-white dark:bg-gray-900 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all outline-none text-gray-800 dark:text-white" />
-                    </div>
-
-                    <div>
-                        <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                            <Calendar className="w-4 h-4 text-purple-600" />
-                            End Date
-                        </label>
-                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
-                            className="w-full rounded-xl border-2 border-gray-200 dark:border-gray-700 px-4 py-3 bg-white dark:bg-gray-900 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all outline-none text-gray-800 dark:text-white" />
-                    </div>
-
                     {isAdmin && (
                         <div>
                             <label className="flex items-center gap-2 mb-3 text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -192,10 +220,6 @@ const LeadAnalytics: React.FC = () => {
                 </div>
 
                 <button onClick={() => {
-                    const now = new Date();
-                    const formatDate = (d: Date) => d.toISOString().split("T")[0];
-                    setStartDate(formatDate(new Date(now.getFullYear(), now.getMonth(), 1)));
-                    setEndDate(formatDate(new Date(now.getFullYear(), now.getMonth() + 1, 0)));
                     setSelectedStaff(isAdmin ? "" : userId);
                 }}
                     className="mt-6 px-6 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
