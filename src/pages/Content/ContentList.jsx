@@ -336,19 +336,6 @@ const ProfessionalCMS = () => {
     setSelectedMobileImage(null);
     setHasUnsavedChanges(true);
   };
-
-  const handleEditHero = (index) => {
-    const hero = sections.hero?.[index];
-    if (!hero) return;
-    setEditingHeroIndex(index);
-    setIsNewHero(false);
-    setFormData({ ...hero.content });
-    setSelectedImage(null);
-    setSelectedMobileImage(null);
-    setHasUnsavedChanges(false);
-    setEditingSection("hero");
-  };
-
   const handleDeleteHero = async (index) => {
     const hero = sections.hero?.[index];
     if (!hero || !hero._id) {
@@ -378,6 +365,17 @@ const ProfessionalCMS = () => {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus(null), 4000);
     }
+  };
+  const handleEditHero = (index) => {
+    const hero = sections.hero?.[index];
+    if (!hero) return;
+    setEditingHeroIndex(index);
+    setIsNewHero(false);
+    setFormData({ ...hero.content });
+    setSelectedImage(null);
+    setSelectedMobileImage(null);
+    setHasUnsavedChanges(false);
+    setEditingSection("hero");
   };
 
   const renderEditForm = (sectionType, sectionData) => {
@@ -444,9 +442,9 @@ const ProfessionalCMS = () => {
                               <div className="font-medium text-gray-900 dark:text-white">
                                 {h.content?.title || `Hero ${idx + 1}`}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              {/* <div className="text-xs text-gray-500">
                                 {h.content?.description?.slice?.(0, 80)}
-                              </div>
+                              </div> */}
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">

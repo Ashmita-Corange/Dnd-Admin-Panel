@@ -559,7 +559,7 @@ function Analytics() {
                         : ticket?.priority === "medium"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                           : "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
-                        }`}
+                      }`} 
                     >
                       {ticket?.priority}
                     </span>
