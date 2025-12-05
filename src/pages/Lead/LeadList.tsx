@@ -298,11 +298,11 @@ const DeleteModal: React.FC<{
           <div className="p-6">
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Are you sure you want to delete the lead{" "}
-              {lead.fullName &&
+              {lead.fullName && (
                 <strong className="text-gray-900 dark:text-white">
                   "{lead.fullName}"
                 </strong>
-              }
+              )}
               ?
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -358,6 +358,14 @@ const LeadList: React.FC = () => {
     (state) => state.staff
   );
 
+  const search = new URLSearchParams(window.location.search);
+  const searchQueryParam = search.get("lastcallstatus") || "";
+
+  // convert searchQueryParam to actual valid string it add _ before capital letters also make it lowercase
+  const validLastCallStatus = searchQueryParam
+    .replace(/([A-Z])/g, "_$1")
+    .toLowerCase();
+  console.log("last call status is ===> ", validLastCallStatus);
   // Get user info from localStorage
   const userInfo = JSON.parse(localStorage.getItem("user") || "{}");
   const userRoleId = userInfo?.role || "";
@@ -407,11 +415,14 @@ const LeadList: React.FC = () => {
   // Fetch leads
   useEffect(() => {
     const activeFilters = {
-      isDeleted: false,
       ...(localFilters.status ? { status: localFilters.status } : {}),
       // If user is staff, automatically filter by their assigned leads
       ...(isStaff && userId ? { assignedTo: userId } : {}),
     };
+
+    if (validLastCallStatus !== "" && validLastCallStatus !== "undefined") {
+      activeFilters.lastCallStatus = validLastCallStatus;
+    }
 
     dispatch(
       fetchLeads({
@@ -422,7 +433,15 @@ const LeadList: React.FC = () => {
         sort: { createdAt: "desc" },
       })
     );
-  }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters, isStaff, userId]);
+  }, [
+    dispatch,
+    pagination.page,
+    pagination.limit,
+    searchInput,
+    localFilters,
+    isStaff,
+    userId,
+  ]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -431,9 +450,12 @@ const LeadList: React.FC = () => {
           page: newPage,
           limit: pagination.limit,
           filters: {
-            isDeleted: false,
             ...(localFilters.status ? { status: localFilters.status } : {}),
             ...(isStaff && userId ? { assignedTo: userId } : {}),
+            ...(validLastCallStatus !== "" &&
+            validLastCallStatus !== "undefined"
+              ? { lastCallStatus: validLastCallStatus }
+              : {}),
           },
           search: searchInput !== "" ? searchInput : undefined,
           sort: { createdAt: "desc" },
@@ -448,9 +470,11 @@ const LeadList: React.FC = () => {
         page: 1,
         limit: newLimit,
         filters: {
-          isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
           ...(isStaff && userId ? { assignedTo: userId } : {}),
+          ...(validLastCallStatus !== "" && validLastCallStatus !== "undefined"
+            ? { lastCallStatus: validLastCallStatus }
+            : {}),
         },
         search: searchInput !== "" ? searchInput : undefined,
         sort: { createdAt: "desc" },
@@ -507,9 +531,12 @@ const LeadList: React.FC = () => {
 
         // Refresh the leads list
         const activeFilters = {
-          isDeleted: false,
           ...(localFilters.status ? { status: localFilters.status } : {}),
+
           ...(isStaff && userId ? { assignedTo: userId } : {}),
+          ...(validLastCallStatus !== "" && validLastCallStatus !== "undefined"
+            ? { lastCallStatus: validLastCallStatus }
+            : {}),
         };
 
         dispatch(
@@ -643,9 +670,11 @@ const LeadList: React.FC = () => {
 
       // Refresh leads
       const activeFilters = {
-        isDeleted: false,
         ...(localFilters.status ? { status: localFilters.status } : {}),
         ...(isStaff && userId ? { assignedTo: userId } : {}),
+        ...(validLastCallStatus !== "" && validLastCallStatus !== "undefined"
+          ? { lastCallStatus: validLastCallStatus }
+          : {}),
       };
 
       dispatch(
@@ -723,10 +752,11 @@ const LeadList: React.FC = () => {
             {assignableLeads.length > 0 && (
               <button
                 onClick={toggleAssignMode}
-                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${isAssignMode
+                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isAssignMode
                     ? "bg-red-500 text-white hover:bg-red-600"
                     : "bg-indigo-500 text-white hover:bg-indigo-600"
-                  }`}
+                }`}
               >
                 {isAssignMode ? (
                   <>
@@ -938,6 +968,9 @@ const LeadList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Source
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
+                  last Call Status
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase dark:text-gray-400">
                   Actions
                 </th>
@@ -1006,6 +1039,9 @@ const LeadList: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {lead.source || "Not specified"}
                     </td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                      {lead.lastCallStatus}
+                    </td>
                     <td className="px-6 py-4 text-right space-x-2">
                       {!isAssignMode && (
                         <>
@@ -1054,10 +1090,11 @@ const LeadList: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => handlePageChange(page)}
-                className={`px-3 py-1 rounded ${pagination.page === page
+                className={`px-3 py-1 rounded ${
+                  pagination.page === page
                     ? "bg-indigo-500 text-white"
                     : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}
+                }`}
               >
                 {page}
               </button>

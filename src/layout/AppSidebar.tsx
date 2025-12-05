@@ -495,7 +495,7 @@ const AppSidebar: React.FC = () => {
   return (
     <aside
       className={`
-        fixed inset-y-0 left-0 z-50 flex flex-col bg-gray-950/95 backdrop-blur-2xl
+        fixed inset-y-0 left-0 z-[1000005] flex flex-col bg-gray-950/95 backdrop-blur-2xl
         border-r border-gray-800/70 transition-all duration-300
         ${isExpanded || isMobileOpen ? "w-[290px]" : isHovered ? "w-[290px]" : "w-[90px]"}
         ${isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
