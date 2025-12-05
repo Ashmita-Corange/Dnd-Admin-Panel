@@ -7,6 +7,8 @@ interface Category {
   slug: string;
   createdAt: string;
   updatedAt: string;
+  allowPrepaidOnly?: boolean; // Added
+  disableCOD?: boolean;       // Added
 }
 
 interface FetchCategoryParams {
@@ -130,18 +132,21 @@ export const fetchCategoryById = createAsyncThunk<Category, string>(
 export const updateCategory = createAsyncThunk<
   Category,
   { id: string; data: Partial<Category> }
->("categories/update", async ({ id, data }, { rejectWithValue }) => {
-  try {
-    const response = await axiosInstance.put(`/category/${id}`, data, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data?.data;
-  } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
+>(
+  "categories/update",
+  async ({ id, data }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/category/${id}`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data?.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
   }
-});
+);
 
 // Delete category
 export const deleteCategory = createAsyncThunk<string, string>(

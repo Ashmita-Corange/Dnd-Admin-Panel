@@ -1,6 +1,17 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
+export interface MetaIntegration {
+  adAccountId?: string;
+  pixelId?: string;
+  pageId?: string;
+  accessToken?: string;
+  appId?: string;
+  appSecret?: string;
+  isConnected?: boolean;
+  connectedAt?: string;
+}
+
 export interface Settings {
   codLimit: number;
   freeShippingThreshold: number;
@@ -11,6 +22,7 @@ export interface Settings {
   codDisableForHighRTO: boolean;
   codBlockOnRTOAddress: boolean;
   highRTOOrderCount: number;
+  metaIntegration?: MetaIntegration;
 }
 
 interface StructureState {
@@ -30,7 +42,7 @@ export const fetchSettings = createAsyncThunk<Settings>(
   async (_, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get("/settings");
-      console.log("settings",response.data);
+      console.log("settings", response.data);
       return response.data?.setting;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);

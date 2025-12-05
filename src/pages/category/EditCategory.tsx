@@ -30,6 +30,8 @@ export default function EditCategory() {
     seoDescription: "",
     sortOrder: 0,
     isFeatured: false,
+    allowPrepaidOnly: false, // Added
+    disableCOD: false,       // Added
   });
   const params = useParams();
   const categoryId = params.id || "";
@@ -113,6 +115,8 @@ export default function EditCategory() {
     formData.append("seoDescription", category.seoDescription);
     formData.append("sortOrder", category.sortOrder.toString());
     formData.append("isFeatured", category.isFeatured.toString());
+    formData.append("allowPrepaidOnly", category.allowPrepaidOnly.toString()); // Added
+    formData.append("disableCOD", category.disableCOD.toString());             // Added
 
     if (typeof category.image === "object" && category.image) {
       formData.append("image", category.image);
@@ -158,6 +162,8 @@ export default function EditCategory() {
         seoDescription: data.seoDescription || "",
         sortOrder: data.sortOrder || 0,
         isFeatured: data.isFeatured || false,
+        allowPrepaidOnly: data.allowPrepaidOnly || false, // Added
+        disableCOD: data.disableCOD || false,             // Added
       });
     } catch (error) {
       console.error("Error fetching category data:", error);
@@ -313,21 +319,55 @@ export default function EditCategory() {
                   </div>
 
                   <div className="flex items-start pt-8">
-                    <div className="flex items-center h-11">
-                      <input
-                        type="checkbox"
-                        id="isFeatured"
-                        name="isFeatured"
-                        checked={category.isFeatured}
-                        onChange={handleChange}
-                        className="w-5 h-5 text-indigo-600 bg-gray-100 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-indigo-500/20 dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 cursor-pointer transition-all"
-                      />
-                      <label
-                        htmlFor="isFeatured"
-                        className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200 cursor-pointer select-none"
-                      >
-                        Featured Category
-                      </label>
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center h-11">
+                        <input
+                          type="checkbox"
+                          id="isFeatured"
+                          name="isFeatured"
+                          checked={category.isFeatured}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-indigo-600 bg-gray-100 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-indigo-500/20 dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 cursor-pointer transition-all"
+                        />
+                        <label
+                          htmlFor="isFeatured"
+                          className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200 cursor-pointer select-none"
+                        >
+                          Featured Category
+                        </label>
+                      </div>
+                      <div className="flex items-center h-11">
+                        <input
+                          type="checkbox"
+                          id="allowPrepaidOnly"
+                          name="allowPrepaidOnly"
+                          checked={category.allowPrepaidOnly}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-indigo-600 bg-gray-100 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-indigo-500/20 dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 cursor-pointer transition-all"
+                        />
+                        <label
+                          htmlFor="allowPrepaidOnly"
+                          className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200 cursor-pointer select-none"
+                        >
+                          Allow Prepaid Only
+                        </label>
+                      </div>
+                      <div className="flex items-center h-11">
+                        <input
+                          type="checkbox"
+                          id="disableCOD"
+                          name="disableCOD"
+                          checked={category.disableCOD}
+                          onChange={handleChange}
+                          className="w-5 h-5 text-indigo-600 bg-gray-100 border-2 border-gray-300 rounded-lg focus:ring-4 focus:ring-indigo-500/20 dark:bg-gray-800 dark:border-gray-600 dark:focus:ring-indigo-600 dark:ring-offset-gray-800 cursor-pointer transition-all"
+                        />
+                        <label
+                          htmlFor="disableCOD"
+                          className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-200 cursor-pointer select-none"
+                        >
+                          Disable COD
+                        </label>
+                      </div>
                     </div>
                   </div>
                 </div>

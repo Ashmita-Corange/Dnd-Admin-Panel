@@ -16,6 +16,7 @@ import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import { Link } from "react-router";
 import { fetchOrders, setSearchQuery } from "../../store/slices/Orders";
+import { useSearchParams } from "react-router-dom";
 
 const OrderList: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -37,6 +38,16 @@ const OrderList: React.FC = () => {
     type: "success",
     isVisible: false,
   });
+
+  const [searchParams] = useSearchParams();
+
+  // Set statusFilter from URL params on mount or param change
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status) {
+      setStatusFilter(status);
+    }
+  }, [searchParams]);
 
   // Debounce search input
   useEffect(() => {

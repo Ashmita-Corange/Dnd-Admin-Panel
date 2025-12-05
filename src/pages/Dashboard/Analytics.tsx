@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import axiosInstance from "../../services/axiosConfig";
 import DatePicker from "../../components/form/date-picker";
+import { Link } from "react-router-dom";
 
 function Analytics() {
   const [data, setData] = useState(null);
@@ -36,7 +37,6 @@ function Analytics() {
 
   const [startDate, setStartDate] = useState<string>(defaultStart);
   const [endDate, setEndDate] = useState<string>(defaultEnd);
-  const [selectedMetric, setSelectedMetric] = useState<string | null>(null);
 
   const getData = async () => {
     try {
@@ -210,6 +210,23 @@ function Analytics() {
     }))
     : [];
 
+  // Helper function to determine redirect URL based on card title
+  const getRedirectUrl = (title: string) => {
+    const userRelated = ["Total Users", "Total Buyers", "Non-Buying Users", "New Customers", "Repeat Customers"];
+    if (userRelated.includes(title)) {
+      return "/customers/list";
+    }
+    // For order-related cards, append status filter
+    const statusMap: { [key: string]: string } = {
+      "Pending Orders": "pending",
+      "Shipped Orders": "shipped",
+      "Cancelled Orders": "cancelled",
+      // "Total Orders" and others without specific status go to /orders/list without filter
+    };
+    const status = statusMap[title];
+    return status ? `/orders/list?status=${status}` : "/orders/list";
+  };
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
       <div className="mb-6">
@@ -266,12 +283,10 @@ function Analytics() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {salesCards.map((card) => (
-            <button
+            <Link
               key={card.title}
-              type="button"
-              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none"
-              onClick={() => setSelectedMetric(card.title)}
-              tabIndex={0}
+              to={getRedirectUrl(card.title)}
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none block"
             >
               <div>
                 <p className="text-gray-500 text-sm font-medium dark:text-gray-300">
@@ -284,7 +299,7 @@ function Analytics() {
                   {card.description}
                 </p>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </div>
@@ -296,12 +311,10 @@ function Analytics() {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {opsCards.map((card) => (
-            <button
+            <Link
               key={card.title}
-              type="button"
-              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none"
-              onClick={() => setSelectedMetric(card.title)}
-              tabIndex={0}
+              to={getRedirectUrl(card.title)}
+              className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow dark:bg-gray-800 focus:outline-none block"
             >
               <div>
                 <p className="text-gray-500 text-sm font-medium dark:text-gray-300">
@@ -314,41 +327,10 @@ function Analytics() {
                   {card.description}
                 </p>
               </div>
-            </button>
+            </Link>
           ))}
         </div>
       </div>
-
-      {/* Metric Details Modal (custom, not headlessui) */}
-      {selectedMetric && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-8 max-w-md mx-auto z-50 relative">
-            <div className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-              {selectedMetric}
-            </div>
-            <div className="text-gray-700 dark:text-gray-300 mb-4">
-              {(() => {
-                const card =
-                  salesCards.find((c) => c.title === selectedMetric) ||
-                  opsCards.find((c) => c.title === selectedMetric);
-                if (!card) return null;
-                return (
-                  <>
-                    <div className="text-3xl font-bold mb-2">{card.value}</div>
-                    <div className="text-sm">{card.description || ""}</div>
-                  </>
-                );
-              })()}
-            </div>
-            <button
-              onClick={() => setSelectedMetric(null)}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

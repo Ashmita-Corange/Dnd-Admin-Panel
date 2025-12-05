@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchSettings, updateSettings } from "../../store/slices/structure";
 import { RootState, AppDispatch } from "../../store";
-import { Settings, ShoppingCart, CreditCard, Truck, Shield, AlertTriangle, Check, X } from "lucide-react";
+import { Settings, ShoppingCart, CreditCard, Truck, Shield, AlertTriangle, Check, X, ChartNoAxesCombined } from "lucide-react";
 
 const fieldGroups = [
   {
@@ -36,6 +36,19 @@ const fieldGroups = [
     icon: <AlertTriangle className="w-5 h-5" />,
     fields: [
       { name: "repeatOrderRestrictionDays", label: "Repeat Order Restriction", type: "number", description: "Days to wait before allowing repeat orders", unit: "days" },
+    ]
+  },
+  {
+    title: "Meta Integration",
+    icon: <ChartNoAxesCombined className="w-5 h-5" />,
+    fields: [
+      { name: "metaIntegration.adAccountId", label: "Ad Account ID", type: "text", description: "Your Meta Ad Account ID (e.g., act_YOUR_AD_ACCOUNT_ID)" },
+      { name: "metaIntegration.pixelId", label: "Pixel ID", type: "text", description: "Your Meta Pixel ID for tracking" },
+      { name: "metaIntegration.pageId", label: "Page ID", type: "text", description: "Your Facebook Page ID" },
+      { name: "metaIntegration.accessToken", label: "Access Token", type: "password", description: "Your Meta API Access Token" },
+      { name: "metaIntegration.appId", label: "App ID", type: "text", description: "Your Meta App ID" },
+      { name: "metaIntegration.appSecret", label: "App Secret", type: "password", description: "Your Meta App Secret" },
+      { name: "metaIntegration.isConnected", label: "Connection Status", type: "checkbox", description: "Enable Meta integration" },
     ]
   }
 ];
@@ -76,10 +89,23 @@ const SettingsList: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, value, checked } = e.target;
-    setForm((prev: any) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : Number(value),
-    }));
+
+    // Handle nested fields (e.g., metaIntegration.adAccountId)
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setForm((prev: any) => ({
+        ...prev,
+        [parent]: {
+          ...(prev[parent] || {}),
+          [child]: type === "checkbox" ? checked : value,
+        },
+      }));
+    } else {
+      setForm((prev: any) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : (type === "number" ? Number(value) : value),
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,14 +125,23 @@ const SettingsList: React.FC = () => {
     setForm(settings);
   };
 
+  // Helper to get nested field value
+  const getFieldValue = (fieldName: string) => {
+    if (fieldName.includes('.')) {
+      const [parent, child] = fieldName.split('.');
+      return (form as any)[parent]?.[child] ?? "";
+    }
+    return (form as any)[fieldName] ?? "";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Toast Message */}
       {toast.type && (
         <div
           className={`fixed top-6 right-6 px-6 py-4 rounded-lg shadow-xl z-50 transition-all duration-300 flex items-center gap-3 min-w-80
-            ${toast.type === "success" 
-              ? "bg-white border-l-4 border-green-500 text-green-800" 
+            ${toast.type === "success"
+              ? "bg-white border-l-4 border-green-500 text-green-800"
               : "bg-white border-l-4 border-red-500 text-red-800"}`}
         >
           {toast.type === "success" ? (
@@ -136,11 +171,10 @@ const SettingsList: React.FC = () => {
             <button
               key={index}
               onClick={() => setActiveTab(index)}
-              className={`flex items-center gap-2 px-4 py-3 font-medium rounded-t-lg transition-all duration-200 ${
-                activeTab === index
+              className={`flex items-center gap-2 px-4 py-3 font-medium rounded-t-lg transition-all duration-200 ${activeTab === index
                   ? "bg-white text-blue-600 border-b-2 border-blue-600 -mb-px"
                   : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              }`}
+                }`}
             >
               {group.icon}
               <span className="hidden sm:inline">{group.title}</span>
@@ -163,11 +197,12 @@ const SettingsList: React.FC = () => {
                     {activeTab === 1 && "Set up shipping charges and delivery options"}
                     {activeTab === 2 && "Manage risk prevention and fraud protection"}
                     {activeTab === 3 && "Control order frequency and restrictions"}
+                    {activeTab === 4 && "Configure Meta (Facebook) advertising integration"}
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="p-6 space-y-6">
               {fieldGroups[activeTab].fields.map((field) => (
                 <div key={field.name} className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
@@ -177,19 +212,19 @@ const SettingsList: React.FC = () => {
                     </label>
                     <p className="text-sm text-gray-500">{field.description}</p>
                   </div>
-                  
+
                   <div className="lg:col-span-2">
                     {field.type === "checkbox" ? (
                       <div className="flex items-center">
                         <input
                           type="checkbox"
                           name={field.name}
-                          checked={!!form[field.name]}
+                          checked={!!getFieldValue(field.name)}
                           onChange={handleChange}
                           className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                         />
                         <span className="ml-3 text-sm text-gray-700">
-                          {form[field.name] ? "Enabled" : "Disabled"}
+                          {getFieldValue(field.name) ? "Enabled" : "Disabled"}
                         </span>
                       </div>
                     ) : (
@@ -197,7 +232,7 @@ const SettingsList: React.FC = () => {
                         <input
                           type={field.type}
                           name={field.name}
-                          value={form[field.name] ?? ""}
+                          value={getFieldValue(field.name)}
                           onChange={handleChange}
                           className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                           placeholder={`Enter ${field.label.toLowerCase()}`}
@@ -264,11 +299,11 @@ const SettingsList: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">COD Limit</p>
-                <p className="text-lg font-semibold text-gray-900">₹{form.codLimit || 0}</p>
+                <p className="text-lg font-semibold text-gray-900">₹{(form as any).codLimit || 0}</p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -276,11 +311,11 @@ const SettingsList: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Free Shipping At</p>
-                <p className="text-lg font-semibold text-gray-900">₹{form.freeShippingThreshold || 0}</p>
+                <p className="text-lg font-semibold text-gray-900">₹{(form as any).freeShippingThreshold || 0}</p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
@@ -289,12 +324,12 @@ const SettingsList: React.FC = () => {
               <div>
                 <p className="text-sm text-gray-600">RTO Protection</p>
                 <p className="text-lg font-semibold text-gray-900">
-                  {form.codDisableForHighRTO ? "Enabled" : "Disabled"}
+                  {(form as any).codDisableForHighRTO ? "Enabled" : "Disabled"}
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-100 rounded-lg">
@@ -302,7 +337,7 @@ const SettingsList: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Order Restriction</p>
-                <p className="text-lg font-semibold text-gray-900">{form.repeatOrderRestrictionDays || 0} days</p>
+                <p className="text-lg font-semibold text-gray-900">{(form as any).repeatOrderRestrictionDays || 0} days</p>
               </div>
             </div>
           </div>
