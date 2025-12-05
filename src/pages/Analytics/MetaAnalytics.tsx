@@ -13,7 +13,11 @@ import {
     ArrowDownRight,
     Percent,
     Activity,
-    PieChart as PieChartIcon
+    PieChart as PieChartIcon,
+    RefreshCw,
+    Database,
+    Wifi,
+    Download
 } from 'lucide-react';
 import {
     BarChart,
@@ -31,9 +35,14 @@ import {
     PolarGrid,
     PolarAngleAxis,
     PolarRadiusAxis,
-    Radar
+    Radar,
+    LineChart,
+    Line,
+    Area,
+    AreaChart
 } from 'recharts';
 import axiosInstance from '../../services/axiosConfig';
+import toast from 'react-hot-toast';
 
 interface MetaMetrics {
     spend: number;
@@ -67,45 +76,112 @@ interface MetaAnalyticsResponse {
     data: {
         dateRange: DateRange;
         metrics: MetaMetrics;
+        source?: 'cache' | 'real-time' | 'cache-partial';
+        cached?: boolean;
     };
+}
+
+interface DailyMetric {
+    date: string;
+    metrics: MetaMetrics;
 }
 
 const MetaAnalytics: React.FC = () => {
     const [metrics, setMetrics] = useState<MetaMetrics | null>(null);
+    const [dailyMetrics, setDailyMetrics] = useState<DailyMetric[]>([]);
+    const [source, setSource] = useState<string>('');
     const [dateRange, setDateRange] = useState<DateRange>({
-        since: '2024-01-01',
-        until: new Date().toISOString().split('T')[0],
+        since: getDefaultSinceDate(7),
+        until: getYesterdayDate(),
     });
+    const [selectedDays, setSelectedDays] = useState<number>(7);
     const [loading, setLoading] = useState(false);
+    const [syncing, setSyncing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchMetrics = async () => {
+    const fetchMetrics = async (forceRefresh = false) => {
         setLoading(true);
         setError(null);
         try {
+            const params = new URLSearchParams({
+                since: dateRange.since,
+                until: dateRange.until,
+                ...(forceRefresh && { forceRefresh: 'true' }),
+            });
+
             const response = await axiosInstance.get<MetaAnalyticsResponse>(
-                `/meta/metrics?since=${dateRange.since}&until=${dateRange.until}`
+                `/meta/metrics?${params}`
             );
             if (response.data.success) {
                 setMetrics(response.data.data.metrics);
+                setSource(response.data.data.source || 'real-time');
             }
         } catch (err: any) {
             setError(err.response?.data?.message || 'Failed to fetch metrics');
+            toast.error('Failed to fetch metrics');
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchMetrics();
-    }, []);
-
-    const handleDateChange = (field: 'since' | 'until', value: string) => {
-        setDateRange((prev) => ({ ...prev, [field]: value }));
+    const fetchDailyMetrics = async () => {
+        try {
+            const response = await axiosInstance.get(
+                `/meta/metrics/daily?since=${dateRange.since}&until=${dateRange.until}`
+            );
+            if (response.data.success) {
+                setDailyMetrics(response.data.data.daily || []);
+            }
+        } catch (err: any) {
+            console.error('Failed to fetch daily metrics:', err);
+        }
     };
 
-    const handleApplyDateRange = () => {
+    const handleSync = async () => {
+        setSyncing(true);
+        try {
+            const response = await axiosInstance.post('/meta/metrics/sync', {
+                since: dateRange.since,
+                until: dateRange.until,
+                syncMissingOnly: true,
+            });
+
+            if (response.data.success) {
+                toast.success(`✅ Synced ${response.data.syncedDates || 0} dates successfully!`);
+                await fetchMetrics();
+                await fetchDailyMetrics();
+            } else {
+                toast.error('❌ Sync failed: ' + response.data.error);
+            }
+        } catch (error: any) {
+            console.error('Error syncing:', error);
+            toast.error('❌ Sync failed: ' + (error.response?.data?.message || 'Unknown error'));
+        } finally {
+            setSyncing(false);
+        }
+    };
+
+    useEffect(() => {
         fetchMetrics();
+        fetchDailyMetrics();
+    }, [dateRange]);
+
+    const handleDateRangeSelect = (days: number) => {
+        setSelectedDays(days);
+        setDateRange({
+            since: getDefaultSinceDate(days),
+            until: getYesterdayDate(),
+        });
+    };
+
+    const handleCustomDateChange = (field: 'since' | 'until', value: string) => {
+        setDateRange((prev) => ({ ...prev, [field]: value }));
+        setSelectedDays(0); // Custom range
+    };
+
+    const handleRefresh = () => {
+        fetchMetrics(true);
+        fetchDailyMetrics();
     };
 
     const formatCurrency = (value: number) => {
@@ -207,13 +283,58 @@ const MetaAnalytics: React.FC = () => {
                                     <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                                         Meta Analytics
                                     </h1>
-                                    <p className="text-gray-600 text-sm">Track your Facebook & Instagram ad performance</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <p className="text-gray-600 text-sm">Track your Facebook & Instagram ad performance</p>
+                                        {source && (
+                                            <div className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${source === 'cache'
+                                                ? 'bg-green-100 text-green-700'
+                                                : source === 'real-time'
+                                                    ? 'bg-blue-100 text-blue-700'
+                                                    : 'bg-amber-100 text-amber-700'
+                                                }`}>
+                                                {source === 'cache' ? (
+                                                    <>
+                                                        <Database className="w-3 h-3" />
+                                                        Cached
+                                                    </>
+                                                ) : source === 'real-time' ? (
+                                                    <>
+                                                        <Wifi className="w-3 h-3" />
+                                                        Real-time
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Database className="w-3 h-3" />
+                                                        Partial Cache
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Date Range Picker */}
+                        {/* Enhanced Controls */}
                         <div className="flex flex-col sm:flex-row gap-3 items-end">
+                            {/* Quick Date Range Selector */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Quick Select</label>
+                                <select
+                                    value={selectedDays}
+                                    onChange={(e) => handleDateRangeSelect(parseInt(e.target.value))}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
+                                >
+                                    <option value={7}>Last 7 Days</option>
+                                    <option value={14}>Last 14 Days</option>
+                                    <option value={30}>Last 30 Days</option>
+                                    <option value={60}>Last 60 Days</option>
+                                    <option value={90}>Last 90 Days</option>
+                                    <option value={0}>Custom Range</option>
+                                </select>
+                            </div>
+
+                            {/* Custom Date Inputs */}
                             <div className="flex gap-3">
                                 <div>
                                     <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
@@ -222,7 +343,7 @@ const MetaAnalytics: React.FC = () => {
                                         <input
                                             type="date"
                                             value={dateRange.since}
-                                            onChange={(e) => handleDateChange('since', e.target.value)}
+                                            onChange={(e) => handleCustomDateChange('since', e.target.value)}
                                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                         />
                                     </div>
@@ -234,29 +355,54 @@ const MetaAnalytics: React.FC = () => {
                                         <input
                                             type="date"
                                             value={dateRange.until}
-                                            onChange={(e) => handleDateChange('until', e.target.value)}
+                                            onChange={(e) => handleCustomDateChange('until', e.target.value)}
                                             className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                         />
                                     </div>
                                 </div>
                             </div>
-                            <button
-                                onClick={handleApplyDateRange}
-                                disabled={loading}
-                                className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
-                            >
-                                {loading ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                        Loading...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Activity className="w-4 h-4" />
-                                        Apply
-                                    </>
-                                )}
-                            </button>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-2">
+                                {/* Sync Button */}
+                                <button
+                                    onClick={handleSync}
+                                    disabled={syncing}
+                                    className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium text-sm"
+                                    title="Sync missing data to cache"
+                                >
+                                    {syncing ? (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 animate-spin" />
+                                            Syncing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Database className="w-4 h-4" />
+                                            Sync
+                                        </>
+                                    )}
+                                </button>
+
+                                {/* Refresh Button */}
+                                <button
+                                    onClick={handleRefresh}
+                                    disabled={loading}
+                                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium text-sm"
+                                >
+                                    {loading ? (
+                                        <>
+                                            <RefreshCw className="w-4 h-4 animate-spin" />
+                                            Loading...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <RefreshCw className="w-4 h-4" />
+                                            Refresh
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -619,6 +765,116 @@ const MetaAnalytics: React.FC = () => {
                             </div>
                         </div>
 
+                        {/* Daily Performance Trend Chart */}
+                        {dailyMetrics.length > 0 && (
+                            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-6">
+                                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                    <Activity className="w-5 h-5 text-indigo-600" />
+                                    Daily Performance Trends
+                                </h3>
+                                <ResponsiveContainer width="100%" height={350}>
+                                    <AreaChart
+                                        data={dailyMetrics.map((day) => ({
+                                            date: day.date.split('-').slice(1).join('/'), // MM/DD format
+                                            spend: parseFloat(day.metrics.spend.toFixed(2)),
+                                            leads: day.metrics.totalLeads,
+                                            ROAS: parseFloat(day.metrics.ROAS),
+                                            clicks: day.metrics.clicks,
+                                            revenue: day.metrics.purchaseValue,
+                                        }))}
+                                        margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                                    >
+                                        <defs>
+                                            <linearGradient id="colorSpendArea" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorLeadsArea" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                                            </linearGradient>
+                                            <linearGradient id="colorRevenueArea" x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                            </linearGradient>
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                        <XAxis dataKey="date" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                                        <YAxis yAxisId="left" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                                        <YAxis yAxisId="right" orientation="right" stroke="#6b7280" style={{ fontSize: '12px' }} />
+                                        <Tooltip
+                                            contentStyle={{
+                                                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                                border: 'none',
+                                                borderRadius: '12px',
+                                                boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+                                            }}
+                                        />
+                                        <Legend />
+                                        <Area
+                                            yAxisId="left"
+                                            type="monotone"
+                                            dataKey="spend"
+                                            stroke="#ef4444"
+                                            strokeWidth={2}
+                                            fillOpacity={1}
+                                            fill="url(#colorSpendArea)"
+                                            name="Daily Spend ($)"
+                                        />
+                                        <Area
+                                            yAxisId="left"
+                                            type="monotone"
+                                            dataKey="revenue"
+                                            stroke="#10b981"
+                                            strokeWidth={2}
+                                            fillOpacity={1}
+                                            fill="url(#colorRevenueArea)"
+                                            name="Daily Revenue ($)"
+                                        />
+                                        <Line
+                                            yAxisId="right"
+                                            type="monotone"
+                                            dataKey="ROAS"
+                                            stroke="#f59e0b"
+                                            strokeWidth={3}
+                                            dot={{ r: 4 }}
+                                            name="ROAS"
+                                        />
+                                    </AreaChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+
+                        {/* No Daily Data Message */}
+                        {dailyMetrics.length === 0 && !loading && (
+                            <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-8">
+                                <div className="text-center">
+                                    <Database className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                                    <h3 className="text-lg font-semibold text-gray-700 mb-2">No Daily Data Available</h3>
+                                    <p className="text-gray-500 mb-4">
+                                        Click the "Sync" button to cache historical metrics for trend visualization.
+                                    </p>
+                                    <button
+                                        onClick={handleSync}
+                                        disabled={syncing}
+                                        className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium mx-auto"
+                                    >
+                                        {syncing ? (
+                                            <>
+                                                <RefreshCw className="w-5 h-5 animate-spin" />
+                                                Syncing Data...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Database className="w-5 h-5" />
+                                                Sync Historical Data
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Key Insights */}
                         <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white">
                             <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
@@ -654,5 +910,18 @@ const MetaAnalytics: React.FC = () => {
         </div>
     );
 };
+
+// Helper functions
+function getDefaultSinceDate(daysAgo: number): string {
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date.toISOString().split('T')[0];
+}
+
+function getYesterdayDate(): string {
+    const date = new Date();
+    date.setDate(date.getDate() - 1);
+    return date.toISOString().split('T')[0];
+}
 
 export default MetaAnalytics;

@@ -55,6 +55,11 @@ const staticItems: NavItem[] = [
     path: "/lead/analytics",
   },
   {
+    icon: <UserPlus className="w-5 h-5" />,
+    name: "Meta Dashboard",
+    path: "/meta/analytics",
+  },
+  {
     icon: <UsersIcon className="w-5 h-5" />,
     name: "Roles",
     subItems: [
@@ -264,7 +269,7 @@ const AppSidebar: React.FC = () => {
     // For non-admin users, filter out the "Roles" menu item
     return items.filter((item) => {
       const itemName = normalizeName(item.name);
-      return itemName !== "role" && itemName !== "dashboard";
+      return itemName !== "role" && itemName !== "dashboard" && itemName !== "metadashboard";
     });
   };
 
