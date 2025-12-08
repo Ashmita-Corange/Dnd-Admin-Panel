@@ -56,7 +56,7 @@ const fieldGroups = [
 const SettingsList: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { settings, loading, error } = useSelector((state: RootState) => state.structure);
-  const [form, setForm] = useState(settings);
+  const [form, setForm] = useState(settings || {});
   const [activeTab, setActiveTab] = useState(0);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -68,7 +68,7 @@ const SettingsList: React.FC = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    setForm(settings);
+    setForm(settings || {});
   }, [settings]);
 
   useEffect(() => {
@@ -122,11 +122,12 @@ const SettingsList: React.FC = () => {
   };
 
   const handleReset = () => {
-    setForm(settings);
+    setForm(settings || {});
   };
 
   // Helper to get nested field value
   const getFieldValue = (fieldName: string) => {
+    if (!form) return "";
     if (fieldName.includes('.')) {
       const [parent, child] = fieldName.split('.');
       return (form as any)[parent]?.[child] ?? "";
@@ -172,8 +173,8 @@ const SettingsList: React.FC = () => {
               key={index}
               onClick={() => setActiveTab(index)}
               className={`flex items-center gap-2 px-4 py-3 font-medium rounded-t-lg transition-all duration-200 ${activeTab === index
-                  ? "bg-white text-blue-600 border-b-2 border-blue-600 -mb-px"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                ? "bg-white text-blue-600 border-b-2 border-blue-600 -mb-px"
+                : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }`}
             >
               {group.icon}

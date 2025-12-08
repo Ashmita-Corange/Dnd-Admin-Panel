@@ -99,6 +99,17 @@ function Analytics() {
       description: "Total revenue generated.",
     },
     {
+      title: "Total GST",
+      value: `₹${sales.totalGst?.toLocaleString("en-IN") ?? 0}`,
+      description: "Total Goods and Services Tax collected.",
+    },
+    {
+      title: "Total Payment Gateway Charges",
+      value: `₹${sales.totalPaymentGatewayCharges?.toLocaleString("en-IN") ?? 0}`,
+      description: "Total charges incurred from payment gateways.",
+    },
+
+    {
       title: "Successful Orders",
       value: sales.totalSuccessfulOrders ?? 0,
       description: "Total successful orders.",
@@ -541,7 +552,7 @@ function Analytics() {
                         : ticket?.priority === "medium"
                           ? "bg-amber-50 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
                           : "bg-rose-50 text-rose-700 dark:bg-rose-900 dark:text-rose-300"
-                      }`} 
+                        }`}
                     >
                       {ticket?.priority}
                     </span>
