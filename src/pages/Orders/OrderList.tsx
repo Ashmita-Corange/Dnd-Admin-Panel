@@ -28,6 +28,7 @@ const OrderList: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialLoadRef = useRef(true);
 
   const [popup, setPopup] = useState<{
     message: string;
@@ -41,13 +42,31 @@ const OrderList: React.FC = () => {
 
   const [searchParams] = useSearchParams();
 
-  // Set statusFilter from URL params on mount or param change
+  // Single useEffect to handle all data fetching
   useEffect(() => {
-    const status = searchParams.get('status');
-    if (status) {
+    const status = searchParams.get('status') || "";
+    
+    // Update status filter if it changed
+    if (status !== statusFilter) {
       setStatusFilter(status);
     }
-  }, [searchParams]);
+
+    // Only fetch on initial load or when dependencies actually change
+    if (initialLoadRef.current || status !== statusFilter) {
+      initialLoadRef.current = false;
+      
+      dispatch(
+        fetchOrders({
+          page: pagination.page,
+          limit: pagination.limit,
+          search: searchQuery || "",
+          sortField: "createdAt",
+          sortOrder: "desc",
+          ...(status && { status }),
+        })
+      );
+    }
+  }, [searchParams, pagination.page, pagination.limit, searchQuery, dispatch]);
 
   // Debounce search input
   useEffect(() => {
@@ -58,20 +77,6 @@ const OrderList: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchInput, searchQuery, dispatch]);
-
-  // Fetch orders with correct sorting (latest first)
-  useEffect(() => {
-    dispatch(
-      fetchOrders({
-        page: pagination.page,
-        limit: pagination.limit,
-        search: searchQuery || "",
-        sortField: "createdAt",
-        sortOrder: "desc", // This ensures latest orders appear first
-        ...(statusFilter && { status: statusFilter }),
-      })
-    );
-  }, [dispatch, pagination.page, pagination.limit, searchQuery, statusFilter]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -103,6 +108,17 @@ const OrderList: React.FC = () => {
 
   const handleStatusFilterChange = (status: string) => {
     setStatusFilter(status);
+    // Immediately fetch with new status instead of relying on useEffect
+    dispatch(
+      fetchOrders({
+        page: 1,
+        limit: pagination.limit,
+        search: searchQuery || "",
+        sortField: "createdAt",
+        sortOrder: "desc",
+        ...(status && { status }),
+      })
+    );
   };
 
   const handleResetFilters = () => {
@@ -223,6 +239,7 @@ const OrderList: React.FC = () => {
       case "shipped":
         return <Clock className="text-purple-500 h-5 w-5" />;
       case "delivered":
+      case "completed":
         return <CheckCircle className="text-green-500 h-5 w-5" />;
       case "cancelled":
         return <XCircle className="text-red-500 h-5 w-5" />;
@@ -241,6 +258,7 @@ const OrderList: React.FC = () => {
       case "shipped":
         return "text-purple-500";
       case "delivered":
+      case "completed":
         return "text-green-500";
       case "cancelled":
         return "text-red-500";
@@ -311,6 +329,7 @@ const OrderList: React.FC = () => {
                 <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
+                <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
@@ -397,7 +416,7 @@ const OrderList: React.FC = () => {
                     {order.items?.length || 0} items
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    ₹{order?.total?.toFixed(2) || "0.00"}
+                    ₹{order?.totalAmount?.toFixed(2) || "0.00"}
                   </td>
                   <td className="px-6 py-4 text-sm">
                     <div className="flex items-center">
@@ -453,7 +472,7 @@ const OrderList: React.FC = () => {
                 className={`px-3 py-1 rounded ${pagination.page === page
                   ? "bg-indigo-500 text-white"
                   : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}
+                }`}
               >
                 {page}
               </button>

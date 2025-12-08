@@ -22,8 +22,13 @@ import axiosInstance from "../../services/axiosConfig";
 import DatePicker from "../../components/form/date-picker";
 import { Link } from "react-router-dom";
 
+interface AnalyticsData {
+  salesDashboard: any;
+  operationsDashboard: any;
+}
+
 function Analytics() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const formatDate = (d: Date) => d.toISOString().split("T")[0];
@@ -224,7 +229,7 @@ function Analytics() {
   // Helper function to determine redirect URL based on card title
   const getRedirectUrl = (title: string) => {
     switch (title) {
-      case "Repeating Customers": // Handle potential naming variation if any, though code says "Repeat Customers" below
+      case "Repeating Customers":
       case "Repeat Customers":
         return "/customers/list?repeatcustomers=true";
       case "New Customers":
@@ -235,8 +240,9 @@ function Analytics() {
         return "/customers/list?buys=nonbuyer";
       case "Total Users":
         return "/customers/list";
+      case "Successful Orders":
+        return "/orders/list?status=completed";
       default:
-        // Continue to check for other types
         break;
     }
 
@@ -245,10 +251,17 @@ function Analytics() {
       "Pending Orders": "pending",
       "Shipped Orders": "shipped",
       "Cancelled Orders": "cancelled",
-      // "Total Orders" and others without specific status go to /orders/list without filter
+      "Delivered Orders": "delivered",
+      "Processing Orders": "processing",
+      "Confirmed Orders": "confirmed",
     };
-    const status = statusMap[title];
-    return status ? `/orders/list?status=${status}` : "/orders/list";
+
+    // Check if title matches any key in statusMap
+    if (title in statusMap) {
+      return `/orders/list?status=${statusMap[title]}`;
+    }
+
+    return "/";
   };
 
   return (

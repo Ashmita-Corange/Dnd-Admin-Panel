@@ -20,12 +20,13 @@ interface Order {
   items: OrderItem[];
   totalAmount: number;
   status:
-    | "pending"
-    | "confirmed"
-    | "processing"
-    | "shipped"
-    | "delivered"
-    | "cancelled";
+  | "pending"
+  | "confirmed"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "completed"
+  | "cancelled";
   paymentStatus: "pending" | "paid" | "failed" | "refunded";
   shippingAddress: Address;
   billingAddress?: Address;
@@ -118,8 +119,10 @@ export const fetchOrders = createAsyncThunk<
         JSON.stringify({ [sortField]: sortOrder === "asc" ? 1 : -1 })
       );
     if (sortOrder) queryParams.append("sortOrder", sortOrder);
-    const filters = {};
-    if (status) filters["status"] = status;
+
+    if (status) queryParams.append("status", status);
+
+    const filters: Record<string, any> = {};
     if (search) filters["_id"] = search;
     if (Object.keys(filters).length > 0) {
       queryParams.append("filters", JSON.stringify(filters));
