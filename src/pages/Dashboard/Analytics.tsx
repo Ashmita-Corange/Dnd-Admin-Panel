@@ -223,10 +223,23 @@ function Analytics() {
 
   // Helper function to determine redirect URL based on card title
   const getRedirectUrl = (title: string) => {
-    const userRelated = ["Total Users", "Total Buyers", "Non-Buying Users", "New Customers", "Repeat Customers"];
-    if (userRelated.includes(title)) {
-      return "/customers/list";
+    switch (title) {
+      case "Repeating Customers": // Handle potential naming variation if any, though code says "Repeat Customers" below
+      case "Repeat Customers":
+        return "/customers/list?repeatcustomers=true";
+      case "New Customers":
+        return `/customers/list?newcustomers=true&startDate=${startDate}&endDate=${endDate}`;
+      case "Total Buyers":
+        return "/customers/list?buys=buyer";
+      case "Non-Buying Users":
+        return "/customers/list?buys=nonbuyer";
+      case "Total Users":
+        return "/customers/list";
+      default:
+        // Continue to check for other types
+        break;
     }
+
     // For order-related cards, append status filter
     const statusMap: { [key: string]: string } = {
       "Pending Orders": "pending",

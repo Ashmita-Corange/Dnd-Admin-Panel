@@ -132,7 +132,23 @@ export const fetchCustomers = createAsyncThunk<
     // Add role filter if it exists
     if (state.customers.filters.role) {
       params.role = state.customers.filters.role;
-      console.log("Sending role filter to API:", state.customers.filters.role);
+    }
+
+    // Add explicit filters for analytics drill-down
+    if (state.customers.filters.repeatcustomers) {
+      params.repeatcustomers = state.customers.filters.repeatcustomers;
+    }
+    if (state.customers.filters.newcustomers) {
+      params.newcustomers = state.customers.filters.newcustomers;
+    }
+    if (state.customers.filters.buys) {
+      params.buys = state.customers.filters.buys;
+    }
+    if (state.customers.filters.startDate) {
+      params.startDate = state.customers.filters.startDate;
+    }
+    if (state.customers.filters.endDate) {
+      params.endDate = state.customers.filters.endDate;
     }
 
     console.log("Final API params:", params);

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Pencil,
   Trash2,
   Search,
   Filter,
-  CheckCircle,XCircle ,
+  CheckCircle, XCircle,
   ChevronLeft,
   ChevronRight,
   RotateCcw,
@@ -37,6 +37,7 @@ import { Customer } from "../../store/slices/customersSlice";
 const CustomersList: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { customers, loading, error, searchQuery, filters, page, limit, total } =
     useAppSelector((state) => state.customers);
   const { roles } = useAppSelector((state) => state.role);
@@ -81,6 +82,48 @@ const CustomersList: React.FC = () => {
     console.log("Updated filters:", newFilters);
     dispatch(setFilters(newFilters));
   }, [selectedRole]);
+
+  // Handle URL query parameters for analytics drill-down
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlFilters: Record<string, any> = {};
+    const keys = ["repeatcustomers", "newcustomers", "buys", "startDate", "endDate"];
+    let hasUrlFilters = false;
+
+    keys.forEach((key) => {
+      const val = params.get(key);
+      if (val) {
+        urlFilters[key] = val;
+        hasUrlFilters = true;
+      }
+    });
+
+    if (hasUrlFilters || keys.some((k) => filters[k])) {
+      const newFilters = { ...filters };
+      let changed = false;
+
+      // Update filters based on URL params
+      keys.forEach((key) => {
+        const val = params.get(key);
+        if (val) {
+          if (newFilters[key] !== val) {
+            newFilters[key] = val;
+            changed = true;
+          }
+        } else {
+          // If param is missing in URL but exists in filters, remove it
+          if (newFilters[key]) {
+            delete newFilters[key];
+            changed = true;
+          }
+        }
+      });
+
+      if (changed) {
+        dispatch(setFilters(newFilters));
+      }
+    }
+  }, [location.search]);
 
   // Fetch customers when dependencies change
   useEffect(() => {
@@ -357,12 +400,12 @@ const CustomersList: React.FC = () => {
                         {customer.isActive ? (
                           <>
                             <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                            
+
                           </>
                         ) : (
                           <>
                             <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
-                            
+
                           </>
                         )}
                       </span>
@@ -420,11 +463,10 @@ const CustomersList: React.FC = () => {
                 <button
                   key={idx}
                   onClick={() => handlePageChange(pg)}
-                  className={`px-3 py-1 rounded ${
-                    page === pg
+                  className={`px-3 py-1 rounded ${page === pg
                       ? "bg-indigo-500 text-white"
                       : "bg-gray-100 dark:bg-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}
+                    }`}
                 >
                   {pg}
                 </button>
@@ -528,7 +570,7 @@ const CustomersList: React.FC = () => {
                     <div className="p-2 bg-indigo-100 dark:bg-indigo-900/20 rounded-lg">
                       <Building className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     </div>
-                   
+
                   </div>
                 </div>
               </div>
@@ -537,20 +579,19 @@ const CustomersList: React.FC = () => {
               <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Status</p>
                 <div className="flex flex-wrap gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    selectedCustomer.isActive 
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedCustomer.isActive
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                       : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-                  }`}>
+                    }`}>
                     {selectedCustomer.isActive ? 'Active' : 'Inactive'}
                   </span>
-                  
+
                   {selectedCustomer.isSuperAdmin && (
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
                       Super Admin
                     </span>
                   )}
-                  
+
                   {selectedCustomer.isDeleted && (
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400">
                       Deleted
@@ -602,17 +643,16 @@ const CustomersList: React.FC = () => {
                       <div>
                         <p className="text-xs text-gray-500 dark:text-gray-400">Role Status</p>
                         <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            selectedCustomer.role.deletedAt 
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${selectedCustomer.role.deletedAt
                               ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                               : 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                          }`}>
+                            }`}>
                             {selectedCustomer.role.deletedAt ? 'Deleted' : 'Active'}
                           </span>
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Module Permissions Details */}
                     {selectedCustomer.role.modulePermissions && selectedCustomer.role.modulePermissions.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
@@ -635,7 +675,7 @@ const CustomersList: React.FC = () => {
                 </div>
               )}
 
-          
+
             </div>
 
             {/* Modal Footer */}
@@ -646,7 +686,7 @@ const CustomersList: React.FC = () => {
               >
                 Close
               </button>
-             
+
             </div>
           </div>
         </div>
