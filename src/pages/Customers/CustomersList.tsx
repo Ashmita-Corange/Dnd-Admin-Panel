@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Pencil,
   Trash2,
@@ -53,6 +55,8 @@ const CustomersList: React.FC = () => {
   }>({ isOpen: false, customer: null });
   const [exportLoading, setExportLoading] = useState(false);
   const [exportSingleLoadingId, setExportSingleLoadingId] = useState<string | null>(null);
+  const [exportStartDate, setExportStartDate] = useState<Date | null>(null);
+  const [exportEndDate, setExportEndDate] = useState<Date | null>(null);
 
   // Fetch roles on component mount
   useEffect(() => {
@@ -206,8 +210,13 @@ const CustomersList: React.FC = () => {
     try {
       setExportLoading(true);
       const tenant = getTenantFromURL();
+      const params: Record<string, string> = {};
+      if (exportStartDate) params.startDate = exportStartDate.toISOString().split('T')[0];
+      if (exportEndDate) params.endDate = exportEndDate.toISOString().split('T')[0];
+
       const response = await axiosInstance.get("/export-user-data", {
         headers: { "x-tenant": tenant },
+        params,
         responseType: "blob",
       });
 
@@ -234,9 +243,13 @@ const CustomersList: React.FC = () => {
     try {
       setExportSingleLoadingId(userId);
       const tenant = getTenantFromURL();
+      const params: Record<string, string> = { userId };
+      if (exportStartDate) params.startDate = exportStartDate.toISOString().split('T')[0];
+      if (exportEndDate) params.endDate = exportEndDate.toISOString().split('T')[0];
+
       const response = await axiosInstance.get("/export-user-data", {
         headers: { "x-tenant": tenant },
-        params: { userId },
+        params,
         responseType: "blob",
       });
 
@@ -300,18 +313,6 @@ const CustomersList: React.FC = () => {
             </select>
           </div>
 
-          {/* Export All */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={exportAllUsers}
-              disabled={exportLoading}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
-            >
-              <Download className="h-4 w-4" />
-              {exportLoading ? "Exporting..." : "Export All"}
-            </button>
-          </div>
-
           <div className="flex items-center gap-2">
             <span className="text-sm dark:text-gray-300">Show:</span>
             <select
@@ -332,6 +333,91 @@ const CustomersList: React.FC = () => {
             <RotateCcw className="h-4 w-4" />
             Reset
           </button>
+        </div>
+
+        {/* Export Section with Date Range */}
+        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex flex-col lg:flex-row gap-4 items-end">
+            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Start Date
+                </label>
+                <div className="relative">
+                  <DatePicker
+                    selected={exportStartDate}
+                    onChange={(date) => setExportStartDate(date)}
+                    selectsStart
+                    startDate={exportStartDate}
+                    endDate={exportEndDate}
+                    maxDate={exportEndDate || new Date()}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select start date"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    wrapperClassName="w-full"
+                    calendarClassName="dark-datepicker"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  End Date
+                </label>
+                <div className="relative">
+                  <DatePicker
+                    selected={exportEndDate}
+                    onChange={(date) => setExportEndDate(date)}
+                    selectsEnd
+                    startDate={exportStartDate}
+                    endDate={exportEndDate}
+                    minDate={exportStartDate}
+                    maxDate={new Date()}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Select end date"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    wrapperClassName="w-full"
+                    calendarClassName="dark-datepicker"
+                    showMonthDropdown
+                    showYearDropdown
+                    dropdownMode="select"
+                  />
+                  <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exportAllUsers}
+                disabled={exportLoading}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="h-4 w-4" />
+                {exportLoading ? "Exporting..." : "Export All"}
+              </button>
+              {(exportStartDate || exportEndDate) && (
+                <button
+                  onClick={() => {
+                    setExportStartDate(null);
+                    setExportEndDate(null);
+                  }}
+                  className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  Clear Dates
+                </button>
+              )}
+            </div>
+          </div>
+          {(exportStartDate || exportEndDate) && (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              Export will include data {exportStartDate && `from ${exportStartDate.toLocaleDateString()}`}
+              {exportStartDate && exportEndDate && " "}
+              {exportEndDate && `to ${exportEndDate.toLocaleDateString()}`}
+            </p>
+          )}
         </div>
       </div>
 

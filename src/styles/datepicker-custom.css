@@ -1,0 +1,84 @@
+/* Custom styles for react-datepicker in dark mode */
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  width: 100%;
+}
+
+/* Dark mode calendar */
+.dark .react-datepicker {
+  background-color: rgb(17 24 39);
+  border-color: rgb(55 65 81);
+}
+
+.dark .react-datepicker__header {
+  background-color: rgb(31 41 55);
+  border-bottom-color: rgb(55 65 81);
+}
+
+.dark .react-datepicker__current-month,
+.dark .react-datepicker__day-name {
+  color: rgb(209 213 219);
+}
+
+.dark .react-datepicker__day {
+  color: rgb(209 213 219);
+}
+
+.dark .react-datepicker__day:hover {
+  background-color: rgb(55 65 81);
+}
+
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--keyboard-selected {
+  background-color: rgb(99 102 241);
+  color: white;
+}
+
+.dark .react-datepicker__day--disabled {
+  color: rgb(75 85 99);
+}
+
+.dark .react-datepicker__day--in-range {
+  background-color: rgb(79 70 229);
+  color: white;
+}
+
+.dark .react-datepicker__day--in-selecting-range {
+  background-color: rgba(99, 102, 241, 0.5);
+}
+
+.dark .react-datepicker__navigation-icon::before {
+  border-color: rgb(209 213 219);
+}
+
+.dark .react-datepicker__navigation:hover *::before {
+  border-color: rgb(243 244 246);
+}
+
+.dark .react-datepicker__month-select,
+.dark .react-datepicker__year-select {
+  background-color: rgb(31 41 55);
+  color: rgb(209 213 219);
+  border-color: rgb(55 65 81);
+}
+
+.dark .react-datepicker__triangle {
+  border-bottom-color: rgb(31 41 55) !important;
+}
+
+/* Light mode enhancements */
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: rgb(99 102 241);
+}
+
+.react-datepicker__day--in-range {
+  background-color: rgb(129 140 248);
+}
+
+.react-datepicker__day--in-selecting-range {
+  background-color: rgba(99, 102, 241, 0.5);
+}
