@@ -19,7 +19,8 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       'bharatapi.nexprism.in',
-      'bharatadmin.nexprism.in'
+      'bharatadmin.nexprism.in',
+      'admin.bharatgramudyogsangh.com'
     ],
   },
 });
