@@ -144,7 +144,6 @@ export const updateTicket = createAsyncThunk<
     });
     
     const responseData = response.data;
-    console.log("Update Ticket - Full Response:", responseData);
     
     const { success } = responseData;
     
@@ -172,7 +171,7 @@ export const updateTicket = createAsyncThunk<
       return rejectWithValue("Failed to update ticket.");
     }
   } catch (error: any) {
-    console.error("❌ updateTicket error:", error);
+    
     return rejectWithValue(
       error?.response?.data?.message || error?.message || "Something went wrong"
     );
@@ -229,8 +228,7 @@ export const fetchTickets = createAsyncThunk<
     });
     
     const data = response.data;
-    console.log("Fetched Tickets - Full Response:", data);
-    console.log("Fetched Tickets - Data Structure:", data?.data);
+
     
     const { success } = data;
     
@@ -239,8 +237,7 @@ export const fetchTickets = createAsyncThunk<
       const ticketsData = data?.data?.data || data?.data || []; // Updated to match new API structure
       const metaData = data?.data?.meta || {};
       
-      console.log("Extracted Tickets Data:", ticketsData);
-      console.log("Meta Data:", metaData);
+    
       
       // Transform tickets to ensure compatibility
       const transformedTickets = ticketsData.map((ticket: any) => ({
@@ -274,7 +271,6 @@ export const fetchTickets = createAsyncThunk<
       return rejectWithValue("Failed to fetch tickets.");
     }
   } catch (error: any) {
-    console.error("❌ fetchTickets error:", error);
     return rejectWithValue(
       error?.response?.data?.message || error?.message || "Something went wrong"
     );

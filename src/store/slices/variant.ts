@@ -69,7 +69,7 @@ export const fetchVariants = createAsyncThunk<Variant[], { tenant: string }>(
           "x-tenant": getTenantFromURL(),
         },
       });
-      console.log("Fetched variants response:", response.data);
+      // console.log("Fetched variants response:", response.data);
       return response.data?.data?.result || [];
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -127,7 +127,7 @@ export const fetchAttributes = createAsyncThunk<
       headers: { "x-tenant": getTenantFromURL() },
       params: query,
     });
-    console.log("Fetched attributes response:", response.data);
+    // console.log("Fetched attributes response:", response.data);
     const data = response.data?.data || {};
     // Map API result to dropdown format
     const result = Array.isArray(data.result)
@@ -163,7 +163,7 @@ export const fetchProducts = createAsyncThunk<
     const response = await axiosInstance.get(
       `/product?${queryParams.toString()}`
     );
-    console.log("Fetched products response:", response.data);
+    // console.log("Fetched products response:", response.data);
 
     // Correct extraction of products array
     const productsArray =
@@ -173,7 +173,7 @@ export const fetchProducts = createAsyncThunk<
       [];
     return productsArray;
   } catch (err: any) {
-    console.log("Error fetching products:", err);
+    // console.log("Error fetching products:", err);
     return rejectWithValue(err.response?.data?.message || err.message);
   }
 });
@@ -243,7 +243,7 @@ export const updateVariant = createAsyncThunk<
   }
 >("variants/update", async (payload, { rejectWithValue }) => {
   try {
-    console.log("🟡 [updateVariant] Payload received:", payload);
+    // console.log("🟡 [updateVariant] Payload received:", payload);
 
     const formData = new FormData();
 
@@ -262,10 +262,10 @@ export const updateVariant = createAsyncThunk<
       payload.existingImages.forEach((img, idx) => {
         formData.append(`existingImages[${idx}]`, img);
       });
-      console.log(
-        "📸 [updateVariant] Included existingImages:",
-        payload.existingImages
-      );
+      // console.log(
+      //   "📸 [updateVariant] Included existingImages:",
+      //   payload.existingImages
+      // );
     }
 
     // New images
@@ -273,10 +273,10 @@ export const updateVariant = createAsyncThunk<
       payload.images.forEach((img, idx) => {
         formData.append(`newImages[${idx}]`, img);
       });
-      console.log(
-        "🖼️ [updateVariant] Included newImages:",
-        payload.images.map((f) => f.name)
-      );
+      // console.log(
+      //   "🖼️ [updateVariant] Included newImages:",
+      //   payload.images.map((f) => f.name)
+      // );
     }
 
     // Attributes
@@ -285,16 +285,16 @@ export const updateVariant = createAsyncThunk<
         formData.append(`attributes[${idx}][attributeId]`, attr.attributeId);
         formData.append(`attributes[${idx}][value]`, attr.value);
       });
-      console.log(
-        "🧬 [updateVariant] Attributes included:",
-        payload.attributes
-      );
+      // console.log(
+      //   "🧬 [updateVariant] Attributes included:",
+      //   payload.attributes
+      // );
     }
 
     // Log FormData content (for dev/debug only)
-    console.log("📦 [updateVariant] FormData content:");
+    // console.log("📦 [updateVariant] FormData content:");
     for (let [key, value] of formData.entries()) {
-      console.log(` - ${key}:`, value);
+            // console.log(` - ${key}:`, value);
     }
 
     const response = await axiosInstance.put(
@@ -308,13 +308,13 @@ export const updateVariant = createAsyncThunk<
       }
     );
 
-    console.log("✅ [updateVariant] Update successful:", response.data?.data);
+    // console.log("✅ [updateVariant] Update successful:", response.data?.data);
     return response.data?.data;
   } catch (err: any) {
-    console.error(
-      "❌ [updateVariant] Error:",
-      err.response?.data || err.message
-    );
+    // console.error(
+    //   "❌ [updateVariant] Error:",
+    //     err.response?.data || err.message
+   // );
     return rejectWithValue(err.response?.data?.message || err.message);
   }
 });

@@ -97,9 +97,7 @@ export const fetchTenants = createAsyncThunk<
     const response = await axiosInstance.get(
       `/tenant?${queryParams.toString()}`
     );
-    console.log("Full response from API:", response.data?.data?.body?.data);
     const data = response.data?.data?.body?.data;
-    console.log("Fetched tenants:", data);
     return {
       tenants: data?.result || [],
       pagination: {

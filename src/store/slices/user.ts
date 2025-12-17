@@ -21,7 +21,7 @@ export const fetchAllUsers = createAsyncThunk<
   FetchUsersParams
 >("users/fetchAll", async (params: FetchUsersParams = {}, { rejectWithValue }) => {
   try {
-    console.log("Fetching users with params:", params);
+    
     
     const queryParams = new URLSearchParams();
 
@@ -39,7 +39,6 @@ export const fetchAllUsers = createAsyncThunk<
     const queryString = queryParams.toString();
     const url =`/health/`; // Use a valid endpoint for testing, e.g., `/users` if needed
     
-    console.log("Making request to URL:", url);
 
     // Use axiosInstance with relative URL - it already has the baseURL configured
     const response = await axiosInstance.get(url, {
@@ -49,7 +48,6 @@ export const fetchAllUsers = createAsyncThunk<
       },
     });
 
-    console.log("Users API response:", response);
     
     const data = response.data?.data;
 
@@ -58,9 +56,7 @@ export const fetchAllUsers = createAsyncThunk<
       pagination: data?.pagination || {},
     };
   } catch (error: any) {
-    console.error("Fetch users error:", error);
-    console.error("Error response:", error.response);
-    console.error("Error config:", error.config);
+   
     
     const errorMessage = error.response?.data?.message || error.message || "Failed to fetch users";
     return rejectWithValue(errorMessage);
@@ -107,7 +103,6 @@ http://test.swarnsiddhi.com/admin/api/v1/health/`, {
       pagination: data?.pagination || {},
     };
   } catch (error: any) {
-    console.error("Fetch users error:", error);
     return rejectWithValue(error.response?.data?.message || error.message);
   }
 });
