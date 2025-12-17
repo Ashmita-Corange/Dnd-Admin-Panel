@@ -26,10 +26,13 @@ import {
   UserCheck,
   Target,
   Hash,
-  Download
+  Download,
+  PhoneCall
 } from "lucide-react";
 import IverLead from './IverLead';
 import { useNavigate } from "react-router-dom";
+import { initiateCall } from "../../services/callService";
+import toast from "react-hot-toast";
 
 // Updated status options based on API data
 const statusOptions = [
@@ -324,6 +327,7 @@ const IvrLogs: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
   const [leadIdForModal, setLeadIdForModal] = useState<string | null>(null);
+  const [initiatingCall, setInitiatingCall] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -395,6 +399,24 @@ const IvrLogs: React.FC = () => {
   const handleViewDetails = (callLog: CallLog) => {
     setSelectedCallLog(callLog);
     setIsDetailModalOpen(true);
+  };
+
+  const handleInitiateCall = async (leadId: string) => {
+    if (!leadId) {
+      toast.error("Lead ID is required to initiate a call");
+      return;
+    }
+
+    setInitiatingCall(leadId);
+    try {
+      const response = await initiateCall(leadId);
+      toast.success(response.message || "Call initiated successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to initiate call");
+      console.error("Error initiating call:", error);
+    } finally {
+      setInitiatingCall(null);
+    }
   };
 
   const generatePageNumbers = () => {
@@ -575,25 +597,40 @@ const IvrLogs: React.FC = () => {
                       </td>
                      
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button
-                          onClick={() => handleViewDetails(log)}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-700 transition-colors mr-2"
-                        >
-                          <Eye className="w-5 h-5 mr-1" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (log.leadId?._id) {
-                              setLeadIdForModal(log.leadId._id);
-                              setLeadModalOpen(true);
-                            }
-                          }}
-                          className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-green-700 transition-colors"
-                          title="View Lead Call Logs"
-                          disabled={!log.leadId?._id}
-                        >
-                          <Phone className="w-5 h-5" />
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleViewDetails(log)}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-indigo-700 hover:bg-indigo-50 transition-colors"
+                            title="View Details"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (log.leadId?._id) {
+                                setLeadIdForModal(log.leadId._id);
+                                setLeadModalOpen(true);
+                              }
+                            }}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-green-700 hover:bg-green-50 transition-colors"
+                            title="View Lead Call Logs"
+                            disabled={!log.leadId?._id}
+                          >
+                            <Phone className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => log.leadId?._id && handleInitiateCall(log.leadId._id)}
+                            className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded-md text-blue-700 hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Initiate Call"
+                            disabled={!log.leadId?._id || initiatingCall === log.leadId?._id}
+                          >
+                            {initiatingCall === log.leadId?._id ? (
+                              <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+                            ) : (
+                              <PhoneCall className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
                       </td>
 
                     </tr>
