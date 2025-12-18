@@ -4,7 +4,7 @@ import { getCouponById, updateCoupon } from "../../store/slices/coupon";
 import { RootState, AppDispatch } from "../../store";
 import PopupAlert from "../../components/popUpAlert";
 import { Toaster } from "react-hot-toast";
-import { useParams } from "react-router-dom"; // changed to react-router-dom
+import { useParams, useNavigate } from "react-router-dom"; // changed to react-router-dom
 import { fetchProducts } from "../../store/slices/product"; // added
 import { fetchCustomers } from "../../store/slices/customersSlice"; // added
 
@@ -98,6 +98,18 @@ const EditCoupon: React.FC = () => {
       setField(name, (e.target as HTMLInputElement).checked);
     } else if (type === "number") {
       setField(name, value === "" ? "" : parseFloat(value));
+    } else if (type === "date") {
+      // Validate and format date input
+      const formattedDate = formatDateForInput(value);
+      if (formattedDate || value === "") {
+        setField(name, formattedDate);
+      }
+    } else if (type === "datetime-local") {
+      // Validate and format datetime-local input
+      const formattedDateTime = formatToDateTimeLocal(value);
+      if (formattedDateTime || value === "") {
+        setField(name, formattedDateTime);
+      }
     } else {
       setField(name, value);
     }
@@ -123,10 +135,28 @@ const EditCoupon: React.FC = () => {
       });
       return;
     }
-    if (!coupon.expiresAt) {
+    if (!coupon.expiresAt || !validateDate(coupon.expiresAt)) {
       setPopup({
         isVisible: true,
-        message: "Expiry date is required.",
+        message: "Please enter a valid expiry date.",
+        type: "error",
+      });
+      return;
+    }
+    // Validate start date if provided
+    if (coupon.startAt && !validateDate(coupon.startAt)) {
+      setPopup({
+        isVisible: true,
+        message: "Please enter a valid start date.",
+        type: "error",
+      });
+      return;
+    }
+    // Validate end date if provided
+    if (coupon.endAt && !validateDate(coupon.endAt)) {
+      setPopup({
+        isVisible: true,
+        message: "Please enter a valid end date.",
         type: "error",
       });
       return;
@@ -139,31 +169,78 @@ const EditCoupon: React.FC = () => {
       });
       return;
     }
+    // Ensure dates are properly formatted before submission
+    const formattedCoupon = {
+      ...coupon,
+      expiresAt: formatDateForInput(coupon.expiresAt),
+      startAt: coupon.startAt ? formatToDateTimeLocal(coupon.startAt) : "",
+      endAt: coupon.endAt ? formatToDateTimeLocal(coupon.endAt) : "",
+    };
     try {
-      await dispatch(updateCoupon({ id: couponId, data: coupon })).unwrap();
+      const updatedCoupon = await dispatch(updateCoupon({ id: couponId, data: formattedCoupon })).unwrap();
+      console.log("Coupon updated successfully:", updatedCoupon);
+      
       setPopup({
         isVisible: true,
         message: "Coupon updated successfully!",
         type: "success",
       });
-      // keep form populated after update
-    } catch {
+      
+      // Refresh the coupon data to show updated values
+      if (updatedCoupon) {
+        setCoupon((prev) => ({
+          ...prev,
+          ...updatedCoupon,
+          expiresAt: formatDateForInput(updatedCoupon.expiresAt),
+          startAt: updatedCoupon.startAt ? formatToDateTimeLocal(updatedCoupon.startAt) : "",
+          endAt: updatedCoupon.endAt ? formatToDateTimeLocal(updatedCoupon.endAt) : "",
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error updating coupon:", error);
       setPopup({
         isVisible: true,
-        message: "Failed to update coupon. Please try again.",
+        message: error?.message || "Failed to update coupon. Please try again.",
         type: "error",
       });
     }
   };
 
-  // new helper: format ISO -> local "YYYY-MM-DDTHH:mm" for datetime-local inputs
+  // Date validation and formatting helpers
+  const formatDateForInput = (dateValue: string | null | undefined): string => {
+    if (!dateValue) return "";
+    // If it's already in YYYY-MM-DD format, return as is
+    if (typeof dateValue === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      return dateValue;
+    }
+    // Try to parse and format the date
+    try {
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return "";
+      return date.toISOString().split("T")[0];
+    } catch {
+      return "";
+    }
+  };
+
   const formatToDateTimeLocal = (iso?: string | null) => {
     if (!iso) return "";
-    const d = new Date(iso);
-    // convert to local time and remove seconds
-    const tzOffset = d.getTimezoneOffset();
-    const local = new Date(d.getTime() - tzOffset * 60000);
-    return local.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+    try {
+      const d = new Date(iso);
+      if (isNaN(d.getTime())) return "";
+      // convert to local time and remove seconds
+      const tzOffset = d.getTimezoneOffset();
+      const local = new Date(d.getTime() - tzOffset * 60000);
+      return local.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
+    } catch {
+      return "";
+    }
+  };
+
+  const validateDate = (dateValue: string): boolean => {
+    if (!dateValue) return true; // Optional dates are valid if empty
+    const date = new Date(dateValue);
+    return !isNaN(date.getTime());
   };
 
   useEffect(() => {
@@ -182,7 +259,7 @@ const EditCoupon: React.FC = () => {
             isActive: typeof data.isActive === "boolean" ? data.isActive : true,
             startAt: formatToDateTimeLocal(data.startAt),
             endAt: formatToDateTimeLocal(data.endAt),
-            expiresAt: data.expiresAt ? String(data.expiresAt).split("T")[0] : "",
+            expiresAt: formatDateForInput(data.expiresAt),
             usageLimit: data.usageLimit || 1,
             usedCount: data.usedCount || 0,
             minCartValue: data.minCartValue || 0,
@@ -365,8 +442,9 @@ const EditCoupon: React.FC = () => {
                   <input
                     type="date"
                     name="expiresAt"
-                    value={coupon.expiresAt}
+                    value={formatDateForInput(coupon.expiresAt)}
                     onChange={handleChange}
+                    min={new Date().toISOString().split("T")[0]}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     required
                   />
@@ -399,7 +477,7 @@ const EditCoupon: React.FC = () => {
                 <input
                   type="datetime-local"
                   name="startAt"
-                  value={coupon.startAt}
+                  value={formatToDateTimeLocal(coupon.startAt)}
                   onChange={handleChange}
                   className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 />
@@ -411,8 +489,9 @@ const EditCoupon: React.FC = () => {
                 <input
                   type="datetime-local"
                   name="endAt"
-                  value={coupon.endAt}
+                  value={formatToDateTimeLocal(coupon.endAt)}
                   onChange={handleChange}
+                  min={coupon.startAt || undefined}
                   className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 />
               </div>

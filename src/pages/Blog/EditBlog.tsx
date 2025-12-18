@@ -9,7 +9,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { createBlog, fetchBlogById, updateBlog } from "../../store/slices/blog";
 import CustomEditor from "../../components/common/TextEditor";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 const Image_url = import.meta.env.VITE_IMAGE_URL;
 interface BlogImage {
   file: File;
@@ -38,6 +38,7 @@ export default function EditBlog() {
   });
 
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const loading = useSelector((state: RootState) => state.blog.loading);
 
   const handleChange = (
@@ -147,23 +148,26 @@ export default function EditBlog() {
     });
 
     try {
-      const createdBlog = await dispatch(
+      const updatedBlog = await dispatch(
         updateBlog({ id: blogId, data: formData })
       ).unwrap();
 
-      console.log("Created Blog:", createdBlog);
+      console.log("Updated Blog:", updatedBlog);
 
       setPopup({
         isVisible: true,
-        message: "Blog created successfully!",
+        message: "Blog updated successfully!",
         type: "success",
       });
 
-      // Reset form
+      // Redirect to blog list page after successful update
+      setTimeout(() => {
+        navigate("/blog/list");
+      }, 1000);
     } catch (err: any) {
       setPopup({
         isVisible: true,
-        message: "Failed to create blog. Please try again.",
+        message: err?.message || "Failed to update blog. Please try again.",
         type: "error",
       });
     }

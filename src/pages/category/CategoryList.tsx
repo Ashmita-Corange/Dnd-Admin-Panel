@@ -184,6 +184,8 @@ const CategoryList: React.FC = () => {
         limit: pagination.limit,
         filters: activeFilters,
         search: searchQuery || "", // Changed from searchFields to search
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   }, [dispatch, pagination.page, pagination.limit, searchQuery, localFilters]);
@@ -199,7 +201,8 @@ const CategoryList: React.FC = () => {
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
           search: searchQuery || "", // Changed from searchFields to search
-          sort: { createdAt: "desc" },
+          sortField: "createdAt",
+          sortOrder: "desc",
         })
       );
     }
@@ -215,7 +218,8 @@ const CategoryList: React.FC = () => {
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
         search: searchQuery || "", // Changed from searchFields to search
-        sort: { createdAt: "desc" },
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
@@ -260,6 +264,8 @@ const CategoryList: React.FC = () => {
         limit: pagination.limit,
         filters: activeFilters,
         search: searchQuery || "", // Changed from searchFields to search
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
@@ -305,7 +311,8 @@ const CategoryList: React.FC = () => {
             limit: pagination.limit,
             filters: activeFilters,
             search: searchQuery || "", // Changed from searchFields to search
-            sort: { createdAt: "desc" },
+            sortField: "createdAt",
+            sortOrder: "desc",
           })
         );
 

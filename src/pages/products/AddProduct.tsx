@@ -358,7 +358,7 @@ export default function AddProduct() {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state: any) => state.product);
   const { categories } = useSelector((state: any) => state.category);
-  const { attributes } = useSelector((state: any) => state.attributes);
+  const { attributes, loading: attributesLoading } = useSelector((state: any) => state.attributes);
   const { brands } = useSelector((state: any) => state.brand);
   const [subcategories, setSubcategories] = useState<Category[]>([]);
 
@@ -693,9 +693,14 @@ export default function AddProduct() {
       dispatch(fetchCategories()).unwrap();
     }
     if (attributes?.length === 0) {
-      dispatch(fetchAttributes()).unwrap();
+      // Fetch all active attributes with a high limit to get all of them
+      dispatch(fetchAttributes({ 
+        page: 1, 
+        limit: 1000,
+        filters: { status: 'active' }
+      })).unwrap();
     }
-  }, [dispatch]);
+  }, [dispatch, categories?.length, attributes?.length]);
 
   const getSubcategories = async () => {
     try {
@@ -1270,35 +1275,50 @@ export default function AddProduct() {
 
       case 5:
         return (
-          <div className="space-y-6">
-            <div>
+          <div className="space-y-6 w-full">
+            <div className="w-full">
               <label className="block mb-4 text-sm font-medium text-gray-700 dark:text-gray-300">
                 Select Attributes
               </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {attributes.map((attribute: Attribute) => (
-                  <div
-                    key={attribute._id}
-                    className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 dark:border-gray-700 dark:hover:bg-indigo-900/20 transition-colors duration-200"
-                  >
-                    <input
-                      type="checkbox"
-                      id={`attribute-${attribute._id}`}
-                      checked={product.attributeSet.includes(attribute._id)}
-                      onChange={(e) =>
-                        handleAttributeChange(attribute._id, e.target.checked)
-                      }
-                      className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                    />
-                    <label
-                      htmlFor={`attribute-${attribute._id}`}
-                      className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer"
+              {attributesLoading && attributes.length === 0 ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-gray-500 dark:text-gray-400">Loading attributes...</div>
+                </div>
+              ) : attributes && attributes.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 w-full">
+                  {attributes
+                    .filter((attr: Attribute) => attr.status === 'active')
+                    .map((attribute: Attribute) => (
+                    <div
+                      key={attribute._id}
+                      className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-indigo-50 dark:border-gray-700 dark:hover:bg-indigo-900/20 transition-colors duration-200 w-full"
                     >
-                      {attribute.name}
-                    </label>
+                      <input
+                        type="checkbox"
+                        id={`attribute-${attribute._id}`}
+                        checked={product.attributeSet.includes(attribute._id)}
+                        onChange={(e) =>
+                          handleAttributeChange(attribute._id, e.target.checked)
+                        }
+                        className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 flex-shrink-0"
+                      />
+                      <label
+                        htmlFor={`attribute-${attribute._id}`}
+                        className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer flex-1 truncate"
+                        title={attribute.name}
+                      >
+                        {attribute.name}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-8 border border-gray-200 rounded-lg dark:border-gray-700">
+                  <div className="text-gray-500 dark:text-gray-400">
+                    No attributes available. Please add attributes first.
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -1849,7 +1869,7 @@ export default function AddProduct() {
           </div>
 
           {/* Tab Content */}
-          <div className="p-8">{renderTabContent()}</div>
+          <div className="p-8 overflow-y-auto max-h-[calc(100vh-300px)]">{renderTabContent()}</div>
 
           {/* Footer with Submit Button */}
           <div className="bg-gray-50 dark:bg-gray-900 px-8 py-6 border-t border-gray-200 dark:border-gray-700">

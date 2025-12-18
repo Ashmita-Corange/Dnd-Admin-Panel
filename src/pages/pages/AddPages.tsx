@@ -7,7 +7,8 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import CustomEditor from "../../components/common/TextEditor";
-import { createPage } from "../../store/slices/pages";
+import { createPage, fetchPages } from "../../store/slices/pages";
+import { useNavigate } from "react-router-dom";
 
 export default function AddPage() {
   const [page, setPage] = useState({
@@ -43,6 +44,7 @@ export default function AddPage() {
   });
 
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const loading = useSelector(
     (state: RootState) => state.page?.loading || false
   );
@@ -163,9 +165,12 @@ export default function AddPage() {
         type: "success",
       });
 
+      // Redirect immediately - the list will fetch fresh data when it mounts
+      navigate("/pages/list");
+
       // Reset form
       setPage({
-        section: "quick-links",
+        mainTitle: "quick-links",
         title: "",
         slug: "",
         content: "",
@@ -188,6 +193,9 @@ export default function AddPage() {
           satPM: "",
         },
       });
+
+      // Redirect to list page immediately after successful creation
+      navigate("/pages/list");
     } catch (err: any) {
       console.error("Error creating page:", err);
       setPopup({

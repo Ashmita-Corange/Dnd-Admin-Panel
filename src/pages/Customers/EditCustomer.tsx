@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
 import { updateCustomer, fetchCustomers, fetchCustomerById } from "../../store/slices/customersSlice";
@@ -11,6 +11,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 
 export default function EditCustomer() {
+  const navigate = useNavigate();
   const [customer, setCustomer] = useState({
     name: "",
     email: "",
@@ -107,14 +108,15 @@ export default function EditCustomer() {
 
       console.log("✅ Updated Customer:", updatedCustomer);
 
-      setPopup({
-        isVisible: true,
-        message: "Customer updated successfully!",
-        type: "success",
+      toast.success("Customer updated successfully!", {
+        duration: 2000,
+        position: "top-right",
       });
 
-      // Refresh customers list
-      await dispatch(fetchCustomers());
+      // Redirect to customers list page (page 1) after successful update
+      setTimeout(() => {
+        navigate("/customers/list?page=1");
+      }, 500);
     } catch (err: any) {
       console.error("❌ Update failed:", err);
       setPopup({

@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import PopupAlert from "../../components/popUpAlert";
 import PageMeta from "../../components/common/PageMeta";
-import { Link } from "react-router-dom"; // changed to react-router-dom
+import { Link, useLocation } from "react-router-dom"; // changed to react-router-dom
 
 // Local Coupon type (match slice)
 interface Coupon {
@@ -148,18 +148,38 @@ const CouponList: React.FC = () => {
     setIsDeleting(false);
   };
 
-  // Debounce search
+  // Initial fetch on mount
+  useEffect(() => {
+    dispatch(fetchCoupons());
+  }, [dispatch]);
+
+  // Refresh when navigating to this page
+  useEffect(() => {
+    if (location.pathname === '/coupon&promo/list') {
+      dispatch(fetchCoupons());
+    }
+  }, [location.pathname, dispatch]);
+
+  // Debounce search and refetch when filters change
   useEffect(() => {
     const timer = setTimeout(() => {
       dispatch(fetchCoupons()); // In real app, pass search/filter params
     }, 400);
     return () => clearTimeout(timer);
-  }, [dispatch, searchInput, statusFilter, page, limit]);
+  }, [dispatch, searchInput, statusFilter]);
 
-  // Pagination logic
-  const total = coupons.length;
+  // Pagination logic - sort by newest first (createdAt descending)
+  const sortedCoupons = [...coupons].sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    if (dateA !== dateB) return dateB - dateA; // Newest first
+    // Fallback to _id comparison
+    return (b._id || '').localeCompare(a._id || '');
+  });
+
+  const total = sortedCoupons.length;
   const totalPages = Math.ceil(total / limit) || 1;
-  const paginatedCoupons = coupons
+  const paginatedCoupons = sortedCoupons
     .filter(
       (c) =>
         (!searchInput ||
@@ -263,12 +283,12 @@ const CouponList: React.FC = () => {
                 className="pl-12 pr-4 py-3 w-full border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-900/50 dark:text-white transition-all shadow-sm hover:shadow-md"
               />
             </div>
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl">
               <Filter className="h-5 w-5 text-indigo-500" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium"
+                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium outline-none"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>

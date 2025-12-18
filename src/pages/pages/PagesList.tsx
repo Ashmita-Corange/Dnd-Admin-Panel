@@ -16,7 +16,7 @@ import {
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { deletePage, fetchPages } from "../../store/slices/pages";
 
 interface Category {
@@ -120,6 +120,7 @@ const DeleteModal: React.FC<{
 
 const PagesList: React.FC = () => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const { pages, loading, error, pagination, searchQuery, filters } =
     useAppSelector((state) => state.pages);
 
@@ -154,7 +155,7 @@ const PagesList: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchInput, searchQuery, dispatch]);
 
-  // Fetch categories - FIXED: Using 'search' instead of 'searchFields'
+  // Initial fetch on mount
   useEffect(() => {
     const activeFilters = {
       deleted: false,
@@ -167,10 +168,32 @@ const PagesList: React.FC = () => {
         limit: pagination.limit,
         filters: activeFilters,
         search: searchInput !== "" ? searchInput : undefined,
-        sort: { createdAt: "desc" },
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   }, [dispatch, pagination.page, pagination.limit, searchInput, localFilters]);
+
+  // Refresh when navigating to this page - reset to page 1 to show newest
+  useEffect(() => {
+    if (location.pathname === '/pages/list') {
+      const activeFilters = {
+        deleted: false,
+        ...(localFilters.status ? { status: localFilters.status } : {}),
+      };
+
+      dispatch(
+        fetchPages({
+          page: 1, // Always start at page 1 to show newest pages
+          limit: pagination.limit,
+          filters: activeFilters,
+          search: searchInput !== "" ? searchInput : undefined,
+          sortField: "createdAt",
+          sortOrder: "desc",
+        })
+      );
+    }
+  }, [location.pathname, dispatch]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -183,7 +206,8 @@ const PagesList: React.FC = () => {
             ...(localFilters.status ? { status: localFilters.status } : {}),
           },
           search: searchInput !== "" ? searchInput : undefined,
-          sort: { createdAt: "desc" },
+          sortField: "createdAt",
+          sortOrder: "desc",
         })
       );
     }
@@ -199,7 +223,8 @@ const PagesList: React.FC = () => {
           ...(localFilters.status ? { status: localFilters.status } : {}),
         },
         search: searchInput !== "" ? searchInput : undefined,
-        sort: { createdAt: "desc" },
+        sortField: "createdAt",
+        sortOrder: "desc",
       })
     );
   };
@@ -288,7 +313,8 @@ const PagesList: React.FC = () => {
             limit: pagination.limit,
             filters: activeFilters,
             search: searchInput !== "" ? searchInput : undefined,
-            sort: { createdAt: "desc" },
+            sortField: "createdAt",
+            sortOrder: "desc",
           })
         );
 

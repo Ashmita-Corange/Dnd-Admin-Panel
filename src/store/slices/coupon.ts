@@ -34,7 +34,17 @@ export const createCoupon = createAsyncThunk<
 >("coupon/createCoupon", async (couponData, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.post("/coupon", couponData);
-    const data = response.data?.coupon || response.data;
+    // Handle different response structures
+    const data = 
+      response.data?.data?.coupon || 
+      response.data?.data || 
+      response.data?.coupon || 
+      response.data;
+    
+    if (!data || !data._id) {
+      console.warn("Unexpected coupon response structure:", response.data);
+    }
+    
     return data;
   } catch (err: any) {
     return rejectWithValue(
@@ -50,14 +60,24 @@ export const fetchCoupons = createAsyncThunk<
 >("coupon/fetchCoupons", async (_, { rejectWithValue }) => {
   try {
     const response = await axiosInstance.get("/coupon");
-    // support different shapes
-    return (
-      response.data?.coupons?.data ||
+    // support different response shapes
+    let coupons = 
+      response.data?.data?.coupons ||
+      response.data?.data?.result ||
       response.data?.data ||
+      response.data?.coupons?.data ||
       response.data?.coupons ||
+      response.data?.result ||
       response.data ||
-      []
-    );
+      [];
+    
+    // Ensure it's an array
+    if (!Array.isArray(coupons)) {
+      console.warn("Expected array but got:", typeof coupons, coupons);
+      coupons = [];
+    }
+    
+    return coupons;
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to fetch coupons"
@@ -101,8 +121,28 @@ export const updateCoupon = createAsyncThunk<
   { rejectValue: string }
 >("coupon/updateCoupon", async ({ id, data }, { rejectWithValue }) => {
   try {
-    const response = await axiosInstance.put(`/coupon/${id}`, data);
-    return response.data?.coupon || response.data;
+    // Try PUT first (standard for full updates)
+    let response;
+    try {
+      response = await axiosInstance.put(`/coupon/${id}`, data);
+    } catch (putError: any) {
+      // If PUT returns 405 (Method Not Allowed), try PATCH as fallback
+      if (putError.response?.status === 405) {
+        console.log("PUT not allowed, trying PATCH instead");
+        response = await axiosInstance.patch(`/coupon/${id}`, data);
+      } else {
+        throw putError;
+      }
+    }
+    
+    // Handle different response structures
+    const result = 
+      response.data?.data?.coupon ||
+      response.data?.data ||
+      response.data?.coupon ||
+      response.data;
+    
+    return result;
   } catch (err: any) {
     return rejectWithValue(
       err.response?.data?.message || "Failed to update coupon"
@@ -122,7 +162,30 @@ const couponSlice = createSlice({
       })
       .addCase(createCoupon.fulfilled, (state, action) => {
         state.loading = false;
-        state.coupons.unshift(action.payload);
+        // Only add if payload is valid and has required fields
+        if (action.payload && action.payload._id) {
+          // Check if coupon already exists (avoid duplicates)
+          const exists = state.coupons.some(c => c._id === action.payload._id);
+          if (!exists) {
+            console.log("Adding new coupon to state:", action.payload);
+            // Add createdAt if not present
+            const couponWithDate = {
+              ...action.payload,
+              createdAt: action.payload.createdAt || new Date().toISOString()
+            };
+            state.coupons.unshift(couponWithDate);
+            // Sort to ensure newest first
+            state.coupons.sort((a, b) => {
+              const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return dateB - dateA;
+            });
+          } else {
+            console.log("Coupon already exists in state:", action.payload._id);
+          }
+        } else {
+          console.warn("Created coupon missing _id:", action.payload);
+        }
       })
       .addCase(createCoupon.rejected, (state, action) => {
         state.loading = false;
@@ -134,7 +197,30 @@ const couponSlice = createSlice({
       })
       .addCase(fetchCoupons.fulfilled, (state, action) => {
         state.loading = false;
-        state.coupons = action.payload;
+        // Merge fetched coupons with existing ones to preserve newly created coupons
+        // that might not be in the backend response yet
+        const fetchedIds = new Set(action.payload.map(c => c._id));
+        const existingNotInFetched = state.coupons.filter(c => c._id && !fetchedIds.has(c._id));
+        
+        // Combine and deduplicate
+        const mergedCoupons = [...action.payload, ...existingNotInFetched];
+        const uniqueCoupons = mergedCoupons.reduce((acc, coupon) => {
+          if (coupon._id && !acc.find(c => c._id === coupon._id)) {
+            acc.push(coupon);
+          }
+          return acc;
+        }, [] as Coupon[]);
+        
+        // Sort by createdAt descending (newest first), fallback to _id if no createdAt
+        const sortedCoupons = uniqueCoupons.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA; // Newest first
+          // If no dates, sort by _id (newer IDs typically come later)
+          return (b._id || '').localeCompare(a._id || '');
+        });
+        
+        state.coupons = sortedCoupons;
       })
       .addCase(fetchCoupons.rejected, (state, action) => {
         state.loading = false;
