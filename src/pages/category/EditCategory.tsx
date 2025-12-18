@@ -12,7 +12,7 @@ import {
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 
 interface SubCategoryInput {
   name: string;
@@ -35,6 +35,7 @@ export default function EditCategory() {
   });
   const params = useParams();
   const categoryId = params.id || "";
+  const navigate = useNavigate();
 
   const [popup, setPopup] = useState({
     isVisible: false,
@@ -138,6 +139,11 @@ export default function EditCategory() {
         message: "Category updated successfully!",
         type: "success",
       });
+
+      // Redirect to category list page after successful update
+      setTimeout(() => {
+        navigate("/category/list");
+      }, 1000);
     } catch (err: any) {
       setPopup({
         isVisible: true,

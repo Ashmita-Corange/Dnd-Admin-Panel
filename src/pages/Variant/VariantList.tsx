@@ -440,12 +440,12 @@ const VariantList: React.FC = () => {
               />
             </div>
 
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl">
               <Filter className="h-5 w-5 text-indigo-500" />
               <select
                 value={localFilters.stock || ""}
                 onChange={(e) => handleFilterChange("stock", e.target.value)}
-                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium"
+                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium outline-none"
               >
                 <option value="">All Stock</option>
                 <option value="in-stock">In Stock</option>
@@ -469,12 +469,12 @@ const VariantList: React.FC = () => {
               </select>
             </div> */}
 
-            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-4 rounded-xl">
               <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Show:</span>
               <select
                 value={pagination.limit}
                 onChange={(e) => handleLimitChange(Number(e.target.value))}
-                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium"
+                className="bg-transparent border-none px-3 py-3 focus:ring-0 dark:text-white cursor-pointer font-medium outline-none"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>

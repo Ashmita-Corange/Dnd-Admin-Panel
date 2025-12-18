@@ -10,12 +10,14 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { Sparkles } from "lucide-react";
 import axiosInstance from "../../services/axiosConfig";
+import { useNavigate } from "react-router";
 
 interface SubCategoryInput {
   name: string;
 }
 
 export default function AddSubcategory() {
+  const navigate = useNavigate();
   const [category, setCategory] = useState({
     name: "",
     slug: "",
@@ -175,6 +177,11 @@ export default function AddSubcategory() {
         sortOrder: 0,
         isFeatured: false,
       });
+
+      // Redirect to subcategory list page after successful creation
+      setTimeout(() => {
+        navigate("/subcategory/list");
+      }, 1000);
     } catch {
       setPopup({
         isVisible: true,

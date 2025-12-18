@@ -17,6 +17,7 @@ interface FetchSubcategoryParams {
   search?: string;
   sortField?: string;
   sortOrder?: "asc" | "desc";
+  filters?: Record<string, string | number | boolean | null>;
 }
 
 interface Pagination {

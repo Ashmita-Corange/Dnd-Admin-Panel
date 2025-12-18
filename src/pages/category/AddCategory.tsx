@@ -8,12 +8,14 @@ import { createCategory } from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
+import { useNavigate } from "react-router";
 
 interface SubCategoryInput {
   name: string;
 }
 
 export default function AddCategory() {
+  const navigate = useNavigate();
   const [category, setCategory] = useState({
     name: "",
     slug: "",
@@ -138,7 +140,14 @@ export default function AddCategory() {
         seoDescription: "",
         sortOrder: 0,
         isFeatured: false,
+        allowPrepaidOnly: false,
+        disableCOD: false,
       });
+
+      // Redirect to category list page after successful creation
+      setTimeout(() => {
+        navigate("/category/list");
+      }, 1000);
     } catch (err: any) {
       setPopup({
         isVisible: true,

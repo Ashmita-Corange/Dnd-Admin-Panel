@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "../../hooks/redux";
 import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
@@ -9,6 +9,7 @@ import axiosInstance from "../../services/axiosConfig";
 import { Sparkles } from "lucide-react";
 
 const EditAttribute = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { id } = useParams();
   const [form, setForm] = useState({
@@ -122,6 +123,11 @@ const EditAttribute = () => {
         message: "Attribute updated successfully!", 
         type: "success" 
       });
+
+      // Redirect to attribute list page after successful update
+      setTimeout(() => {
+        navigate("/attribute/list");
+      }, 1000);
     } catch (err) {
       setPopup({ 
         isVisible: true, 

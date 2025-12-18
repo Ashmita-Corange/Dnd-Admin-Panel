@@ -10,10 +10,11 @@ import toast, { Toaster } from "react-hot-toast";
 import PageMeta from "../../components/common/PageMeta";
 import PopupAlert from "../../components/popUpAlert";
 import axiosInstance from "../../services/axiosConfig";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Sparkles } from "lucide-react";
 
 export default function AddVariant() {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -108,19 +109,41 @@ export default function AddVariant() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Filter out empty attributes before validation
+    const validAttributes = variant.attributes.filter(
+      (attr) => attr.attributeId && attr.value && attr.attributeId.trim() && attr.value.trim()
+    );
+
+    // Validate required fields
     if (
       !variant.productId ||
+      !variant.productId.trim() ||
       !variant.title ||
+      !variant.title.trim() ||
       !variant.sku ||
+      !variant.sku.trim() ||
       !variant.price ||
-      !variant.stock
+      variant.price <= 0 ||
+      !variant.stock ||
+      variant.stock < 0
     ) {
-      toast.error("Please fill all required fields.", {
+      toast.error("Please fill all required fields correctly.", {
         duration: 8000,
         position: "top-right",
       });
       return;
     }
+
+    // Validate that at least one attribute is provided (backend requirement)
+    if (validAttributes.length === 0) {
+      toast.error("At least one attribute is required. Please add an attribute with both attribute type and value.", {
+        duration: 8000,
+        position: "top-right",
+      });
+      return;
+    }
+
     try {
       await dispatch(
         createVariant({
@@ -133,7 +156,7 @@ export default function AddVariant() {
           stock: variant.stock,
           offerTag: variant.offerTag,
           images: variant.images,
-          attributes: variant.attributes,
+          attributes: validAttributes,
         })
       ).unwrap();
       setPopup({
@@ -152,11 +175,28 @@ export default function AddVariant() {
         images: [],
         attributes: [{ attributeId: "", value: "" }],
       });
+
+      // Redirect to variant list page after successful creation
+      setTimeout(() => {
+        navigate("/variant/list");
+      }, 1000);
     } catch (err: any) {
+      // Handle Redux Toolkit error format
+      const errorMessage = 
+        err?.payload || 
+        err?.response?.data?.message || 
+        err?.message || 
+        "Failed to create variant. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create variant. Please try again.",
+        message: typeof errorMessage === 'string' ? errorMessage : "Failed to create variant. Please try again.",
         type: "error",
+      });
+      console.error("Variant creation error:", {
+        error: err,
+        payload: err?.payload,
+        response: err?.response?.data,
+        message: errorMessage
       });
     }
   };
