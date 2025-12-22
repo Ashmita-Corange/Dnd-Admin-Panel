@@ -13,7 +13,7 @@ import {
 } from "../../store/slices/staff"; // You'll need to create this slice
 import { fetchRoles } from "../../store/slices/roles";
 import { signup } from "../../store/slices/authslice";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router-dom";
 
 // const ROLES = [
 //   { value: "admin", label: "Admin" },
@@ -46,6 +46,7 @@ export default function EditStaff() {
   const params = useParams();
   const id = params.id;
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const loading = useSelector(
     (state: RootState) => state.staff?.loading || false
   );
@@ -161,6 +162,10 @@ export default function EditStaff() {
         confirmPassword: "",
         role: "",
       });
+      // Redirect to list page after successful update
+      setTimeout(() => {
+        navigate("/staff/list");
+      }, 1000);
     } catch (err: any) {
       const errorMessage =
         err.message || "Failed to update staff member. Please try again.";

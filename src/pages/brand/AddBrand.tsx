@@ -7,6 +7,7 @@ import { createBrand } from "../../store/slices/brandSlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
+import { useNavigate } from "react-router-dom";
 
 export default function AddBrand() {
   const [brand, setBrand] = useState({
@@ -27,6 +28,7 @@ export default function AddBrand() {
   });
 
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const loading = useSelector(
     (state: RootState) => state.brand?.loading || false
   );
@@ -122,6 +124,10 @@ export default function AddBrand() {
         image: null,
         isFeatured: false,
       });
+      // Redirect to list page after successful creation
+      setTimeout(() => {
+        navigate("/brand/list");
+      }, 1000);
     } catch (err: any) {
       setPopup({
         isVisible: true,
