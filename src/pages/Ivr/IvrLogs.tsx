@@ -128,7 +128,7 @@ const CallDetailModal: React.FC<{
   if (!isOpen || !callLog) return null;
 
   return (
-    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 mt-22">
+    <div className="fixed inset-0 bg-white/30 backdrop-blur-sm flex items-center justify-center z-[1000010] p-4 mt-22">
       <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
@@ -695,17 +695,8 @@ const IvrLogs: React.FC = () => {
       />
       {/* IverLead Modal */}
       {leadModalOpen && leadIdForModal && (
-  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[1000010] p-4">
     <div className="bg-white rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto relative shadow-2xl border border-gray-200">
-      <button
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-        onClick={() => {
-          setLeadModalOpen(false);
-          setLeadIdForModal(null);
-        }}
-      >
-        {/* <X className="w-6 h-6" /> */}
-      </button>
       <IverLead leadId={leadIdForModal} onClose={() => {
         setLeadModalOpen(false);
         setLeadIdForModal(null);

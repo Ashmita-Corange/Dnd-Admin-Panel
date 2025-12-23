@@ -15,7 +15,7 @@ import {
   fetchSubcategoryById,
   updateSubcategory,
 } from "../../store/slices/subCategory";
-import { useParams } from "react-router";
+import { useParams,useNavigate } from "react-router";
 import axiosInstance from "../../services/axiosConfig";
 
 interface SubCategoryInput {
@@ -38,6 +38,7 @@ export default function EditSubcategory() {
   });
   const params = useParams();
   const subcategoryId = params.id;
+  const navigate = useNavigate();
 
   const [allCategories, setAllCategories] = useState([]);
 
@@ -176,6 +177,10 @@ export default function EditSubcategory() {
         message: "Subcategory updated successfully!",
         type: "success",
       });
+      setTimeout(() => {
+        navigate("/subcategory/list");
+      }, 1000);
+    
       setCategory({
         name: "",
         slug: "",

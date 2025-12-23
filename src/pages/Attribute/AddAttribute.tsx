@@ -6,8 +6,10 @@ import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 import { Sparkles } from "lucide-react";
+import { useNavigate } from "react-router";
 
 const AddAttribute = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { loading } = useAppSelector((state) => state.attributes);
 
@@ -91,6 +93,11 @@ const AddAttribute = () => {
         values: [""],
         status: "active",
       });
+
+      // Redirect to attribute list page after successful creation
+      setTimeout(() => {
+        navigate("/attribute/list");
+      }, 1000);
     } catch (err: any) {
       // Show API error message if available
       const errorMsg =

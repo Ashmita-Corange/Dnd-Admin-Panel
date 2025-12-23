@@ -1343,8 +1343,8 @@ const ProfessionalCMS = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Success Popup Notification */}
       {saveStatus === "success" && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-sm dark:bg-gray-800 dark:border-gray-700">
+        <div className="fixed top-4 right-4 z-[9999] pointer-events-auto animate-in slide-in-from-right-full duration-300">
+          <div className="bg-white rounded-lg shadow-2xl border border-gray-200 p-4 max-w-sm dark:bg-gray-800 dark:border-gray-700">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -1362,7 +1362,7 @@ const ProfessionalCMS = () => {
               </div>
               <button
                 onClick={() => setSaveStatus(null)}
-                className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X size={14} />
               </button>
@@ -1373,8 +1373,8 @@ const ProfessionalCMS = () => {
 
       {/* Error Popup Notification */}
       {saveStatus === "error" && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right-full duration-300">
-          <div className="bg-white rounded-lg shadow-lg border border-red-200 p-4 max-w-sm dark:bg-gray-800 dark:border-red-700">
+        <div className="fixed top-4 right-4 z-[9999] pointer-events-auto animate-in slide-in-from-right-full duration-300">
+          <div className="bg-white rounded-lg shadow-2xl border border-red-200 p-4 max-w-sm dark:bg-gray-800 dark:border-red-700">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
@@ -1392,7 +1392,7 @@ const ProfessionalCMS = () => {
               </div>
               <button
                 onClick={() => setSaveStatus(null)}
-                className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                className="flex-shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 <X size={14} />
               </button>

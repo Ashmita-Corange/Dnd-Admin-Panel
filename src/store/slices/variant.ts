@@ -208,10 +208,28 @@ export const createVariant = createAsyncThunk<
         formData.append(`images[${idx}]`, img);
       });
     }
-    payload.attributes.forEach((attr, idx) => {
-      formData.append(`attributes[${idx}][attributeId]`, attr.attributeId);
-      formData.append(`attributes[${idx}][value]`, attr.value);
+    // Filter out empty attributes and only send valid ones
+    const validAttributes = payload.attributes.filter(
+      (attr) => 
+        attr && 
+        attr.attributeId && 
+        attr.value && 
+        typeof attr.attributeId === 'string' && 
+        typeof attr.value === 'string' &&
+        attr.attributeId.trim() !== '' && 
+        attr.value.trim() !== ''
+    );
+    
+    // Ensure at least one valid attribute
+    if (validAttributes.length === 0) {
+      return rejectWithValue('At least one valid attribute is required');
+    }
+    
+    validAttributes.forEach((attr, idx) => {
+      formData.append(`attributes[${idx}][attributeId]`, attr.attributeId.trim());
+      formData.append(`attributes[${idx}][value]`, attr.value.trim());
     });
+    
     const response = await axiosInstance.post("/variant", formData, {
       headers: {
         "x-tenant": getTenantFromURL(),
@@ -220,7 +238,13 @@ export const createVariant = createAsyncThunk<
     });
     return response.data?.data;
   } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
+    const errorMessage = err?.response?.data?.message || err?.message || 'Failed to create variant';
+    console.error('Variant creation error:', {
+      message: errorMessage,
+      response: err?.response?.data,
+      status: err?.response?.status
+    });
+    return rejectWithValue(errorMessage);
   }
 });
 

@@ -205,9 +205,24 @@ export const createCustomer = createAsyncThunk<
     }
   } catch (error: any) {
     console.error("❌ createCustomer error:", error);
-    return rejectWithValue(
-      error?.response?.data?.message || error?.message || "Something went wrong"
-    );
+    
+    // Extract error message from different possible structures
+    let errorMessage = "Something went wrong";
+    
+    if (error?.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error?.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    }
+    
+    // Check for timeout errors and provide user-friendly message
+    if (errorMessage.includes('timeout') || errorMessage.includes('buffering')) {
+      errorMessage = "Database connection timeout. Please check your database connection and try again.";
+    }
+    
+    return rejectWithValue(errorMessage);
   }
 });
 

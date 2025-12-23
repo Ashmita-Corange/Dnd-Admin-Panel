@@ -59,7 +59,19 @@ export const createPage = createAsyncThunk<Page, Partial<Page>>(
   async (data, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post("/page", data);
-      return response.data?.data;
+      // Handle different response structures
+      const page = 
+        response.data?.data?.page ||
+        response.data?.data ||
+        response.data?.page ||
+        response.data;
+      
+      // Ensure createdAt is set
+      if (page && !page.createdAt) {
+        page.createdAt = new Date().toISOString();
+      }
+      
+      return page;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || err.message);
     }
@@ -177,15 +189,50 @@ const pageSlice = createSlice({
       })
       .addCase(fetchPages.fulfilled, (state, action) => {
         state.loading = false;
-        state.pages = action.payload.pages;
+        // Sort pages by createdAt descending (newest first)
+        const sortedPages = [...action.payload.pages].sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          if (dateA !== dateB) return dateB - dateA; // Newest first
+          // Fallback to _id comparison
+          return (b._id || '').localeCompare(a._id || '');
+        });
+        state.pages = sortedPages;
         state.pagination = action.payload.pagination;
       })
       .addCase(fetchPages.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
+      .addCase(createPage.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(createPage.fulfilled, (state, action) => {
-        state.pages.unshift(action.payload);
+        state.loading = false;
+        // Only add if payload is valid and has required fields
+        if (action.payload && action.payload._id) {
+          // Check if page already exists (avoid duplicates)
+          const exists = state.pages.some(p => p._id === action.payload._id);
+          if (!exists) {
+            // Add createdAt if not present
+            const pageWithDate = {
+              ...action.payload,
+              createdAt: action.payload.createdAt || new Date().toISOString()
+            };
+            state.pages.unshift(pageWithDate);
+            // Sort to ensure newest first
+            state.pages.sort((a, b) => {
+              const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return dateB - dateA;
+            });
+          }
+        }
+      })
+      .addCase(createPage.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       })
       //   .addCase(updatePage.fulfilled, (state, action) => {
       //     const index = state.pages.findIndex(

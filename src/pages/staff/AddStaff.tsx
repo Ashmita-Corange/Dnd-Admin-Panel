@@ -9,6 +9,7 @@ import PopupAlert from "../../components/popUpAlert";
 import { createStaff } from "../../store/slices/staff"; // You'll need to create this slice
 import { fetchRoles } from "../../store/slices/roles";
 import { signup } from "../../store/slices/authslice";
+import { useNavigate } from "react-router-dom";
 
 // const ROLES = [
 //   { value: "admin", label: "Admin" },
@@ -37,6 +38,7 @@ export default function AddStaff() {
   });
 
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
   const loading = useSelector(
     (state: RootState) => state.staff?.loading || false
   );
@@ -149,6 +151,10 @@ export default function AddStaff() {
         confirmPassword: "",
         role: "",
       });
+      // Redirect to list page after successful creation
+      setTimeout(() => {
+        navigate("/staff/list");
+      }, 1000);
     } catch (err: any) {
       const errorMessage =
         err.message || "Failed to create staff member. Please try again.";

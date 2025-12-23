@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import toast, { Toaster } from "react-hot-toast";
 import {
   Pencil,
   Trash2,
@@ -87,12 +88,24 @@ const CustomersList: React.FC = () => {
     dispatch(setFilters(newFilters));
   }, [selectedRole]);
 
-  // Handle URL query parameters for analytics drill-down
+  // Handle URL query parameters for analytics drill-down and page reset
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const urlFilters: Record<string, any> = {};
     const keys = ["repeatcustomers", "newcustomers", "buys", "startDate", "endDate"];
     let hasUrlFilters = false;
+
+    // Handle page parameter - reset to page 1 if explicitly set in URL or when navigating to list
+    const pageParam = params.get("page");
+    if (pageParam) {
+      const pageNum = parseInt(pageParam, 10);
+      if (!isNaN(pageNum)) {
+        dispatch(setPage(pageNum));
+      }
+    } else if (location.pathname === "/customers/list") {
+      // Reset to page 1 when navigating to list without page parameter (e.g., after add/edit)
+      dispatch(setPage(1));
+    }
 
     keys.forEach((key) => {
       const val = params.get(key);
@@ -127,7 +140,7 @@ const CustomersList: React.FC = () => {
         dispatch(setFilters(newFilters));
       }
     }
-  }, [location.search]);
+  }, [location.search, location.pathname, dispatch]);
 
   // Fetch customers when dependencies change
   useEffect(() => {
@@ -211,13 +224,52 @@ const CustomersList: React.FC = () => {
       setExportLoading(true);
       const tenant = getTenantFromURL();
       const params: Record<string, string> = {};
-      if (exportStartDate) params.startDate = exportStartDate.toISOString().split('T')[0];
-      if (exportEndDate) params.endDate = exportEndDate.toISOString().split('T')[0];
+      
+      // Add date range filters - ensure proper format
+      if (exportStartDate) {
+        const startDateStr = exportStartDate.toISOString().split('T')[0];
+        params.startDate = startDateStr;
+        console.log("Export start date:", startDateStr);
+      }
+      if (exportEndDate) {
+        const endDateStr = exportEndDate.toISOString().split('T')[0];
+        params.endDate = endDateStr;
+        console.log("Export end date:", endDateStr);
+      }
+      
+      // Add role filter if selected
+      if (selectedRole) {
+        params.role = selectedRole;
+        console.log("Export role filter:", selectedRole, roles.find(r => r._id === selectedRole)?.name);
+      }
+      
+      // Add search query if present
+      if (searchInput && searchInput.trim()) {
+        params.search = searchInput.trim();
+        console.log("Export search query:", searchInput.trim());
+      }
+      
+      // Add any other active filters
+      if (filters && Object.keys(filters).length > 0) {
+        Object.keys(filters).forEach(key => {
+          if (filters[key] && key !== 'role') { // role already added above
+            params[key] = String(filters[key]);
+          }
+        });
+      }
+
+      // Log all parameters being sent
+      console.log("📤 Exporting with all params:", JSON.stringify(params, null, 2));
+      console.log("📤 Export URL will be: /export-user-data?" + new URLSearchParams(params).toString());
 
       const response = await axiosInstance.get("/export-user-data", {
         headers: { "x-tenant": tenant },
         params,
         responseType: "blob",
+        paramsSerializer: (params) => {
+          // Ensure params are properly serialized
+          return new URLSearchParams(params as any).toString();
+        },
       });
 
       const filename = getFileNameFromDisposition(
@@ -232,8 +284,20 @@ const CustomersList: React.FC = () => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+      
+      toast.success(`Export completed! File: ${filename}`, {
+        duration: 3000,
+        position: "top-right",
+      });
+    } catch (err: any) {
       console.error("Failed to export all users:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to export user data. Please try again.",
+        {
+          duration: 4000,
+          position: "top-right",
+        }
+      );
     } finally {
       setExportLoading(false);
     }
@@ -244,8 +308,20 @@ const CustomersList: React.FC = () => {
       setExportSingleLoadingId(userId);
       const tenant = getTenantFromURL();
       const params: Record<string, string> = { userId };
+      
+      // Add date range filters
       if (exportStartDate) params.startDate = exportStartDate.toISOString().split('T')[0];
       if (exportEndDate) params.endDate = exportEndDate.toISOString().split('T')[0];
+      
+      // Add role filter if selected
+      if (selectedRole) {
+        params.role = selectedRole;
+      }
+      
+      // Add search query if present
+      if (searchInput && searchInput.trim()) {
+        params.search = searchInput.trim();
+      }
 
       const response = await axiosInstance.get("/export-user-data", {
         headers: { "x-tenant": tenant },
@@ -265,15 +341,29 @@ const CustomersList: React.FC = () => {
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-    } catch (err) {
+      
+      toast.success(`Export completed! File: ${filename}`, {
+        duration: 3000,
+        position: "top-right",
+      });
+    } catch (err: any) {
       console.error("Failed to export user:", err);
+      toast.error(
+        err?.response?.data?.message || "Failed to export user data. Please try again.",
+        {
+          duration: 4000,
+          position: "top-right",
+        }
+      );
     } finally {
       setExportSingleLoadingId(null);
     }
   };
 
   return (
-    <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
+    <div>
+      <Toaster position="top-right" />
+      <div className="min-h-screen rounded-2xl border border-gray-200 bg-white px-5 py-7 dark:border-gray-800 dark:bg-white/[0.03] xl:px-10 xl:py-12">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white/90">
           Customers List
@@ -411,11 +501,14 @@ const CustomersList: React.FC = () => {
               )}
             </div>
           </div>
-          {(exportStartDate || exportEndDate) && (
+          {(exportStartDate || exportEndDate || selectedRole || searchInput) && (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              Export will include data {exportStartDate && `from ${exportStartDate.toLocaleDateString()}`}
+              Export will include data
+              {exportStartDate && ` from ${exportStartDate.toLocaleDateString()}`}
               {exportStartDate && exportEndDate && " "}
-              {exportEndDate && `to ${exportEndDate.toLocaleDateString()}`}
+              {exportEndDate && ` to ${exportEndDate.toLocaleDateString()}`}
+              {selectedRole && ` with role: ${roles.find(r => r._id === selectedRole)?.name || selectedRole}`}
+              {searchInput && ` matching: "${searchInput}"`}
             </p>
           )}
         </div>
@@ -843,6 +936,7 @@ const CustomersList: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

@@ -9,6 +9,7 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
 
 const AddCustomer = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const loading = useSelector((state: RootState) => state.customers.loading);
   const { roles, loading: rolesLoading } = useSelector((state: RootState) => state.role);
@@ -53,17 +54,39 @@ const AddCustomer = () => {
       const result = await dispatch(createCustomer(formData)).unwrap();
       console.log("✅ Created customer:", result);
 
-      setPopup({
-        isVisible: true,
-        message: "Customer created successfully!",
-        type: "success",
+      toast.success("Customer created successfully!", {
+        duration: 2000,
+        position: "top-right",
       });
 
-      setFormData({ name: "", email: "", password: "", role: "", isSuperAdmin: false });
+      // Redirect to customers list page (page 1) after successful creation
+      setTimeout(() => {
+        navigate("/customers/list?page=1");
+      }, 500);
     } catch (err: any) {
+      console.error("Error creating customer:", err);
+      
+      // Extract error message from different possible structures
+      let errorMessage = "Failed to create customer.";
+      
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.error) {
+        errorMessage = err.error;
+      }
+      
+      // Check for timeout errors
+      if (errorMessage.includes('timeout') || errorMessage.includes('buffering')) {
+        errorMessage = "Database connection timeout. Please check your database connection and try again.";
+      }
+      
       setPopup({
         isVisible: true,
-        message: err || "Failed to create customer.",
+        message: errorMessage,
         type: "error",
       });
     }

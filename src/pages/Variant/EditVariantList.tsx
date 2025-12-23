@@ -38,10 +38,6 @@ interface Variant {
 }
 
 const EditVariantList = () => {
-  useEffect(() => {
-    console.log("EditVariantList loaded. Current variant state:", variant);
-  }, []);
-
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -253,37 +249,10 @@ const EditVariantList = () => {
         type: "success",
       });
 
-      // Refresh the variants list
-      await dispatch(fetchVariants({ tenant }));
-
-      // Refresh the current variant data in the form
-      const updatedVariants = await dispatch(
-        fetchVariants({ tenant })
-      ).unwrap();
-      const foundVariant = updatedVariants.find((v: Variant) => v._id === id);
-      if (foundVariant) {
-        setCurrentVariant(foundVariant);
-        setVariant({
-          productId: foundVariant.productId,
-          title: foundVariant.title,
-          sku: foundVariant.sku,
-          price: foundVariant.price,
-          salePrice: foundVariant.salePrice || 0,
-          stock: foundVariant.stock,
-          offerTag: foundVariant.offerTag || "",
-          images: [],
-          existingImages: foundVariant.images || [],
-          attributes:
-            foundVariant.attributes.length > 0
-              ? foundVariant.attributes.map((attr) => ({
-                  attributeId: attr.attributeId,
-                  value: attr.value,
-                }))
-              : [{ attributeId: "", value: "" }],
-        });
-      }
-
-      // Do NOT navigate away after update
+      // Redirect to variant list page after successful update
+      setTimeout(() => {
+        navigate("/variant/list");
+      }, 1000);
     } catch (err: any) {
       console.error("Update error:", err);
       setPopup({
