@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
@@ -20,6 +21,7 @@ interface FetchProductParams {
   search?: string;
   sortField?: string;
   sortOrder?: "asc" | "desc";
+  filters?: Record<string, any>;
 }
 
 interface Pagination {
@@ -154,7 +156,12 @@ export const updateProduct = createAsyncThunk<
     });
     return response.data?.data || {};
   } catch (err: any) {
-    return rejectWithValue(err.response?.data || err.message);
+    return rejectWithValue(
+      err.response?.data?.body?.message ||
+        err.response?.data?.message ||
+        err.message ||
+        "Failed to update product"
+    );
   }
 });
 

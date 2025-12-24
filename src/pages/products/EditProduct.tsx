@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import toast, { Toaster } from "react-hot-toast";
@@ -563,27 +564,41 @@ export default function EditProduct() {
       const response = await dispatch(
         updateProduct({ id: productId, data: formData })
       );
-        if (updateProduct.fulfilled.match(response)) {
-          dispatch(
-            showAlert({ message: "Product updated successfully!", type: "success" })
-          );
-          // toast.success("Product updated successfully!", {
-          //   duration: 4000,
-          //   position: "top-right",
-          // });
+      if (updateProduct.fulfilled.match(response)) {
+        dispatch(
+          showAlert({
+            message: "Product updated successfully!",
+            type: "success",
+          })
+        );
+        // toast.success("Product updated successfully!", {
+        //   duration: 4000,
+        //   position: "top-right",
+        // });
         // Give the toast a moment to appear then navigate back to product list
         setTimeout(() => {
           navigate("/product/list");
         }, 900);
       } else {
-        dispatch(
-          showAlert({ message: "Failed to update product. Please try again.", type: "error" })
-        );
+        // Extract error message from the rejected action
+        const errorMessage =
+          typeof response.payload === "string"
+            ? response.payload
+            : (response.payload as any)?.message ||
+              "Failed to update product. Please try again.";
+        dispatch(showAlert({ message: errorMessage, type: "error" }));
       }
     } catch (err: any) {
-      dispatch(
-        showAlert({ message: "Failed to update product. Please try again.", type: "error" })
-      );
+      // When using unwrap(), if rejectWithValue was used, err is the rejected value (the message string)
+      // Otherwise, it's the error object
+      const errorMessage =
+        typeof err === "string"
+          ? err
+          : err?.response?.data?.body?.message ||
+            err?.response?.data?.message ||
+            err?.message ||
+            "Failed to update product. Please try again.";
+      dispatch(showAlert({ message: errorMessage, type: "error" }));
     }
   };
 
@@ -664,7 +679,9 @@ export default function EditProduct() {
       });
     } catch (error) {
       console.error("Error fetching product data:", error);
-      dispatch(showAlert({ message: "Failed to fetch product data.", type: "error" }));
+      dispatch(
+        showAlert({ message: "Failed to fetch product data.", type: "error" })
+      );
     }
   };
 
@@ -678,7 +695,9 @@ export default function EditProduct() {
       console.log("Fetched subcategories:", res);
     } catch (error) {
       console.error("Error fetching subcategories:", error);
-      dispatch(showAlert({ message: "Failed to fetch subcategories.", type: "error" }));
+      dispatch(
+        showAlert({ message: "Failed to fetch subcategories.", type: "error" })
+      );
     }
   };
 
@@ -819,7 +838,9 @@ export default function EditProduct() {
       removeImage(image.localId, fieldName);
     } catch (error) {
       console.error("Error removing image:", error);
-      dispatch(showAlert({ message: "Failed to remove image.", type: "error" }));
+      dispatch(
+        showAlert({ message: "Failed to remove image.", type: "error" })
+      );
     }
   };
 
