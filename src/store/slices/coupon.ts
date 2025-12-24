@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
@@ -121,19 +122,8 @@ export const updateCoupon = createAsyncThunk<
   { rejectValue: string }
 >("coupon/updateCoupon", async ({ id, data }, { rejectWithValue }) => {
   try {
-    // Try PUT first (standard for full updates)
-    let response;
-    try {
-      response = await axiosInstance.put(`/coupon/${id}`, data);
-    } catch (putError: any) {
-      // If PUT returns 405 (Method Not Allowed), try PATCH as fallback
-      if (putError.response?.status === 405) {
-        console.log("PUT not allowed, trying PATCH instead");
-        response = await axiosInstance.patch(`/coupon/${id}`, data);
-      } else {
-        throw putError;
-      }
-    }
+    // Use PATCH for updating coupon
+    const response = await axiosInstance.patch(`/coupon/${id}`, data);
     
     // Handle different response structures
     const result = 
@@ -145,7 +135,7 @@ export const updateCoupon = createAsyncThunk<
     return result;
   } catch (err: any) {
     return rejectWithValue(
-      err.response?.data?.message || "Failed to update coupon"
+      err.response?.data?.body?.message || err.response?.data?.message || err.message || "Failed to update coupon"
     );
   }
 });
