@@ -179,9 +179,13 @@ export default function AddRole() {
         modulePermissions: [],
       });
     } catch (err: any) {
+  
+        typeof err === 'string' 
+          ? err 
+          : err?.response?.data?.body?.message || err?.response?.data?.message || err?.message || "Failed to create role. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to create role. Please try again.",
+        message: errorMessage,
         type: "error",
       });
     }
