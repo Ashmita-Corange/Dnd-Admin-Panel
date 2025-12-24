@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
@@ -6,9 +7,17 @@ export interface Subcategory {
   _id: string;
   name: string;
   slug: string;
-  parentCategory: string; // or you can use a populated object if needed
-  createdAt: string;
-  updatedAt: string;
+  description?: string;
+  status?: string;
+  parentCategory: string | { _id: string; name?: string }; 
+  image?: string | File;
+  thumbnail?: string | File;
+  seoTitle?: string;
+  seoDescription?: string;
+  sortOrder?: number;
+  isFeatured?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface FetchSubcategoryParams {
@@ -119,7 +128,7 @@ export const fetchSubcategoryById = createAsyncThunk<Subcategory, string>(
       console.log("Fetched subcategory by ID:", response.data);
       return response.data.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(err.response?.data?.body?.message || err.response?.data?.message || err.message);
     }
   }
 );
@@ -137,7 +146,7 @@ export const updateSubcategory = createAsyncThunk<
     });
     return response.data?.data;
   } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
+    return rejectWithValue(err.response?.data?.body?.message || err.response?.data?.message || err.message);
   }
 });
 

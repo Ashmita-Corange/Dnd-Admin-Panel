@@ -63,7 +63,7 @@ export const createRole = createAsyncThunk<Role, Partial<Role>>(
       const response = await axiosInstance.post("/role", data);
       return response.data?.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(err.response?.data?.body?.message || err.response?.data?.message || err.message);
     }
   }
 );

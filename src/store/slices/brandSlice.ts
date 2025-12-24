@@ -64,7 +64,7 @@ export const createBrand = createAsyncThunk<Brand, Partial<Brand>>(
       });
       return response.data?.data;
     } catch (err: any) {
-      return rejectWithValue(err.response?.data?.message || err.message);
+      return rejectWithValue(err.response?.data?.body?.message || err.response?.data?.message || err.message);
     }
   }
 );

@@ -1,13 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import toast, { Toaster } from "react-hot-toast";
 import { AppDispatch, RootState } from "../../store";
 import { Sparkles } from "lucide-react";
-import {
-  createCategory,
-  fetchCategories,
-} from "../../store/slices/categorySlice";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PopupAlert from "../../components/popUpAlert";
@@ -17,10 +15,6 @@ import {
 } from "../../store/slices/subCategory";
 import { useParams,useNavigate } from "react-router";
 import axiosInstance from "../../services/axiosConfig";
-
-interface SubCategoryInput {
-  name: string;
-}
 
 export default function EditSubcategory() {
   const [category, setCategory] = useState({
@@ -37,7 +31,7 @@ export default function EditSubcategory() {
     isFeatured: false,
   });
   const params = useParams();
-  const subcategoryId = params.id;
+  const subcategoryId = params.id || "";
   const navigate = useNavigate();
 
   const [allCategories, setAllCategories] = useState([]);
@@ -54,25 +48,30 @@ export default function EditSubcategory() {
   const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_URL || "";
 
   const fetchCategories = async () => {
-    const queryParams = new URLSearchParams();
-    queryParams.append("page", "1");
-    queryParams.append("limit", "100");
+    try {
+      const queryParams = new URLSearchParams();
+      queryParams.append("page", "1");
+      queryParams.append("limit", "100");
 
-    queryParams.append(
-      "filters",
-      JSON.stringify({
-        status: "Active",
-        deletedAt: null,
-      })
-    );
+      queryParams.append(
+        "filters",
+        JSON.stringify({
+          status: "Active",
+          deletedAt: null,
+        })
+      );
 
-    const response = await axiosInstance.get(
-      `/category?${queryParams.toString()}`
-    );
-    console.log("Response from fetchCategories:", response.data);
-    const data = response.data?.data?.body?.data;
+      const response = await axiosInstance.get(
+        `/category?${queryParams.toString()}`
+      );
+      console.log("Response from fetchCategories:", response.data);
+      const data = response.data?.data?.body?.data;
 
-    setAllCategories(data?.result || []);
+      setAllCategories(data?.result || []);
+    } catch (err: any) {
+      console.error("Failed to fetch categories:", err);
+      // Silently handle error for categories dropdown - don't show popup
+    }
   };
 
   useEffect(() => {
@@ -124,6 +123,13 @@ export default function EditSubcategory() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!subcategoryId) {
+      toast.error("Subcategory ID is missing.", {
+        duration: 8000,
+        position: "top-right",
+      });
+      return;
+    }
     if (!category.name) {
       toast.error("Category name is required.", {
         duration: 8000,
@@ -163,7 +169,7 @@ export default function EditSubcategory() {
     try {
       // Create the main category and get the result (should include the new category's ID)
       const createdCategory = await dispatch(
-        updateSubcategory({ id: subcategoryId, data: formData })
+        updateSubcategory({ id: subcategoryId, data: formData as any })
       ).unwrap();
 
       console.log(
@@ -195,15 +201,29 @@ export default function EditSubcategory() {
         isFeatured: false,
       });
     } catch (err: any) {
+      // When using unwrap(), if rejectWithValue was used, err is the rejected value (the message string)
+      // Otherwise, it's the error object
+      const errorMessage = 
+        typeof err === 'string' 
+          ? err 
+          : err?.response?.data?.body?.message || err?.response?.data?.message || err?.message || "Failed to update Subcategory. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to update Subcategory. Please try again.",
+        message: errorMessage,
         type: "error",
       });
     }
   };
 
   const getData = async () => {
+    if (!subcategoryId) {
+      setPopup({
+        isVisible: true,
+        message: "Subcategory ID is missing",
+        type: "error",
+      });
+      return;
+    }
     try {
       const data = await dispatch(fetchSubcategoryById(subcategoryId)).unwrap();
       console.log("Fetched subcategory data:", data);
@@ -212,19 +232,27 @@ export default function EditSubcategory() {
         slug: data.slug,
         description: data.description || "",
         status: data.status || "Active",
-        parentCategory: data.parentCategory._id || null,
-        image: data.image, // Reset image to null for new upload
-        thumbnail: data.thumbnail || null, // Reset thumbnail to null for new upload
+        parentCategory: typeof data.parentCategory === 'object' && data.parentCategory?._id 
+          ? data.parentCategory._id 
+          : (typeof data.parentCategory === 'string' ? data.parentCategory : null),
+        image: typeof data.image === 'string' ? null : (data.image instanceof File ? data.image : null), // Convert string URLs to null, keep File objects
+        thumbnail: typeof data.thumbnail === 'string' ? null : (data.thumbnail instanceof File ? data.thumbnail : null), // Convert string URLs to null, keep File objects
         seoTitle: data.seoTitle || "",
         seoDescription: data.seoDescription || "",
         sortOrder: data.sortOrder || 0,
         isFeatured: data.isFeatured || false,
       });
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
+    } catch (error: any) {
+      console.error("Failed to fetch subcategory:", error);
+      // When using unwrap(), if rejectWithValue was used, error is the rejected value (the message string)
+      // Otherwise, it's the error object
+      const errorMessage = 
+        typeof error === 'string' 
+          ? error 
+          : error?.response?.data?.body?.message || error?.response?.data?.message || error?.message || "Failed to fetch subcategory. Please try again.";
       setPopup({
         isVisible: true,
-        message: "Failed to fetch categories. Please try again.",
+        message: errorMessage,
         type: "error",
       });
     }
@@ -235,7 +263,7 @@ export default function EditSubcategory() {
     getData();
   }, []);
 
-  const getFileUrl = (file) => {
+  const getFileUrl = (file: string | File | null) => {
     if (typeof file === "string") {
       // Use base URL for string paths
       return `${IMAGE_BASE_URL}/${file}`;
@@ -299,7 +327,7 @@ export default function EditSubcategory() {
                   </label>
                   <select
                     name="parentCategory"
-                    value={category.parentCategory}
+                    value={category.parentCategory || ""}
                     onChange={handleChange}
                     className="w-full rounded border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                     required
