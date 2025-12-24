@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axiosInstance from "../../services/axiosConfig";
 
@@ -111,7 +112,7 @@ export const fetchCategories = createAsyncThunk<
       },
     };
   } catch (err: any) {
-    return rejectWithValue(err.response?.data?.message || err.message);
+    return rejectWithValue(err.response?.data?.body?.message || err.response?.data?.message || err.message);
   }
 });
 
